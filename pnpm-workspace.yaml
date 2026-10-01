@@ -19,5 +19,3 @@ peerDependencyRules:
     - vite
   allowedVersions:
     vite: "*"
-minimumReleaseAgeExclude:
-  - "@solidjs/router@2.0.0-next.34"

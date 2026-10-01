@@ -197,8 +197,8 @@ importers:
   apps/web:
     dependencies:
       '@solidjs/router':
-        specifier: 2.0.0-next.34
-        version: 2.0.0-next.34(@solidjs/web@2.0.0-rc.13(solid-js@2.0.0-rc.13))(filesystem-routing@0.4.0(@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.3)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))(solid-js@2.0.0-rc.13)
+        specifier: 2.0.0-next.32
+        version: 2.0.0-next.32(@solidjs/web@2.0.0-rc.13(solid-js@2.0.0-rc.13))(filesystem-routing@0.4.0(@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.3)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))(solid-js@2.0.0-rc.13)
       '@solidjs/web':
         specifier: 'catalog:'
         version: 2.0.0-rc.13(solid-js@2.0.0-rc.13)
@@ -830,8 +830,8 @@ packages:
   '@solidjs/compiler@2.0.0-rc.13':
     resolution: {integrity: sha512-OveR/xhLKo8MTJO/53jgjHuBW54c6/a9B/jiSjDrBeQ3JSbODUxQ8t58WBSlHaxyowPd27TwhVkLo3zeT1YqMQ==}
 
-  '@solidjs/router@2.0.0-next.34':
-    resolution: {integrity: sha512-XRmCQUOPpz6EYp6MyDqtC4KdToXayk/hYv0/jFdSjnmUDjYAi9l6HpTMxADnz1Sv1kX8Jn6DVbsDJTrxC+fU5Q==}
+  '@solidjs/router@2.0.0-next.32':
+    resolution: {integrity: sha512-eed847ixn4L1rYGUamDv5ZXGPyVvTtTnIxB/FbxuP7akmcUA4ZroKcaSFzb4lkGs2DuNiWLzHCK+89aZhV9bag==}
     peerDependencies:
       '@solidjs/web': ^2.0.0-rc.13
       filesystem-routing: '>=0.4.0'
@@ -2295,7 +2295,7 @@ snapshots:
       '@solidjs/compiler-wasm32-wasi': 2.0.0-rc.13
       '@solidjs/compiler-win32-x64-msvc': 2.0.0-rc.13
 
-  '@solidjs/router@2.0.0-next.34(@solidjs/web@2.0.0-rc.13(solid-js@2.0.0-rc.13))(filesystem-routing@0.4.0(@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.3)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))(solid-js@2.0.0-rc.13)':
+  '@solidjs/router@2.0.0-next.32(@solidjs/web@2.0.0-rc.13(solid-js@2.0.0-rc.13))(filesystem-routing@0.4.0(@voidzero-dev/vite-plus-core@0.3.2(@types/node@26.6.3)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1)))(solid-js@2.0.0-rc.13)':
     dependencies:
       '@solidjs/web': 2.0.0-rc.13(solid-js@2.0.0-rc.13)
       solid-js: 2.0.0-rc.13
