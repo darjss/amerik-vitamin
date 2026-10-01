@@ -160,7 +160,9 @@ Rebuilding stock history from scratch is impossible. Too much stock, too little 
 
 ## 6. How the business actually runs
 
-- **Mom prefers paper.** Some orders will stay in her notebook. Don't force dashboard entry: she photographs the notebook page and sends it to Telegram, OCR plus an agent drafts the orders, and she confirms each with one tap.
+- **The notebook is the real ledger today (reported).** Mom writes every order and every inventory item in a paper notebook. That's her system of record, not the DB, and nothing gets sent anywhere from it. Treat it as the current source of truth for what sold and what's in stock.
+  - Consequences: it's the best source for sales history and velocity, and the reference point for the opening inventory count.
+  - **Open, owner decides:** whether the new system replaces the notebook, sits next to it, or ingests it, e.g. digitizing past pages to seed velocity. Don't design a notebook flow until that's decided. Any replacement has to be faster for her than writing a line in the notebook, or she'll keep the notebook and the system will drift.
 - **A physical store is likely coming.** It's a showroom, pickup point and fulfillment hub on the same backend and the same inventory, not a separate stock universe. Every order carries:
   - `source`: messenger_bot, messenger_human, web, brand_site, phone, walk_in, notebook
   - `fulfillment_type`: courier, pickup, in_store
