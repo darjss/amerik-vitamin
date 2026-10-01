@@ -83,7 +83,7 @@ It is also a haunted house.
 
 - **The schema is fossilized.** It's a 6-line diff from a Next.js + Turso dashboard I made in December 2024. **81 of the original 84 columns survived four framework rewrites.** We repainted the kitchen four times and never fixed the floor.
 - **Saving a product corrupts its name.** The form loads `"NatureBell D3 5000IU 240"`, the server rebuilds it as `${brand} ${name} ${potency} ${amount}`, and you get `"NatureBell NatureBell D3 5000IU 240 5000IU 240"`. Every save. Then it regenerates the slug and forgets the old one, so every edit 404s a URL Google already indexed. Then I opened issue #78 to clean up the duplicates. I built myself a job.
-- **You can't edit a product with 0 stock.** The edit form validates with the *add* schema, which demands stock ≥ 1. And when a save does go through, it overwrites live stock with whatever stale number was sitting in the form.
+- **You can't edit a product with 0 stock.** The edit form validates with the _add_ schema, which demands stock ≥ 1. And when a save does go through, it overwrites live stock with whatever stale number was sitting in the form.
 - **Four cache layers, two of them never invalidated.** TanStack Query, a KV cache that keeps dashboards 50 minutes stale, Workers Cache, and an Upstash search index that rebuilds **the entire catalog** on every single write, so edits snap back like a rubber band.
 - **Changing a phone number fails** because orders have a foreign key to `customers.phone`, an integer.
 - **A brand new Postgres pool on every `db()` call.** Never closed.
