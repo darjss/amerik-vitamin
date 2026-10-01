@@ -1,29 +1,15 @@
-# Vite+ Monorepo Starter
+# amerik-vitamin
 
-A starter for creating a Vite+ monorepo.
+The rewrite of vit-store: storefronts, mom's mobile dashboard, Messenger, supply, and the reels engine for Amerik huns baraa.
 
-## Development
+Start here:
 
-- Check everything is ready:
-
-```bash
-vp run ready
-```
-
-- Run the tests:
+1. [docs/MANIFESTO.md](docs/MANIFESTO.md): why this exists.
+2. [docs/OPERATING_CONTEXT.md](docs/OPERATING_CONTEXT.md): what's true right now.
+3. [AGENTS.md](AGENTS.md): how agents work here, and every other doc.
 
 ```bash
-vp run -r test
-```
-
-- Build the monorepo:
-
-```bash
-vp run -r build
-```
-
-- Run the development server:
-
-```bash
-vp run dev
+vp install
+vp dev      # in apps/web
+vp check
 ```

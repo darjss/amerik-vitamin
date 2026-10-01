@@ -162,7 +162,7 @@ Rebuilding stock history from scratch is impossible. Too much stock, too little 
 
 - **The notebook is the real ledger today (reported).** Mom writes every order and every inventory item in a paper notebook. That's her system of record, not the DB, and nothing gets sent anywhere from it. Treat it as the current source of truth for what sold and what's in stock.
   - Consequences: it's the best source for sales history and velocity, and the reference point for the opening inventory count.
-  - **Decided: the software replaces the notebook.** It has to be easier than paper, or she keeps the notebook and the data drifts. The plan, targets, and switch-over are in [docs/KILL-THE-NOTEBOOK.md](docs/KILL-THE-NOTEBOOK.md).
+  - **Decided: the software replaces the notebook.** It has to be easier than paper, or she keeps the notebook and the data drifts. The plan, targets, and switch-over are in [KILL-THE-NOTEBOOK.md](KILL-THE-NOTEBOOK.md).
 - **A physical store is likely coming.** It's a showroom, pickup point and fulfillment hub on the same backend and the same inventory, not a separate stock universe. Every order carries:
   - `source`: messenger_bot, messenger_human, web, brand_site, phone, walk_in, notebook
   - `fulfillment_type`: courier, pickup, in_store
