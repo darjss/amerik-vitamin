@@ -2,7 +2,7 @@
 
 > To every coding agent, clanker, subagent, sidekick, future model, future hire, and the 2 am version of me that opens this repo half dead after work:
 >
-> Read this before you write a single line.
+> Read this before you write a single line. Then read [OPERATING_CONTEXT.md](OPERATING_CONTEXT.md), which is what's true right now. This file is why.
 >
 > This is not a PRD. PRDs are where intent goes to die in a table.
 >
@@ -32,11 +32,11 @@ This repo exists to give her the evenings back, and then to make the business so
 
 ## 1. The numbers that should make your weights twitch
 
-I pulled these from prod Postgres, PostHog, and two years of supplier email. They are real.
+I pulled these from prod Postgres, PostHog, and supplier email. The database numbers are measured. The yearly number is inferred from procurement times markup, not audited. [OPERATING_CONTEXT.md](OPERATING_CONTEXT.md) marks which is which, and you should too.
 
 ```text
-What the database knows:          50,879,100₮    233 orders
-What the business actually does:  ~1,300,000,000 to 1,800,000,000₮ a year
+What the database knows:          50,879,100₮    233 orders          (measured)
+What the business probably does:  ~1,300,000,000 to 1,800,000,000₮ a year   (inferred)
 ```
 
 **The system sees about 3% of the business.** The other 97% lives in my mom's Messenger inbox and her memory.
@@ -192,7 +192,7 @@ Buttons, not chat. An LLM that writes code against the admin API is fun for me a
 
 ### 4.5 Supply knows itself
 
-Amazon order emails forward to `orders@amerikvitamin.mn`. Cloudflare Email Routing → an `email()` handler → postal-mime. Raw `.eml` to R2 so we can replay anything. Order ID, total, status changes, ETA. Line items from the email if Amazon still includes them, from the screenshot import if it doesn't. Check real September 2026 emails before writing a single parser.
+Amazon order emails forward to `orders@amerikvitamin.mn`. Cloudflare Email Routing → an `email()` handler → postal-mime. Raw `.eml` to R2 so we can replay anything. The real emails are known now (OPERATING_CONTEXT.md §4): order ID, unit count, total, status, ETA, and invoice and tracking links. **No product names, no per-SKU prices.** So the parser does order-level facts, and SKU lines come from the screenshot import, later the invoice page. Amazon scraping never sits on the critical path.
 
 Then the part that actually matters:
 
@@ -251,7 +251,7 @@ Here's what actually stands between us and that number. It's not the framework.
 - **Never be out of stock on fast sellers.** And keep the niche SKUs stocked too, because competitors won't carry them. That's the moat.
 - **Reply faster than any human shop.** The customer who messaged three shops at 2 am buys from whoever answers first. That's us. Always.
 - **Reorder reminders.** Nobody else does this.
-- **Official.** Authorized distributor badge, authenticity, expiry dates on every product. Gray-market sellers can't say that.
+- **Registered products, then official.** Once registration and authorization land: the distributor statement, permit numbers, authenticity, expiry dates on every product. Gray-market sellers can't say that. Until the paperwork says so, we don't say so either.
 - **Price per SKU, not per formula.** Undercut on hero products like D3+K2, magnesium, and omega-3. Keep full margin on the niche stuff nobody else has.
 - **Out-post everyone.** When posts generate themselves, daily per brand costs nothing.
 
@@ -333,12 +333,12 @@ She owns voice, hooks, the content calendar, template look, and where the money 
 
 ## 7. We're going official
 
-The site got pulled from Google and the Facebook page went quiet on purpose, while we sort out becoming the authorized distributor for NatureBell and Micro Ingredients in Mongolia.
+The site got pulled from Google and the Facebook page went quiet on purpose, while 34 NatureBell and Micro Ingredients products go through Mongolian registration under **Arvijih Bell Wellness**. The blocker is manufacturer paperwork from Eagle Shine: COAs, test methods, declarations, artwork, an authorization letter. The live state of that is in OPERATING_CONTEXT.md §2. Agents don't email suppliers.
 
-When that clears, marketing goes hard, and two official brand sites go live with it.
+When that clears, marketing goes hard, and two dedicated brand sites go live with it.
 
 - Brand sites own the canonical URLs for their products.
-- Authorized distributor statement, registration or permit numbers, approved wording only.
+- **No "official" or "authorized" wording until the authorization actually permits it.** Then permit numbers and approved wording only.
 - Brand guidelines win over our taste on brand sites.
 - At relaunch: cancel the Search Console removals, add the brand domains as properties, submit a database-driven sitemap per host, and 301 **every** old URL. Old backlinks are the cheapest SEO on earth.
 
@@ -391,7 +391,7 @@ Break these and the PR gets closed without a review.
 7. **One cache.** Workers Cache with tags. If you want a second cache, you want a bug.
 8. **The model never places an order or moves money on its own.** Code does. The model talks.
 9. **Nothing publishes without a human tap.** Reels, posts, boosts.
-10. **No health claims. Ever.**
+10. **No health claims. Ever. No "official" until the paperwork says so.**
 11. **Mom never needs a laptop.** If a flow only works on desktop, it doesn't work.
 12. **Stable URLs forever.** Slug changes 301. Old URLs never 404.
 13. **No feature without a person.** Name who uses it and what they stop doing.
@@ -404,7 +404,8 @@ Break these and the PR gets closed without a review.
 
 ```text
 1. stop the bleeding in vit-store      hotfix the name and stock bugs, start logging purchases,
-                                       reconcile 57 pending orders and 65 pending transfers
+                                       reconcile 57 pending orders and 65 pending transfers,
+                                       pick an opening inventory date and count the A-items
 2. Messenger bot live on pilot page    comment-to-DM → bot → addOrder → handoff on Telegram
 3. payments + dispatch + mobile dash   plus Telegram pings and quick actions. after this, mom only packs
 4. packing brief + reorder screen      stock kept honest by receipts
