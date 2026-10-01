@@ -1,0 +1,24 @@
+{
+  "name": "@amerik/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vp dev",
+    "build": "vp build",
+    "start": "vp preview",
+    "preview": "vp preview"
+  },
+  "dependencies": {
+    "@solidjs/router": "2.0.0-next.34",
+    "@solidjs/web": "catalog:",
+    "filesystem-routing": "0.4.0",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@solidjs/vite-plugin": "3.0.0-next.35",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  }
+}
