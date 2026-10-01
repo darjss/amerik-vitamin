@@ -109,7 +109,7 @@ That's it. That's the whole company.
 ```text
 pack the orders        → from a pick list, labels printed from her phone over Bluetooth
 hand them to courier   → dispatch already created, she just hands over parcels
-approve what to buy    → one Telegram message every morning, tap approve or edit
+approve what to buy    → the reorder screen on her phone, tap approve or edit
 tap "it arrived"       → when a shipment lands, fix any count that's off
 the weird chats        → complaints and edge cases the bot hands off to her
 ```
@@ -145,7 +145,7 @@ Meta wouldn't publish my Flue bot. My coworker said Zernio. Zernio carries it no
 - Live prices. Live stock. **Expiry dates** (113 conversations in the export asked about expiry, the customers are telling us something).
 - Code handles every tap, every order, every payment. The model answers questions. **The model never places an order on its own.**
 - Every order goes through `addOrder`. **Every chat sale lands in the database.** This single fact fixes more of the business than any UI ever will.
-- Hard stuff gets handed to mom on Telegram.
+- Hard stuff gets handed to mom: a Telegram ping, one tap, and she's in the chat on the dashboard.
 - It pilots on the small NatureBell + Micro Ingredients page first. Two brands, small catalog, fewer ways to embarrass us.
 
 ### 4.2 Payments confirm themselves
@@ -156,25 +156,36 @@ QPay confirms through its callback. Bank transfers confirm through Khaan transac
 
 Paid orders become courier dispatches through the delivery API, batched. Customer gets "on the way." Mom prints labels and hands over boxes.
 
-### 4.4 Telegram is mom's entire admin
+### 4.4 The dashboard lives in her pocket. Telegram taps her on the shoulder.
 
-She already lives in Telegram. So the ops surface **is** Telegram, with inline buttons:
+Two surfaces. Different jobs. Don't blur them.
+
+**The dashboard is home.** A mobile-first web app built for one thumb on a cheap Android in bad light. It's where she actually works:
 
 ```text
-☀️ Morning brief
-   Yesterday: 34 orders · 7,240,000₮
-   Paid, not shipped: 12
-   Unmatched transfers: 2   [review]
-   Running out: D3+K2 (4 left, ~2 days)   [reorder]
+TODAY
+  📦 Pack 23 orders              [pick list] [print labels]
+  💸 2 transfers need a look     [review]
+  🆘 1 chat handed to you        [open]
+  ⚠️ D3+K2: 4 left, ~2 days      [reorder]
 
-🛒 Reorder list
-   NatureBell D3+K2 240    stock 4    sells 2/day    buy 40   [✓] [edit]
-   Micro Magnesium Glyc.   stock 6    sells 1.5/day  buy 30   [✓] [edit]
-   [approve all → opens prefilled Amazon cart]
+ORDERS      search by phone, one tap to see everything about a customer
+REORDER     NatureBell D3+K2 240   stock 4   sells 2/day   buy 40   [✓] [edit]
+            [approve all → opens a prefilled Amazon cart]
+ARRIVALS    Amazon #111-4429... landed?   [counts ok] [fix counts]
+PRODUCTS    price and stock edits that actually save, the first time
+```
 
-📦 Shipment from Amazon #111-4429... arrived?   [yes, counts ok] [fix counts]
+The old admin was a desktop dashboard shrunk onto a phone. This one is a phone app that happens to be a website. If a screen needs pinch-zoom, it's broken.
 
-🆘 Bot handoff: customer says pills arrived broken   [open chat]
+**Telegram is the nervous system.** She already lives there. It pings and offers the one obvious tap, then deep-links into the dashboard for anything bigger:
+
+```text
+🛍 New order #A3F2 · 245,000₮ · paid by QPay · Bayanzürkh
+☀️ Today's packing: 23 orders, 41 items                   [open pick list]
+💸 Transfer 180,000₮ didn't match any order                [match] [open]
+🆘 Customer says pills arrived broken                       [open chat]
+📉 Micro Magnesium: 3 left                                  [add to reorder]
 ```
 
 Buttons, not chat. An LLM that writes code against the admin API is fun for me and terrifying for her. Keep the LLM for one-off questions.
@@ -395,8 +406,8 @@ Break these and the PR gets closed without a review.
 1. stop the bleeding in vit-store      hotfix the name and stock bugs, start logging purchases,
                                        reconcile 57 pending orders and 65 pending transfers
 2. Messenger bot live on pilot page    comment-to-DM → bot → addOrder → handoff on Telegram
-3. payments + dispatch + Telegram      after this, mom only packs
-4. morning brief + reorder approval    stock kept honest by receipts
+3. payments + dispatch + mobile dash   plus Telegram pings and quick actions. after this, mom only packs
+4. packing brief + reorder screen      stock kept honest by receipts
 5. reels engine                        catalog reels, arrival reels, girlfriend's approval flow
 6. reels → orders reporting            boost only winners
 7. schema v2 + data copy               as a financial reconciliation: counts, totals, stock all match
@@ -432,7 +443,7 @@ Store-kit sells shops to other people. This repo sells vitamins. Don't confuse t
 
 What I want is this:
 
-> Mom wakes up. One Telegram message tells her what happened overnight. She taps approve on the reorder list. She packs the boxes. She hands them to the courier.
+> Mom wakes up. One Telegram message says today is 23 orders. She opens the dashboard, taps approve on the reorder list, prints the labels. She packs the boxes. She hands them to the courier.
 >
 > Then she has the rest of the day.
 >
