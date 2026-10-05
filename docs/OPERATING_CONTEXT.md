@@ -2,6 +2,8 @@
 
 MANIFESTO.md is why. This file is what's true right now. Read both before planning anything.
 
+**Current phase: A, the bot plus the dashboard.** The order of battle is MANIFESTO §10.
+
 Facts here carry a status: **measured** (pulled from a system), **reported** (from email or the owner, not checked in code), **inferred** (an estimate), or **decided** (a standing call). Don't upgrade a fact's status in your head. If you act on an inferred number, say so.
 
 ---
@@ -76,27 +78,32 @@ Sep 30   our full reply: new applicant entity, Form 9 attached, full 34-product 
 - **Agent access:** create a **profile-scoped read/write Zernio API key** limited to the pilot page for coding agents. Never hand an agent a key that can post to the main page.
 - **The bot has never been live. Real customer data comes from the April to May 2026 Facebook export: 1,697 conversations, all answered by hand.** Every chat order today is a manual order.
 
-### Bot architecture: the PR stack wins
+### The bot: built in vit-store, ported here (decided)
 
-The live decision is the open vit-store stack **#339 to #344**, not older ideas about rewriting `@vit/assistant`:
+vit-store PRs #339 to #345 are **merged** into vit-store main (measured). They built `apps/messenger`:
 
-- a new `apps/messenger` worker on Cloudflare `agents@0.24.0` plus Chat SDK `chat@4.41.0` plus `@zernio/chat-sdk-adapter`
-- one Ingress Durable Object, and one Conversation Durable Object per thread, holding the inbox, cart, checkout, payments and outbox in its own SQLite
-- **Flue is gone. No Think.**
-- it calls 8 public store procedures over HTTP: product search, products by IDs (two variants), `order.addOrder`, `payment.selectTransfer`, `payment.claimTransferPaid`, `payment.getPaymentStatus`, `payment.getTransferReconciliationStatus`
-- an Effect RPC backend has to re-expose those 8 calls before cutover. A type-only import doesn't make the wire format compatible.
+- Cloudflare `agents@0.24.0`, Chat SDK `chat@4.41.0`, `@zernio/chat-sdk-adapter`
+- one Ingress Durable Object, and one Conversation Durable Object per thread holding inbox, cart, checkout, payments and outbox in its own SQLite
+- an eval harness of 145 labeled cases from the Messenger export (#343)
+- the Telegram admin bot as an `Admin` DO (#345). Flue is gone.
 
-### Human handoff is an explicit state machine
+It talks to vit-store over tRPC + SuperJSON through 8 public procedures (product search, products by IDs ×2, `addOrder`, and four transfer/payment calls).
+
+**Decided:** `apps/messenger` is ported into this repo and its store client calls the new Effect RPC contract directly. The bot never launched, so there's nothing to stay wire-compatible with.
+
+### Human handoff is an explicit state machine (decided)
 
 ```text
 BOT_ACTIVE → HUMAN_REQUIRED → HUMAN_ACTIVE → BOT_ACTIVE
 ```
 
-- `HUMAN_REQUIRED`: Telegram pings mom or my girlfriend with a deep link into the dashboard conversation.
-- `HUMAN_ACTIVE`: **the bot is completely silent.** No typing indicator, no "anything else?", nothing.
-- Back to `BOT_ACTIVE` only through an explicit "return to bot" tap. Never on a timer.
-- Orders placed by a human during takeover still have to land in the DB. Manual takeovers are the remaining leak once the bot is live.
-- Check whether #342's Telegram handoff implements these states. If it doesn't, that's the fix.
+- `HUMAN_REQUIRED`: Telegram pings mom or my girlfriend with buttons: take over, open the order in the dashboard.
+- `HUMAN_ACTIVE`: the bot stays silent. The one thing it still sends is payment confirmations.
+- Back to `BOT_ACTIVE` only through an explicit "return to bot" tap, in Telegram or the dashboard.
+- The human replies where she already does, in the page inbox. The dashboard shows the handoff and the return button, and doesn't try to be a Messenger client.
+- Orders a human takes during takeover get entered on the dashboard. Manual takeovers are the remaining leak once the bot is live.
+
+**What #342 actually built (measured):** a 12-hour `paused_until` timer plus a resume URL. There's no state machine and no inline button, and it expires on a timer. The port replaces it with the states above.
 
 ---
 
@@ -163,16 +170,21 @@ Rebuilding stock history from scratch is impossible. Too much stock, too little 
 - **The notebook is the real ledger today (reported).** Mom writes every order and every inventory item in a paper notebook. That's her system of record, not the DB, and nothing gets sent anywhere from it. Treat it as the current source of truth for what sold and what's in stock.
   - Consequences: it's the best source for sales history and velocity, and the reference point for the opening inventory count.
   - **Decided: the software replaces the notebook.** It has to be easier than paper, or she keeps the notebook and the data drifts. The plan, targets, and switch-over are in [KILL-THE-NOTEBOOK.md](KILL-THE-NOTEBOOK.md).
-- **A physical store is likely coming.** It's a showroom, pickup point and fulfillment hub on the same backend and the same inventory, not a separate stock universe. Every order carries:
-  - `source`: messenger_bot, messenger_human, web, brand_site, phone, walk_in, notebook
-  - `fulfillment_type`: courier, pickup, in_store
-- **Her surfaces:** a mobile-first dashboard is home. Telegram handles notifications and quick actions: new order, today's packing brief, unmatched transfer, handoff, low stock.
-- **The delivery fee in her posts is 5,000₮, and vit-store code charges 6,000₮.** Confirm the real number before porting it.
+- **A physical store is likely coming (reported).** Showroom, pickup point and fulfillment hub on the same backend and the same stock. Orders already carry `source` and `fulfillment_type` for it (COMMERCE-RULES).
+- **Her surfaces:** a mobile-first dashboard is home. Telegram handles notifications and quick actions: new order, today's packing brief, unmatched transfer, handoff, oversold, low stock.
+- **She sells at normal volume during the downtime (reported),** by hand in Messenger, mostly **cash on delivery**. Manual orders keep COD. The bot and the sites are prepay (decided, see COMMERCE-RULES).
+- **vit-store's admin is unusable for her (reported).** It holds 483 orders, 367 customers and 652 products (measured), and it sees about 3% of sales.
+- **Delivery fee:** vit-store charges 6,000₮ in checkout and in the bot (measured). Her posts say 5,000₮ (reported). Confirm the real number before it ships anywhere.
 
----
+## 7. Delivery
 
-## 7. Creative
+- **tu-delivery is the courier.** vit-store dispatches through its API and never reads status back (measured).
+- **Their new API version has webhooks (reported).** The owner registers ours with them by hand. The webhook sets `delivered`.
+- **Legacy orders that reached `shipped` were almost all received (reported).** They migrate as `delivered`. Legacy `pending` orders were never paid, and they migrate as `cancelled`.
 
-- **My girlfriend's designs are good. They just don't convert.** Mom's crude collage converts because it answers _what, how much, how to buy_ at a glance. Every creative keeps that transaction-first logic.
-- **Real footage and real product photos only.** No AI-generated lifestyle imagery.
-- Score creatives on DMs and orders, never likes.
+## 8. Money in
+
+- **QPay:** invoice plus callback, re-checked against QPay before it counts (measured, vit-store).
+- **Khaan transfers come from a reverse-engineered internet-banking client,** [`khaan-client`](https://github.com/darjss/khaan-client), logged in with a username, a password and a remembered device ID (measured). vit-store polls every 25 s for 5 min after a customer claims they paid. It's fragile by nature. When it breaks, transfers fall to the human queue, and that's acceptable.
+- **Customers prove transfers with screenshots today.** The export has about 570 of them in 6 weeks (measured).
+
