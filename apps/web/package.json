@@ -20,7 +20,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.54.8",
     "@cloudflare/workers-types": "catalog:",
-    "@solidjs/vite-plugin": "3.0.0-next.35",
+    "@solidjs/vite-plugin": "3.0.0-next.43",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

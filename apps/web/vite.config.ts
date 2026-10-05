@@ -1,19 +1,35 @@
+import { cloudflare } from "@cloudflare/vite-plugin";
 import { fileRoutes } from "filesystem-routing/vite";
 import solid from "@solidjs/vite-plugin";
 import { defineConfig } from "vite-plus";
 
+// Alchemy's Website.Vite injects the Cloudflare plugin itself; the plugin is
+// only added for a plain `vp build`.
+const workerSsr =
+  process.env.ALCHEMY_CLOUDFLARE_VITE_INJECTED === "1"
+    ? []
+    : [cloudflare({ viteEnvironment: { name: "ssr" } })];
+
 export default defineConfig({
+  environments: {
+    // The ssr bundle runs in workerd, where `cloudflare:*` modules are
+    // builtins. The client graph reaches the same specifier through binding.ts
+    // on a branch `isServer` eliminates, so it must be external there too.
+    client: { build: { rolldownOptions: { external: [/^cloudflare:/u] } } },
+    ssr: { build: { rolldownOptions: { external: [/^cloudflare:/u] } } },
+  },
   plugins: [
+    ...workerSsr,
     solid({
       extensions: [".jsx", ".tsx"],
       ssr: true,
-      start: {},
+      start: { middleware: "./src/middleware.ts", renderMode: "async" },
     }),
-    fileRoutes({ types: true }),
+    fileRoutes({ codeSplitting: false, httpMethods: true, types: true }),
   ],
   root: import.meta.dirname,
   server: {
     host: "127.0.0.1",
-    port: 3000,
+    port: 3001,
   },
 });
