@@ -4,8 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run --filter @amerik/web dev"
+    "dev": "vp run --filter @amerik/infra dev",
+    "build": "vp run -r build",
+    "check": "vp check",
+    "plan": "vp run --filter @amerik/infra plan",
+    "deploy": "vp run --filter @amerik/infra deploy",
+    "destroy": "vp run --filter @amerik/infra destroy",
+    "migrate": "vp run --filter @amerik/db migrate",
+    "ready": "vp check && vp run -r build"
   },
   "devDependencies": {
     "vite": "catalog:",
