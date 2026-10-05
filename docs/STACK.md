@@ -43,7 +43,7 @@ infra            Alchemy stack
 | Alchemy 2 (beta.79+) | Stages: prod plus local dev. Hyperdrive, secrets, cron, `Cloudflare.cache()` |
 | better-auth | Google sign-in only, long-lived sessions for mom's phone |
 | Cloudflare Workers Cache | The only cache. `Cache-Control` + `Cache-Tag`, purge on product edit |
-| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #345 |
+| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #346 |
 | [`khaan-client`](https://github.com/darjss/khaan-client) | Khaan transactions for transfer matching |
 | Zernio | Messenger, posts, reels, comment-to-DM, analytics |
 | Remotion | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies |
