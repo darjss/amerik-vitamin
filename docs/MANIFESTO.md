@@ -112,6 +112,7 @@ hand them to courier   → dispatch already created, she just hands over parcels
 approve what to buy    → the reorder screen on her phone, tap approve or edit
 tap "it arrived"       → when a shipment lands, fix any count that's off
 the weird chats        → complaints and edge cases the bot hands off to her
+her own orders         → one line each, faster than the pen, until the bot takes most of them
 ```
 
 ### What mom never touches again
@@ -187,7 +188,7 @@ The old admin was a desktop dashboard shrunk onto a phone. This one is a phone a
 🛍 New order #A3F2 · 245,000₮ · paid by QPay · Bayanzürkh
 ☀️ Today's packing: 23 orders, 41 items                   [open pick list]
 💸 Transfer 180,000₮ didn't match any order                [match] [open]
-🆘 Customer says pills arrived broken                       [open chat]
+🆘 Customer says pills arrived broken                       [take over]
 📉 Micro Magnesium: 3 left                                  [add to reorder]
 ```
 
@@ -223,7 +224,7 @@ Repeat customers are the cheapest revenue that exists and no shop in Mongolia do
 ### 4.9 Three storefronts, one worker
 
 - **amerikvitamin.mn**: the multi-brand retailer. Search, categories, comparisons.
-- **naturebell.mn** and **microingredients.mn**: official brand sites. Brand story, the full line, authenticity, the brand's own look. They own the canonical URLs for their products.
+- **naturebell.mn** and **microingredients.mn**: the brand sites. Brand story, the full line, authenticity, the brand's own look. They own the canonical URLs for their products.
 - Same backend, same checkout, same orders. Each domain keeps its own cart.
 
 ---

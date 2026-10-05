@@ -8,7 +8,7 @@ The site was pulled from Search Console and the Facebook page went quiet while r
 - [ ] Stock counted, and the opening inventory date is set.
 - [ ] Wording approved: "official" or "authorized" only if the authorization allows it, registration or permit numbers on product pages, no health claims.
 - [ ] Delivery fee confirmed, 5,000 or 6,000₮, the same in posts, bot and checkout.
-- [ ] The server components gate passed on a preview deploy (see STACK.md).
+- [ ] The server components gate passed on a deployed Worker (see STACK.md).
 
 ## SEO
 
