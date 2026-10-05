@@ -80,12 +80,12 @@ Sep 30   our full reply: new applicant entity, Form 9 attached, full 34-product 
 
 ### The bot: built in vit-store, ported here (decided)
 
-vit-store PRs #339 to #345 are **merged** into vit-store main (measured). They built `apps/messenger`:
+vit-store PRs #339 to #346 are **merged** (Oct 1 2026) into vit-store main (measured). They built `apps/messenger`:
 
 - Cloudflare `agents@0.24.0`, Chat SDK `chat@4.41.0`, `@zernio/chat-sdk-adapter`
 - one Ingress Durable Object, and one Conversation Durable Object per thread holding inbox, cart, checkout, payments and outbox in its own SQLite
 - an eval harness of 145 labeled cases from the Messenger export (#343)
-- the Telegram admin bot as an `Admin` DO (#345). Flue is gone.
+- the Telegram admin bot as an `Admin` DO (#345), and durability fixes (#346). Flue is gone.
 
 It talks to vit-store over tRPC + SuperJSON through 8 public procedures (product search, products by IDs ×2, `addOrder`, and four transfer/payment calls).
 
