@@ -5,25 +5,26 @@
 **Rule: recover behavior, write new code.** Before you touch a vit-store file, write down the behavior you want, then build that behavior here against COMMERCE-RULES.
 
 **The one exception is `apps/messenger`.** It was written in October 2026 for this architecture, so it gets ported as code. The port changes two things:
+
 - its store client calls the new Effect RPC contract instead of tRPC
 - its 12-hour `paused_until` handoff becomes the state machine in OPERATING_CONTEXT §3
 
 ## Behavior worth recovering
 
-| Behavior | Where in vit-store |
-| --- | --- |
-| QPay invoice and callback, re-checked before it counts | `packages/api/src/lib/payments/qpay.ts`, `apps/server/src/routes/payments.ts` |
-| Khaan matching: exact amount, payment number or phone in the description, fingerprint unique per bank transaction | `apps/server/src/lib/khaan/match-transfer.ts`, `khaan_consumed_transaction` |
-| Khaan polling after a customer claims they paid | `apps/server/src/durable-objects/transfer-reconciliation-object.ts` |
-| tu-delivery dispatch with a duplicate guard | `packages/api/src/lib/integrations/delivery/index.ts`, `delivery_dispatch` |
-| Telegram admin: order alerts, morning brief, callback buttons | `apps/messenger/src/admin/`, `packages/api/src/lib/integrations/admin-notifications/` |
-| Pricing formula | `packages/api/src/lib/ai-product/constants.ts` |
-| AI product extraction from Amazon URLs (store the ASIN this time) | `packages/api/src/lib/ai-product/*` |
-| Screenshot import for purchases | `packages/api/src/routers/admin/ai-purchase.ts` |
-| Catalog matcher for invoice lines | `packages/api/src/lib/ai/product-match.ts` |
-| Restock waitlist | `restock_subscription` table |
-| Phone label batch printing over Bluetooth | open PR #294 |
-| PNG OG images | open PR #255 |
+| Behavior                                                                                                          | Where in vit-store                                                                    |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| QPay invoice and callback, re-checked before it counts                                                            | `packages/api/src/lib/payments/qpay.ts`, `apps/server/src/routes/payments.ts`         |
+| Khaan matching: exact amount, payment number or phone in the description, fingerprint unique per bank transaction | `apps/server/src/lib/khaan/match-transfer.ts`, `khaan_consumed_transaction`           |
+| Khaan polling after a customer claims they paid                                                                   | `apps/server/src/durable-objects/transfer-reconciliation-object.ts`                   |
+| tu-delivery dispatch with a duplicate guard                                                                       | `packages/api/src/lib/integrations/delivery/index.ts`, `delivery_dispatch`            |
+| Telegram admin: order alerts, morning brief, callback buttons                                                     | `apps/messenger/src/admin/`, `packages/api/src/lib/integrations/admin-notifications/` |
+| Pricing formula                                                                                                   | `packages/api/src/lib/ai-product/constants.ts`                                        |
+| AI product extraction from Amazon URLs (store the ASIN this time)                                                 | `packages/api/src/lib/ai-product/*`                                                   |
+| Screenshot import for purchases                                                                                   | `packages/api/src/routers/admin/ai-purchase.ts`                                       |
+| Catalog matcher for invoice lines                                                                                 | `packages/api/src/lib/ai/product-match.ts`                                            |
+| Restock waitlist                                                                                                  | `restock_subscription` table                                                          |
+| Phone label batch printing over Bluetooth                                                                         | open PR #294                                                                          |
+| PNG OG images                                                                                                     | open PR #255                                                                          |
 
 ## Bugs to never repeat
 
@@ -51,15 +52,15 @@
 
 It's a reconciliation, rehearsed on a local dump first:
 
-| Legacy | v2 |
-| --- | --- |
-| `pending` orders | `cancelled`, because they were never paid |
-| `shipped` or `delivered` orders | `delivered` |
-| `cancelled` or `refunded` orders | `cancelled` |
-| `sales.product_cost = 0` | `null` |
-| successful payments | payments |
-| customer phone integer | 8-digit text |
-| current slug and `oldSlugs` | slug history |
+| Legacy                           | v2                                        |
+| -------------------------------- | ----------------------------------------- |
+| `pending` orders                 | `cancelled`, because they were never paid |
+| `shipped` or `delivered` orders  | `delivered`                               |
+| `cancelled` or `refunded` orders | `cancelled`                               |
+| `sales.product_cost = 0`         | `null`                                    |
+| successful payments              | payments                                  |
+| customer phone integer           | 8-digit text                              |
+| current slug and `oldSlugs`      | slug history                              |
 
 Done means counts per table, order totals by status and payment sums match vit-store's own SQL.
 

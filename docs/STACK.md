@@ -25,29 +25,29 @@ infra            Alchemy stack
 
 ## Now
 
-| Tool | Version | Why |
-| --- | --- | --- |
-| vite-plus (`vp`) | 0.3.2 in the scaffold, and so is the `vite` alias to `@voidzero-dev/vite-plus-core`. **Bump both to 1.0.0**, like tranzfer2 | One CLI for install, dev, build, lint, format |
-| pnpm | 12, workspace catalogs | Same as tranzfer2 |
-| solid-js, @solidjs/web | 2.0.0-rc.13 | API frozen. Fine-grained, small, server components |
-| @solidjs/vite-plugin | 3.0.0-next.35 (next.47 exists, bump when needed) | Start mode: generated entries, SSR, server functions |
-| @solidjs/router | 2.0.0-next.32 | next.34 was too new for the minimum release age |
-| filesystem-routing | 0.4.0 | File routes, required by the router |
+| Tool                   | Version                                                                                                                     | Why                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| vite-plus (`vp`)       | 0.3.2 in the scaffold, and so is the `vite` alias to `@voidzero-dev/vite-plus-core`. **Bump both to 1.0.0**, like tranzfer2 | One CLI for install, dev, build, lint, format        |
+| pnpm                   | 12, workspace catalogs                                                                                                      | Same as tranzfer2                                    |
+| solid-js, @solidjs/web | 2.0.0-rc.13                                                                                                                 | API frozen. Fine-grained, small, server components   |
+| @solidjs/vite-plugin   | 3.0.0-next.35 (next.47 exists, bump when needed)                                                                            | Start mode: generated entries, SSR, server functions |
+| @solidjs/router        | 2.0.0-next.32                                                                                                               | next.34 was too new for the minimum release age      |
+| filesystem-routing     | 0.4.0                                                                                                                       | File routes, required by the router                  |
 
 ## Planned
 
-| Tool | Why |
-| --- | --- |
-| Effect 4.0.0 (stable since 2026-10-01) | RPC contracts with tagged errors, services, config. The `http`, `rpc` and `sql` modules are marked unstable, so pin exactly |
-| drizzle-orm 1.0 rc, `effect-postgres` | Effect-native Drizzle over Hyperdrive |
-| Alchemy 2 (beta.79+) | Stages: prod plus local dev. Hyperdrive, secrets, cron, `Cloudflare.cache()` |
-| better-auth | Google sign-in only, long-lived sessions for mom's phone |
-| Cloudflare Workers Cache | The only cache. `Cache-Control` + `Cache-Tag`, purge on product edit |
-| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #346 |
-| [`khaan-client`](https://github.com/darjss/khaan-client) | Khaan transactions for transfer matching |
-| Zernio | Messenger, posts, reels, comment-to-DM, analytics |
-| Remotion | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies |
-| postal-mime | Parse Amazon emails in the `email()` handler |
+| Tool                                                       | Why                                                                                                                         |
+| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Effect 4.0.0 (stable since 2026-10-01)                     | RPC contracts with tagged errors, services, config. The `http`, `rpc` and `sql` modules are marked unstable, so pin exactly |
+| drizzle-orm 1.0 rc, `effect-postgres`                      | Effect-native Drizzle over Hyperdrive                                                                                       |
+| Alchemy 2 (beta.79+)                                       | Stages: prod plus local dev. Hyperdrive, secrets, cron, `Cloudflare.cache()`                                                |
+| better-auth                                                | Google sign-in only, long-lived sessions for mom's phone                                                                    |
+| Cloudflare Workers Cache                                   | The only cache. `Cache-Control` + `Cache-Tag`, purge on product edit                                                        |
+| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #346                                                                                 |
+| [`khaan-client`](https://github.com/darjss/khaan-client)   | Khaan transactions for transfer matching                                                                                    |
+| Zernio                                                     | Messenger, posts, reels, comment-to-DM, analytics                                                                           |
+| Remotion                                                   | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies                           |
+| postal-mime                                                | Parse Amazon emails in the `email()` handler                                                                                |
 
 ## Alchemy gate
 
@@ -69,6 +69,7 @@ Alchemy stays only if it proves deploy, migrations, secrets and rollback on prod
   - a cache HIT, then a purge, then a MISS
 
   If it fails, use plain SSR. The owner's DUND demo already ran them on a Worker: Lighthouse mobile 90 to 93, with 180 to 269ms of blocking time as the weak spot.
+
 - **Cached documents carry zero user data.** Anything that touches a session sends `no-store`.
 - **The prerenderer runs in Node without bindings,** and static assets can't vary by host. Anything multi-domain gets SSR plus the edge cache.
 

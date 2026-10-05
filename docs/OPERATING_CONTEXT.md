@@ -187,4 +187,3 @@ Rebuilding stock history from scratch is impossible. Too much stock, too little 
 - **QPay:** invoice plus callback, re-checked against QPay before it counts (measured, vit-store).
 - **Khaan transfers come from a reverse-engineered internet-banking client,** [`khaan-client`](https://github.com/darjss/khaan-client), logged in with a username, a password and a remembered device ID (measured). vit-store polls every 25 s for 5 min after a customer claims they paid. It's fragile by nature. When it breaks, transfers fall to the human queue, and that's acceptable.
 - **Customers prove transfers with screenshots today.** The export has about 570 of them in 6 weeks (measured).
-
