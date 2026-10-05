@@ -90,7 +90,7 @@ It is also a haunted house.
 - **The sitemap lists 71 noindex redirect stubs and 185 duplicate old-slug pages** and forgets the real category pages. The "301 redirects" are meta-refresh pages that return 200. The OG images are SVG, which Facebook won't render.
 - **3,500 lines of purchase tracking. Used zero times.**
 - **88,000 lines of code. 2 test files.**
-- **11 lint PRs sitting open that were already merged.** 28 numbered plans and a `validate.py` that validates the plans.
+- **11 lint PRs left open after they'd already merged.** 28 numbered plans and a `validate.py` that validates the plans.
 
 So we burn it down and keep the lessons.
 
@@ -139,22 +139,25 @@ Every one of these is a real system with a real job. None of them are "platforms
 
 ### 4.1 The Messenger bot, through Zernio
 
-Meta wouldn't publish my Flue bot. My coworker said Zernio. Zernio carries it now (ADR 0011, PRs #339 to #344).
+Meta wouldn't publish my Flue bot. My coworker said Zernio. Zernio carries it now. The bot got built inside vit-store (PRs #339 to #346, merged), it never launched, and it moves into this repo with a new backend under it.
 
 - Answers in 4 to 7 seconds, in mom's short Cyrillic voice, even though 70% of customers write in Latin-script Mongolian.
 - Live prices. Live stock. **Expiry dates** (113 conversations in the export asked about expiry, the customers are telling us something).
 - Code handles every tap, every order, every payment. The model answers questions. **The model never places an order on its own.**
-- Every order goes through `addOrder`. **Every chat sale lands in the database.** This single fact fixes more of the business than any UI ever will.
-- Hard stuff gets handed to mom: a Telegram ping, one tap, and she's in the chat on the dashboard.
+- Bot orders go through the exact same order function as mom's dashboard. **Every chat sale lands in the database.** This single fact fixes more of the business than any UI ever will.
+- Bot orders are prepay: QPay or transfer before anything gets packed.
+- Hard stuff gets handed to a human: a Telegram ping, one tap to take over, and the bot shuts up. She answers in the page inbox like she always has. One more tap gives the chat back. No timers. The bot never wakes up mid-conversation on its own.
 - It pilots on the small NatureBell + Micro Ingredients page first. Two brands, small catalog, fewer ways to embarrass us.
 
 ### 4.2 Payments confirm themselves
 
-QPay confirms through its callback. Bank transfers confirm through Khaan transaction matching against the payment reference. The customer gets a Messenger confirmation. Mom finds out from the morning brief, not from a screenshot.
+QPay confirms through its callback. Bank transfers confirm by Khaan matching on the payment number or the customer's phone, plus the exact amount. Anything ambiguous goes to a human, never a guess. The customer gets a Messenger confirmation. Mom finds out from the morning brief, not from a screenshot.
+
+Her own manual orders stay cash on delivery, because that's how she sells and we're not here to change how she sells. The dashboard tracks who owes what, the way the notebook does now.
 
 ### 4.3 Delivery dispatches itself
 
-Paid orders become courier dispatches through the delivery API, batched. Customer gets "on the way." Mom prints labels and hands over boxes.
+Orders ready to go become tu-delivery dispatches, batched. The customer gets "on the way." The courier's webhook says delivered, so `delivered` finally means something. Mom prints labels and hands over boxes.
 
 ### 4.4 The dashboard lives in her pocket. Telegram taps her on the shoulder.
 
@@ -197,16 +200,15 @@ Amazon order emails forward to `orders@amerikvitamin.mn`. Cloudflare Email Routi
 Then the part that actually matters:
 
 ```text
-landed cost per unit = item USD × FX
-                     + order shipping and tax, shared by line value
-                     + forwarder fee, shared by weight
+landed cost per unit = (item USD + shipping shared by weight) × FX
+                       shipping ≈ $10/kg, real number per shipment
 ```
 
 Frozen on receipt. Unknown historical cost stays **unknown**, never zero. The day margins become real is the day we start making decisions instead of vibes.
 
 ### 4.6 Stock tells the truth
 
-One function moves stock. Nothing else touches the number. On hand comes from receipts and sales. Incoming comes from open supplier orders. The storefront says `Ирж байна, ~5 хоногт` instead of just disappearing.
+One function moves stock. Nothing else touches the number. On hand comes from receipts and sales. When the number goes negative, that's the number confessing it was wrong: mom gets a ping to count it, and the paid order still ships. Incoming comes from open supplier orders. The storefront says `Ирж байна, ~5 хоногт` instead of just disappearing.
 
 ### 4.7 Reorder reminders: the cheat code
 
@@ -283,51 +285,15 @@ And **likes are a vanity metric.** Mom's collage had 1 like and drove chats. The
 
 ### No AI slop media
 
-She hates AI-generated images and video, and she's right. Nobody trusts a supplement shop that can't afford a photo.
-
-- **Real product photos.** From the catalog, from R2.
-- **Real footage.** Hands holding the actual bottle. Boxes arriving. Mom packing 40 orders. A real person explaining which magnesium is for sleep.
-- **Her design system as templates.** Her taste, plus mom's conversion elements: price, days of supply, "comment ҮНЭ".
-
-### Formats
-
-1. **Catalog reels, fully automated.** 7 to 15 seconds: hook, product with motion, dose, days of supply, price, "comment ҮНЭ". Rendered from the database so price and stock are never wrong. 2 to 3 a day per page.
-2. **FAQ reels.** From real Messenger questions: expiry, dosage, kids, which magnesium. The 1,697-conversation export already has the themes ranked.
-3. **Arrival reels, half automated.** Shipment lands → mom films 10 seconds of boxes on her phone → sends to the Telegram bot → pipeline cuts it, adds subtitles, prices, branding → queued. "New stock just arrived" is a monster format for a shop like this.
-4. **Human reels.** Talking head, UGC style. Agents write the scripts and hooks and do the editing. Humans do the trust.
+She hates AI-generated images and video, and she's right. Nobody trusts a supplement shop that can't afford a photo. Real product photos. Real footage: hands holding the actual bottle, boxes arriving, mom packing 40 orders. Her design system as templates, carrying mom's conversion elements: price, days of supply, "comment ҮНЭ".
 
 ### The loop
 
-```text
-reel goes out with "comment ҮНЭ"
-        ↓
-Zernio comment-to-DM fires a product card
-        ↓
-bot takes over, places the order
-        ↓
-order tagged with the reel it came from
-        ↓
-weekly report: which reels sold
-        ↓
-make more of the winners, boost ONLY the winners
-        ↓
-the random $8 boost is dead
-```
+Reel goes out with "comment ҮНЭ", Zernio comment-to-DM fires a product card, the bot takes the order, the order is tagged with the reel, and the weekly report says which reels sold. Make more of the winners. Boost ONLY the winners. The random $8 boost is dead.
 
-Zernio is the pipe for all of it: posts, scheduled reels, Instagram Trial Reels shown only to non-followers that graduate when they perform, comment-to-DM automations, analytics, best time to post. Instagram gets added because reels reach further there and Zernio covers both from one call.
+My girlfriend owns voice, hooks, the calendar, the look and where the money goes. Agents make volume underneath her taste, and nothing she hasn't seen gets published. Ever.
 
-Rendering is Remotion on a cron, on GitHub Actions or the dev-box. Not on Workers.
-
-### Approval
-
-Every morning my girlfriend gets the day's rendered reels on Telegram. Approve or reject, one tap. **Nothing she hasn't seen gets published. Ever.**
-
-She owns voice, hooks, the content calendar, template look, and where the money goes. Agents make volume underneath her taste.
-
-### Things that will get us banned or sued
-
-- **Health claims.** No "cures," no "treats," no "No.1." Meta rejects it and the brands we're becoming official for will hate it.
-- **Instagram since late August 2026:** buttons and cards to non-followers in private replies get refused, and the failed call burns the one reply you get. Plain text first, buttons after they answer.
+Formats, Zernio specifics, the approval flow and the banned list live in [CREATIVE.md](CREATIVE.md).
 
 ---
 
@@ -340,7 +306,7 @@ When that clears, marketing goes hard, and two dedicated brand sites go live wit
 - Brand sites own the canonical URLs for their products.
 - **No "official" or "authorized" wording until the authorization actually permits it.** Then permit numbers and approved wording only.
 - Brand guidelines win over our taste on brand sites.
-- At relaunch: cancel the Search Console removals, add the brand domains as properties, submit a database-driven sitemap per host, and 301 **every** old URL. Old backlinks are the cheapest SEO on earth.
+- At relaunch, 301 **every** old URL. Old backlinks are the cheapest SEO on earth. The day-of list is [RELAUNCH.md](RELAUNCH.md).
 
 ---
 
@@ -348,25 +314,16 @@ When that clears, marketing goes hard, and two dedicated brand sites go live wit
 
 ```text
 vite-plus monorepo, pnpm catalogs
-Solid 2, start mode
-  + server components ("lakes"): markup ships once, client components in slots
+Solid 2 start mode, server components only after they pass the gate
 Effect 4 RPC: one RpcGroup contract, tagged errors
-PlanetScale Postgres via Hyperdrive, drizzle-orm 1.0 effect-postgres
-better-auth
-Alchemy 2: prod, staging, and a stage per PR with its own database branch
+one PlanetScale Postgres via Hyperdrive, drizzle-orm 1.0 effect-postgres
+better-auth, Google sign-in
+Alchemy 2 if it proves itself, wrangler if it doesn't
 Cloudflare Workers Cache: Cache-Tag + purge, the ONLY cache layer
 Remotion for reels, Zernio for everything social
 ```
 
-Beta and RC are fine. I said so. Pin exact versions and upgrade on purpose.
-
-Server components get one gate before the storefront depends on them, on a real preview deploy:
-
-```text
-correct status codes · single-hop 301s · canonical, meta, JSON-LD in the rendered HTML · sitemap per host
-```
-
-My own DUND demo already ran them on a Worker: Lighthouse mobile 90 to 93, CLS 0.06, 5 to 15 KB navigations. Its weak spot was blocking time (180 to 269ms). Watch it.
+Beta and RC are fine. I said so. Pin exact versions and upgrade on purpose. The why, the gates and the gotchas are in [STACK.md](STACK.md).
 
 **And the rule above the stack:**
 
@@ -395,31 +352,41 @@ Break these and the PR gets closed without a review.
 11. **Mom never needs a laptop.** If a flow only works on desktop, it doesn't work.
 12. **Stable URLs forever.** Slug changes 301. Old URLs never 404.
 13. **No feature without a person.** Name who uses it and what they stop doing.
-14. **Briefs are exact.** SWE-2 does the hands-on work and it's free. Opus plans and reviews and it's not. Write briefs a cheaper model can't misread.
+14. **Briefs are exact.** Opus plans and reviews. Sonnet builds from the brief. Write briefs with files, interfaces and a done-criterion so plain that done and not-done can't be confused.
 15. **Docs hold decisions. Commits hold history.** Delete finished plans. No `validate.py` for the plans. I'm looking at you, past me.
 
 ---
 
 ## 10. Order of battle
 
+Mom is selling right now, by hand, cash on delivery, into a paper notebook. So the downtime goes to the things that take work off her phone today. The storefront can wait. Nobody's looking at it anyway.
+
 ```text
-1. stop the bleeding in vit-store      hotfix the name and stock bugs, start logging purchases,
-                                       reconcile 57 pending orders and 65 pending transfers,
-                                       pick an opening inventory date and count the A-items
-2. Messenger bot live on pilot page    comment-to-DM → bot → addOrder → handoff on Telegram
-3. payments + dispatch + mobile dash   plus Telegram pings and quick actions. after this, mom only packs
-4. packing brief + reorder screen      stock kept honest by receipts
-5. reels engine                        catalog reels, arrival reels, girlfriend's approval flow
-6. reels → orders reporting            boost only winners
-7. schema v2 + data copy               as a financial reconciliation: counts, totals, stock all match
-8. v2 slice                            product edit → server-component product page → verified checkout
-9. three storefronts                   amerikvitamin.mn + the two official brand sites
-10. relaunch                           GSC removals cancelled, sitemaps, 301 map, marketing goes hard
-11. reorder reminders + restock alerts
-12. Amazon email ingest                with landed cost, so margins finally exist
+PHASE A: the bot and the dashboard                          ← we are here
+0. foundation           one DB over Hyperdrive, Workers deployed, /health round-trips on prod
+1. schema v2            COMMERCE-RULES as code. one test file proves every rule
+2. legacy import        483 orders, 367 customers, 652 products. reconciles to the tugrik
+3. dashboard v1         Today page, one-line entry, COD, pack list. side by side with the notebook
+4. payments             QPay, Khaan matching, the unmatched-transfer queue
+5. delivery             tu-delivery dispatch, webhook sets delivered
+6. telegram             new order, packing brief, unmatched transfer, oversold, handoff buttons
+7. the bot              ported from vit-store, handoff state machine, live on the pilot page
+8. cutover              vit-store checkout off. one system
+
+PHASE B: stock that tells the truth
+9.  opening count       barcode scan, gtin learned on first beep, A-items exact
+10. receipts            supplier orders, scan-to-receive, landed cost frozen
+11. Amazon email        order-level facts in, "needs lines" queue, screenshot import for SKUs
+12. reorder screen      sales velocity → buy list → approve
+
+LATER
+reels engine and reels → orders reporting
+three storefronts behind the server-components gate
+relaunch (RELAUNCH.md)
+reorder reminders and restock alerts
 ```
 
-The month of downtime is for 1 through 4 plus the v2 foundation. Mom should be off manual duty **before** the marketing turns on, not after it melts her phone.
+Mom should be off manual duty **before** the marketing turns on, not after it melts her phone.
 
 ---
 
@@ -432,6 +399,7 @@ AI-generated product photos           AI-generated "lifestyle" videos
 a desktop admin mom has to sit at     a dashboard nobody opens
 a loyalty points program              a mobile app in the App Store
 a recommendation engine               a CRM
+a Messenger client in the dashboard
 a second cache layer                  a plugin system
 anything with "AI-powered" in the copy
 ```
