@@ -1,17 +1,9 @@
 import { defineConfig } from "vite-plus";
 
+import { formatIgnores, lint } from "./lint.config";
+
 export default defineConfig({
-  fmt: {
-    ignorePatterns: [
-      "**/file-routes.d.ts",
-      "packages/db/migrations/**",
-      ".agents/**",
-      "docs/legacy/*.html",
-    ],
-  },
-  lint: {
-    jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
-    rules: { "vite-plus/prefer-vite-plus-imports": "error" },
-    options: { typeAware: true, typeCheck: true },
-  },
+  fmt: { ignorePatterns: formatIgnores },
+  lint,
+  staged: { "*": "vp check --fix" },
 });

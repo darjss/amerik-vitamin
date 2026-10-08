@@ -14,6 +14,10 @@
     "ready": "vp check && vp run -r build"
   },
   "devDependencies": {
+    "@effect/tsgo": "catalog:",
+    "@oxlint/plugins": "catalog:",
+    "eslint-plugin-solid": "catalog:",
+    "oxlint": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
