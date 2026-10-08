@@ -44,8 +44,22 @@ infra                Alchemy stack `amerik-vitamin`
 | @solidjs/router           | 2.0.0-next.35                                                       | next.36 is inside the release age                                                                                                              |
 | filesystem-routing        | 0.4.0                                                               | File routes, required by the router                                                                                                            |
 | @cloudflare/vite-plugin   | 1.63.0                                                              | Builds the web Worker. Alchemy injects its own copy in dev and deploy                                                                          |
+| vitest, @effect/vitest    | 5.0.3, 4.0.1                                                        | Tests. vitest matches the copy bundled in vite-plus 1.1.0                                                                                      |
+| oxlint, @oxlint/plugins   | 1.87.0                                                              | The oxlint vite-plus 1.1.0 runs. `@oxlint/plugins` must match it exactly for anti-slop                                                         |
+| @effect/tsgo              | 0.50.0                                                              | Effect diagnostics in `vp check`. `prepare` runs `effect-tsgo patch --oxlint` on every install                                                 |
+| eslint-plugin-solid       | 0.18.1                                                              | Solid v2-strict rules on `apps/web`                                                                                                            |
 
-`effect`, `@effect/sql-pg`, `@effect/platform-node` and `@cloudflare/workers-types` are pnpm `overrides` to their catalog version. Without that, optional peers resolve to stale copies and drizzle-orm installs twice, which breaks types between `@amerik/db` and alchemy.
+`effect`, `@effect/sql-pg`, `@effect/platform-node`, `@cloudflare/workers-types`, `vitest` and `typescript` are pnpm `overrides` to their catalog version. Without that, peers resolve to stale copies: drizzle-orm installs twice and breaks types between `@amerik/db` and alchemy, and a second vitest splits the test runner.
+
+## Lint
+
+`lint.config.ts` is the one lint config. It runs oxlint's defaults plus:
+
+- [anti-slop](https://github.com/dmmulroy/anti-slop), vendored in `tools/oxlint/anti-slop` with its Effect rules. The copy is ours: change rules there and record the change in its `UPSTREAM.md`.
+- effect-tsgo's `antipattern` and `correctness` presets on Effect code.
+- eslint-plugin-solid v2-strict on `apps/web`.
+
+Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 
 ## Planned
 
