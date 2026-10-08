@@ -10,7 +10,7 @@ import * as RpcServer from "effect/rpc/RpcServer";
 
 import { pingDatabase } from "./implementation/health";
 import { ApiHandlers } from "./implementation/rpc";
-import { Postgres } from "./resources";
+import { Postgres } from "./infrastructure/database";
 import { ApiWorker } from "./worker";
 
 export default ApiWorker.make(
