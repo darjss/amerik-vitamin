@@ -24,6 +24,7 @@ Every post and every reel answers all three. A beautiful creative that skips one
 - Real footage: hands holding the bottle, boxes arriving, mom packing orders, a person explaining a product.
 - **No AI-generated images or video.** Nobody trusts a supplement shop that can't afford a photo.
 - Her layouts as templates, always carrying price, days of supply, and the call to action.
+- Arrival collages are rendered from the DB in her layout, from in-stock variants only. See [KILL-THE-NOTEBOOK.md](KILL-THE-NOTEBOOK.md#5-the-collage-comes-out-of-the-db).
 - **One shop name per page.** Not three.
 
 ## Formats
