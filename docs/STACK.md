@@ -31,21 +31,21 @@ infra                Alchemy stack `amerik-vitamin`
 
 | Tool                      | Version                                                             | Why                                                                                                                                            |
 | ------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| vite-plus (`vp`)          | 1.0.0, and the `vite` alias to `@voidzero-dev/vite-plus-core` 1.0.0 | One CLI for install, dev, build, lint, format                                                                                                  |
+| vite-plus (`vp`)          | 1.1.0, and the `vite` alias to `@voidzero-dev/vite-plus-core` 1.1.0 | One CLI for install, dev, build, lint, format                                                                                                  |
 | pnpm                      | 12, workspace catalogs                                              | Same as tranzfer2                                                                                                                              |
 | typescript                | 7.0.2                                                               | Native compiler, same as tranzfer2                                                                                                             |
-| effect                    | 4.0.0                                                               | RPC contracts with tagged errors, services, config. 4.0.1 was inside the 24h release age                                                       |
-| @effect/sql-pg            | 4.0.0                                                               | Postgres driver under drizzle's `effect-postgres`                                                                                              |
+| effect                    | 4.0.1                                                               | RPC contracts with tagged errors, services, config. 4.0.2 is inside the 24h release age                                                        |
+| @effect/sql-pg            | 4.0.1                                                               | Postgres driver under drizzle's `effect-postgres`                                                                                              |
 | drizzle-orm, drizzle-kit  | 1.0.0-rc.5-ab785fc                                                  | Effect-native Drizzle. The rc tag tranzfer2 and the relay use                                                                                  |
-| alchemy                   | 2.0.0-beta.80                                                       | Stages (prod plus local dev), Hyperdrive, Docker, Command. beta.81 exists                                                                      |
-| @cloudflare/workers-types | 5.20260911.1                                                        | 5.20261005.1 was inside the release age                                                                                                        |
-| solid-js, @solidjs/web    | 2.0.0-rc.13                                                         | API frozen. Fine-grained, small, server components                                                                                             |
+| alchemy                   | 2.0.0-beta.81                                                       | Stages (prod plus local dev), Hyperdrive, Docker, Command                                                                                      |
+| @cloudflare/workers-types | 5.20261007.1                                                        | Newest past the release age                                                                                                                    |
+| solid-js, @solidjs/web    | 2.0.0-rc.13                                                         | API frozen. rc.14 is inside the release age                                                                                                    |
 | @solidjs/vite-plugin      | 3.0.0-next.47                                                       | Start mode: generated entries, SSR, server functions. `renderMode: "async"` needs next.40 or newer, and next.43 passes an option rc.13 rejects |
-| @solidjs/router           | 2.0.0-next.32                                                       | next.34 was too new for the minimum release age                                                                                                |
+| @solidjs/router           | 2.0.0-next.35                                                       | next.36 is inside the release age                                                                                                              |
 | filesystem-routing        | 0.4.0                                                               | File routes, required by the router                                                                                                            |
-| @cloudflare/vite-plugin   | 1.54.8                                                              | Builds the web Worker. Alchemy injects its own copy in dev and deploy                                                                          |
+| @cloudflare/vite-plugin   | 1.63.0                                                              | Builds the web Worker. Alchemy injects its own copy in dev and deploy                                                                          |
 
-Oxlint presets, `@effect/tsgo` and the oxlint/tsgolint overrides from tranzfer2 are not installed. `vp check` passes without them.
+`effect`, `@effect/sql-pg`, `@effect/platform-node` and `@cloudflare/workers-types` are pnpm `overrides` to their catalog version. Without that, optional peers resolve to stale copies and drizzle-orm installs twice, which breaks types between `@amerik/db` and alchemy.
 
 ## Planned
 
@@ -90,6 +90,5 @@ Alchemy stays only if it proves deploy, migrations, secrets and rollback on prod
 ## Check before relying on
 
 - `@effect/sql-pg` uses `node:net`. `/health` round-trips through the local Hyperdrive passthrough in `alchemy dev`. It is unproven against deployed Hyperdrive and PlanetScale until the first production deploy.
-- The Cloudflare API token needs the mTLS certificates permission (account, SSL and Certificates) for the Hyperdrive CA upload. The token in `.env` lacked it when this was scaffolded.
 - Does Zernio publish Facebook **Reels**, or just Facebook videos? Instagram Reels are confirmed.
 - Amazon's multi-item add-to-cart URL for the prefilled reorder cart.

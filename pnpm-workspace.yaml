@@ -6,21 +6,27 @@ packages:
 catalogMode: prefer
 
 catalog:
-  "@cloudflare/workers-types": 5.20260911.1
-  "@effect/platform-node": 4.0.0
-  "@effect/sql-pg": 4.0.0
+  "@cloudflare/vite-plugin": 1.63.0
+  "@cloudflare/workers-types": 5.20261007.1
+  "@effect/platform-node": 4.0.1
+  "@effect/sql-pg": 4.0.1
+  "@solidjs/router": 2.0.0-next.35
   "@solidjs/web": 2.0.0-rc.13
   "@types/node": ^24
-  alchemy: 2.0.0-beta.80
+  alchemy: 2.0.0-beta.81
   drizzle-kit: 1.0.0-rc.5-ab785fc
   drizzle-orm: 1.0.0-rc.5-ab785fc
-  effect: 4.0.0
+  effect: 4.0.1
   solid-js: 2.0.0-rc.13
   typescript: 7.0.2
-  vite: npm:@voidzero-dev/vite-plus-core@1.0.0
-  vite-plus: 1.0.0
+  vite: npm:@voidzero-dev/vite-plus-core@1.1.0
+  vite-plus: 1.1.0
 overrides:
   vite@*: "catalog:"
+  "@effect/sql-pg": "catalog:"
+  "@effect/platform-node": "catalog:"
+  "@cloudflare/workers-types": "catalog:"
+  effect: "catalog:"
 peerDependencyRules:
   allowAny:
     - vite
