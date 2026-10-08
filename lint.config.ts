@@ -50,7 +50,19 @@ export const lint = defineConfig({
   overrides: [
     {
       files: effectFiles,
-      rules: { ...antipattern.rules, ...correctness.rules, ...effectErrorRules },
+      rules: {
+        ...antipattern.rules,
+        ...correctness.rules,
+        ...effectErrorRules,
+        // Effect 4 ships rpc, http and sql as unstable modules. We use them on
+        // purpose and pin effect exactly (docs/STACK.md).
+        "effecttsgo/unstable-api-usage": "off",
+      },
+    },
+    {
+      // Composition edges: the Worker entry, the Alchemy stack and the migrate script.
+      files: ["apps/api/src/index.ts", "infra/alchemy.run.ts", "packages/db/src/migrate.ts"],
+      rules: { "effecttsgo/strict-effect-provide": "off" },
     },
     {
       files: webFiles,
