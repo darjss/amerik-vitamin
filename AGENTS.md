@@ -21,8 +21,8 @@ Amerik huns baraa's store, dashboard, Messenger bot, supply and reels. The goal:
 - Smallest direct change. Inferred types, named exports. No `any`, no casting wrappers.
 - New abstractions, helpers and test files need the owner's approval first.
 - Use `vp` for everything pnpm or npx would do. After changes run `vp check` and the relevant `vp run build`.
-- Pin prerelease versions exactly, and upgrade one package at a time. When a version is too new for the release age, pin an older one. Release-age settings and `minimumReleaseAgeExclude` stay untouched.
-- Opus plans and reviews. Sonnet implements from exact briefs: files, interfaces, done-criteria.
+- Pin every version exactly and keep it on the newest release past the release age. When the newest is too new, pin the one before it. Release-age settings and `minimumReleaseAgeExclude` stay untouched.
+- Opus 5.5 plans, implements and reviews. Hand work to Sonnet or another model only when the owner asks, and then with an exact brief: files, interfaces, done-criteria.
 - Parallel agents get worktrees under `~/dev/scratchpad/amerik-vitamin`.
 - Docs hold standing decisions. When one changes, update its single home and cite the PR. Delete finished plans.
 

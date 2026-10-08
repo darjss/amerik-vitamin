@@ -2,7 +2,7 @@
 
 MANIFESTO.md is why. This file is what's true right now. Read both before planning anything.
 
-**Current phase: A, the bot plus the dashboard.** The order of battle is MANIFESTO §10.
+**Current phase: A, the bot first, then the dashboard.** The order of battle is MANIFESTO §10.
 
 Facts here carry a status: **measured** (pulled from a system), **reported** (from email or the owner, not checked in code), **inferred** (an estimate), or **decided** (a standing call). Don't upgrade a fact's status in your head. If you act on an inferred number, say so.
 

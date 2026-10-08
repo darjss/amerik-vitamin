@@ -2,7 +2,7 @@
 
 Versions live in package manifests. This file says why, and what to watch.
 
-Beta and RC are fine here. Pin them exactly, and upgrade one package at a time, on purpose.
+Beta and RC are fine here. Pin them exactly, and track the newest release past the release age.
 
 ## Shape
 
