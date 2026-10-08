@@ -44,6 +44,10 @@ Each session got one tag from a Sonnet reader, and the tags are grouped into buc
 
 Only about a quarter built something new. About 58% was rework or upkeep. Another 17% paid a model to be the admin UI that never got built. Subagents burned 1.22B of it, 26%, mostly reviewing each other.
 
+## The real root cause
+
+Mom never used the website dashboard for new arrivals, and she still doesn't. When stock arrives she posts it to Facebook as collages: 70+ images, 9 to 12 products per image, repeats included. The site's stock was synced afterwards by reading her posts, through the owner and an agent. The biggest stock session (pi, 2026-08-22 to 08-27, about 218M tokens with subagents) was a model working backwards from her marketing to the inventory. The rewrite fixes it by turning that around: the DB renders her collages. See [../KILL-THE-NOTEBOOK.md](../KILL-THE-NOTEBOOK.md#5-the-collage-comes-out-of-the-db).
+
 ## The 667M-token string
 
 ecommerce-dashboard had a product variants table, and ecom-dashboard deleted it on 2025-01-16 in commit `570107d`, message "upd". After that, every repo stored potency, count and form inside the product name. The catalog was rebuilt from scratch at least four times:

@@ -163,6 +163,9 @@ Rebuilding stock history from scratch is impossible. Too much stock, too little 
 - **The notebook is the real ledger today (reported).** Mom writes every order and every inventory item in a paper notebook. That's her system of record, not the DB, and nothing gets sent anywhere from it. Treat it as the current source of truth for what sold and what's in stock.
   - Consequences: it's the best source for sales history and velocity, and the reference point for the opening inventory count.
   - **Decided: the software replaces the notebook.** It has to be easier than paper, or she keeps the notebook and the data drifts. The plan, targets, and switch-over are in [KILL-THE-NOTEBOOK.md](KILL-THE-NOTEBOOK.md).
+- **Her Facebook collages are the real catalog (reported).** When a shipment arrives she does not touch the dashboard. She takes product photos and posts them to Facebook as simple collages with prices: 70+ images per arrival, 9 to 12 products per image, with products repeated across images. The website's stock and prices are then synced by hand from those collages, through the owner and an agent session.
+  - Cost (measured): one such sync, the pi session of 2026-08-22 to 08-27, used about 218M tokens including subagents. In 2026 catalog and stock chores took 667M tokens. See [legacy/agent-history.md](legacy/agent-history.md).
+  - **Decided: the DB renders the collages.** She confirms arrivals in one screen and the collages come out of the DB, so posting them keeps stock right. See [KILL-THE-NOTEBOOK.md](KILL-THE-NOTEBOOK.md#5-the-collage-comes-out-of-the-db).
 - **A physical store is likely coming.** It's a showroom, pickup point and fulfillment hub on the same backend and the same inventory, not a separate stock universe. Every order carries:
   - `source`: messenger_bot, messenger_human, web, brand_site, phone, walk_in, notebook
   - `fulfillment_type`: courier, pickup, in_store
