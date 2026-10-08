@@ -81,6 +81,14 @@ td.n, th.n { text-align: right; }
 .errs .big { font-family: Unbounded, sans-serif; font-weight: 600; min-width: 4.4ch; font-variant-numeric: tabular-nums; }
 .errs code { font-size: 0.84rem; background: var(--grid); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
 .errs small { color: var(--ink-3); display: block; }
+.quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.quote { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.quote b { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+.quote p { margin: 0; color: var(--ink-2); font-size: 0.9rem; }
+.quote .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.quote .tags span { font-size: 0.75rem; background: var(--grid); border-radius: 999px; padding: 2px 8px; color: var(--ink-2); }
+.rules { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ink-2); }
+.rules b { color: var(--ink); }
 .tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.82rem; padding: 6px 9px; border-radius: 8px; opacity: 0; transition: opacity .12s; z-index: 9; max-width: 280px; }
 .foot { margin-top: 64px; color: var(--ink-3); font-size: 0.85rem; max-width: 72ch; }
 .foot li { margin-bottom: 4px; }
@@ -159,6 +167,20 @@ td.n, th.n { text-align: right; }
   </section>
 
   <section>
+    <h2>What the replays showed</h2>
+    <p class="sub">Replay Vision, PostHog's AI session watcher, summarized 21 recorded sessions between Aug 28 and Sep 3. Eleven went cleanly, mostly OTP logins and guest checkouts. Ten hit friction, and almost all of it sits between the cart, the order and the payment hand-off.</p>
+    <div class="two">
+      <div class="card"><div class="eyebrow">Friction themes, sessions affected</div><div class="bars" id="uxThemes"></div></div>
+      <div class="card"><div class="eyebrow">How it went</div><svg id="uxOutcome" viewBox="0 0 440 200" role="img" aria-label="Session outcomes"></svg></div>
+    </div>
+    <div class="quotes" id="uxQuotes"></div>
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow">UX rules for the rewrite, straight from these sessions</div>
+      <ol class="rules" id="uxRules"></ol>
+    </div>
+  </section>
+
+  <section>
     <h2>Browse at night, buy at noon</h2>
     <p class="sub">Ulaanbaatar time. Visitors peak at 22:00. Orders peak at 12:00 and 16:00, around lunch and late afternoon. People pick things out in bed and pay the next day.</p>
     <div class="two">
@@ -189,6 +211,27 @@ const D = {
   products: [["D3 + K2 2,000 IU, 300 softgels",190,120000],["Magnesium Glycinate 1,000 mg, 240 caps",135,115000],["D3 + K2 5,000 IU, 300 softgels",115,110000],["Micro Ingredients D3 + K2 2,000 IU, 300",83,125000],["Triple Strength Omega-3, 240 softgels",78,155000],["Methylated B Complex, 240 caps",54,85000],["NatureBell Magnesium Glycinate 500 mg",52,110000],["Micro Ingredients D3 & K2 5,000 IU (MK-7)",50,135000],["Micro Ingredients D3 + K2 5,000 IU (MK-7)",45,110000],["Micro Ingredients D3 50,000 IU + K2, 240",44,145000],["Multi Collagen Peptides, 2 lb",27,200000],["Myo & D-Chiro Inositol, 240 caps",27,135000]],
   dupes: [["Vitamin D3+k2 5,000 IU D3 + 100 MCG K2 300 Softgels",115,"110,000₮"],["Micro Ingredients, Vitamin D3 & K2, 5,000 IU D3 & 100 mcg K2 (MK-7), 300 Softgels",50,"135,000₮"],["Micro Ingredients, Vitamin D3 + K2, 5,000 IU D3 + 100 mcg K2 (MK-7), 300 Softgels",45,"110,000₮"]],
   errors: [[2728,"Too many OTP attempts. Please try again later.","from just 4 people: the 4-digit OTP form kept re-submitting itself after each failure"],[1368,"Transition was aborted because of invalid state","454 people. View transitions colliding with navigation"],[1078,"Multiple elements found with view-transition-name: product-image-…","about 420 people across a dozen product ids. The same product image rendered twice on one page"],[170,"Script error.","56 people, cross-origin script with no details"],[88,"Load failed","55 people, flaky mobile networks"],[69,"Not a QPay payment","7 people. The provider-flip bug, here only the client-side share"],[63,"Importing a module script failed.","8 people, stale chunks after a deploy"]],
+  ux: {
+    themes: [["Cart edited after the order was created: new order ids, stale totals", 3], ["Abandoned at the payment step", 3], ["404 on a payment link or page", 3], ["Bank app hand-off failed, customer started over", 2], ["Guest's own order missing from the profile page", 2], ["Cart emptied or kept after ordering", 2], ["Tab-hopping and QR or copy friction on the payment page", 1], ["Product image rendered as a solid block", 1], ["Login prompt in the middle of browsing", 1]],
+    outcome: [["Clean", 11], ["Friction", 10]],
+    quotes: [
+      ["The 1,121,000₮ customer", "10 items in the cart. Tapped Khan bank, the app hand-off happened outside the browser, and the customer came back and started a new checkout instead of resuming the existing one. That's the repeated-orders bug, recorded.", ["qpay deeplink handoff failure", "repeated checkout order creation"]],
+      ["Order 0NDQ934J, 236,000₮", "Created an order, went back to the cart, removed the zinc. The cart total updated, but the payment link still showed the old items and the old total. Tried QPay, then Sono, then left.", ["stale order total after cart update", "payment abandonment"]],
+      ["KXUUW16H, then O8VYH6SV", "Ordered 2 items, kept shopping in a new tab, hit a 404 on a payment link, added 2 more items and checked out again. Two orders now exist. Pressed 'Шилжүүлсэн' on the second.", ["404 page error", "duplicate order creation"]],
+      ["Order GC855DYO31", "Came back from the Sono app with the cart still full. The profile page said 'Захиалга олдсонгүй' (no orders found). Bounced between the payment link and the profile looking for the order.", ["cart persisted after order creation", "empty order history on profile page"]],
+      ["Kids Omega-3", "The product image showed as a solid yellow block. Opened the same product in a new tab to see it, compared it with Triple Strength, then came back and bought it anyway.", ["rendering issue with product images"]],
+    ],
+    rules: [
+      "<b>One open checkout per customer.</b> While an order is unpaid, the cart edits that order and the payment link always shows the live total. No silent new order ids.",
+      "<b>Returning from a bank app lands on the pending payment</b>, showing \"did it go through?\" with live status. Never the home page, never a new checkout.",
+      "<b>The payment link is the order page.</b> Guests find their order by phone without logging in. The profile never says \"no orders\" right after someone ordered.",
+      "<b>Old payment links never 404.</b> A paid, expired or cancelled order shows its state.",
+      "<b>Show only the payment methods that work.</b> No Sono until it's approved. Put QR first in the Facebook in-app browser, the place where 42% of Khan bank taps never open the app.",
+      "<b>Clear the cart only when payment is confirmed</b>, not at order creation and not at random.",
+      "<b>One image per product per page.</b> No duplicate view-transition names, and an image never renders as a blank block.",
+      "<b>Browsing never asks for a login.</b> These customers buy first and sign in later, if ever.",
+    ],
+  },
   hours: [[0,9,244],[1,10,145],[2,3,78],[3,3,49],[4,0,35],[5,1,57],[6,1,117],[7,5,209],[8,9,283],[9,18,343],[10,11,348],[11,20,437],[12,30,381],[13,17,443],[14,22,452],[15,13,476],[16,31,453],[17,19,415],[18,25,420],[19,12,355],[20,14,404],[21,14,403],[22,13,532],[23,16,389]],
 };
 
@@ -309,6 +352,25 @@ bars($("typing"), D.typing, { label: r => `"${r[0]}"`, segs: r => [{ v: r[1], c:
 bars($("products"), D.products, { segs: r => [{ v: r[1], c: "var(--s1)" }], show: r => `${r[1]}`, title: r => `<b>${esc(r[0])}</b><br>${r[1]} people · ${int(r[2])}₮` });
 $("dupes").innerHTML = D.dupes.map(([n, p, price]) => `<div><span>${esc(n)}</span><span>${p} people</span><span>${price}</span></div>`).join("");
 $("errors").innerHTML = D.errors.map(([n, msg, note]) => `<li><span class="big">${int(n)}</span><span><code>${esc(msg)}</code><small>${esc(note)}</small></span></li>`).join("");
+
+bars($("uxThemes"), D.ux.themes, { segs: r => [{ v: r[1], c: "var(--bad)" }], show: r => `${r[1]}`, title: r => `<b>${esc(r[0])}</b><br>${r[1]} of 21 summarized sessions` });
+{
+  const svg = $("uxOutcome"), W = 440, H = 200, cx = 110, cy = 100, r = 74, rin = 46;
+  const total = D.ux.outcome.reduce((s, o) => s + o[1], 0); let a0 = -Math.PI / 2, s = "";
+  const colors = ["var(--s3)", "var(--bad)"];
+  D.ux.outcome.forEach(([k, v], i) => {
+    const a1 = a0 + v / total * Math.PI * 2 - 0.03, large = a1 - a0 > Math.PI ? 1 : 0;
+    const p = (ang, rr) => `${cx + rr * Math.cos(ang)},${cy + rr * Math.sin(ang)}`;
+    s += `<path d="M${p(a0, r)} A${r},${r} 0 ${large} 1 ${p(a1, r)} L${p(a1, rin)} A${rin},${rin} 0 ${large} 0 ${p(a0, rin)} Z" fill="${colors[i]}" data-t="${esc(`<b>${k}</b><br>${v} sessions`)}"/>`;
+    s += `<rect x="230" y="${70 + i * 34}" width="12" height="12" rx="3" fill="${colors[i]}"/><text class="note" x="250" y="${80 + i * 34}" style="font-size:13px">${k}: ${v} sessions</text>`;
+    a0 = a1 + 0.03;
+  });
+  s += `<text x="${cx}" y="${cy + 6}" text-anchor="middle" style="font: 600 20px Unbounded, sans-serif; fill: var(--ink)">${total}</text>`;
+  svg.innerHTML = s;
+  svg.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+}
+$("uxQuotes").innerHTML = D.ux.quotes.map(([h, body, tags]) => `<div class="quote"><b>${esc(h)}</b><p>${esc(body)}</p><div class="tags">${tags.map(x => `<span>${esc(x)}</span>`).join("")}</div></div>`).join("");
+$("uxRules").innerHTML = D.ux.rules.map(x => `<li>${x}</li>`).join("");
 
 const hourChart = (el, idx, color, peakFn) => {
   const W = 440, H = 180, pl = 30, pb = 22, pt = 8;

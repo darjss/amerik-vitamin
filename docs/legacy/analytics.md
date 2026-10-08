@@ -41,6 +41,41 @@ In total that's about 73M₮ across 316 orders, with 1.6 to 1.9 items per order.
 - **`Not a QPay payment`**: 69 client-side events from 7 people. That's only the share the browser saw of the provider-flip bug.
 - **Total exceptions**: August had 2,934, the worst month.
 
+## What the session replays showed
+Replay Vision, PostHog's AI session watcher, summarized 21 recorded sessions between 2026-08-28 and 09-03. 11 were clean, mostly OTP logins and guest checkouts. 10 had friction, and nearly all of it sits between the cart, the order and the payment hand-off.
+
+| Friction theme | Sessions |
+|---|---|
+| Cart edited after the order was created: new order ids, stale totals on the payment link | 3 |
+| Abandoned at the payment step | 3 |
+| 404 on a payment link or page | 3 |
+| Bank app hand-off failed, customer started a new checkout instead of resuming | 2 |
+| Guest's own order missing from the profile ("Захиалга олдсонгүй") | 2 |
+| Cart emptied, or kept, after ordering | 2 |
+| Tab-hopping and QR or copy friction on the payment page | 1 |
+| Product image rendered as a solid block | 1 |
+| Login prompt in the middle of browsing | 1 |
+
+What the sessions showed:
+- **The 1,121,000₮ customer** had 10 items in the cart and tapped Khan bank. The app hand-off happened outside the browser, and the customer came back and started a new checkout instead of resuming. This is the repeated-orders bug, caught on a recording.
+- **Order 0NDQ934J** was created, then the customer removed an item in the cart. The cart updated, but the payment link still showed the old items and total. The customer tried QPay, then Sono, then left.
+- **KXUUW16H, then O8VYH6SV.** The customer ordered 2 items and kept shopping in a new tab. They hit a 404 on a payment link, added 2 items, and checked out again, leaving two orders.
+- **Order GC855DYO31.** The customer came back from the Sono app with the cart still full. The profile said "no orders found", and they bounced between the payment link and the profile.
+- **Kids Omega-3.** The product image rendered as a solid yellow block. The customer opened a new tab to see it, then bought it anyway.
+- **Customers buy first and sign in later, if ever.** Guest checkout is the main path.
+
+### UX rules for the rewrite
+1. **One open checkout per customer.** While an order is unpaid, the cart edits that order, and the payment link always shows the live total. No silent new order ids.
+2. **Returning from a bank app lands on the pending payment**, showing live status and "did it go through?". It never lands on the home page or starts a new checkout.
+3. **The payment link is the order page.** Guests find their order by phone without logging in. The profile never says "no orders" right after someone ordered.
+4. **Old payment links never 404.** A paid, expired or cancelled order shows its state.
+5. **Show only payment methods that work.** No Sono until the store is approved. Put QR first in the Facebook in-app browser.
+6. **Clear the cart only when payment is confirmed.**
+7. **One image per product per page.** No duplicate view-transition names, and never a blank image block.
+8. **Browsing never asks for a login.**
+
+The Replay Vision tools need the `replay_scanner:read` scope on the PostHog key. These summaries were read from the `$recording_observed` events instead. Recordings are kept for 30 days.
+
 ## When people shop
 In Ulaanbaatar time, visitors peak at 22:00 and orders peak at 12:00 and 16:00. People browse at night and pay the next day. For the rewrite, the 10:00 morning brief and the collage posts should go out before lunch.
 
