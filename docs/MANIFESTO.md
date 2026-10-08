@@ -353,7 +353,7 @@ Break these and the PR gets closed without a review.
 11. **Mom never needs a laptop.** If a flow only works on desktop, it doesn't work.
 12. **Stable URLs forever.** Slug changes 301. Old URLs never 404.
 13. **No feature without a person.** Name who uses it and what they stop doing.
-14. **Briefs are exact.** Opus plans and reviews. Sonnet builds from the brief. Write briefs with files, interfaces and a done-criterion so plain that done and not-done can't be confused.
+14. **Opus builds.** Opus 5.5 plans, writes and reviews the code. Another model gets work only when I say so, and then with a brief so exact that done and not-done can't be confused.
 15. **Docs hold decisions. Commits hold history.** Delete finished plans. No `validate.py` for the plans. I'm looking at you, past me.
 
 ---
@@ -363,15 +363,17 @@ Break these and the PR gets closed without a review.
 Mom is selling right now, by hand, cash on delivery, into a paper notebook. So the downtime goes to the things that take work off her phone today. The storefront can wait. Nobody's looking at it anyway.
 
 ```text
-PHASE A: the bot and the dashboard                          ← we are here
-0. foundation           one DB over Hyperdrive, Workers deployed, /health round-trips on prod
-1. schema v2            COMMERCE-RULES as code. one test file proves every rule
-2. legacy import        483 orders, 367 customers, 652 products. reconciles to the tugrik
-3. dashboard v1         Today page, one-line entry, COD, pack list. side by side with the notebook
-4. payments             QPay, Khaan matching, the unmatched-transfer queue
-5. delivery             tu-delivery dispatch, webhook sets delivered
-6. telegram             new order, packing brief, unmatched transfer, oversold, handoff buttons
-7. the bot              ported from vit-store, handoff state machine, live on the pilot page
+PHASE A: the bot first, then the dashboard                  ← we are here
+0. foundation           one DB over Hyperdrive, Workers on Alchemy, /health round-trips
+1. schema v2            COMMERCE-RULES as code in Effect. one test file proves every rule
+2. product import       652 vit-store products into shop, old slugs kept. mom spot-checks 20
+3. payments             QPay, Khaan matching, the unmatched-transfer queue. the bot is prepay
+4. the bot              ported from vit-store, all Effect, handoff state machine, Telegram pings.
+                        live on the pilot page
+5. dashboard v1         Today page, one-line entry, COD, pack list. side by side with the notebook.
+                        customers and old orders come over here
+6. delivery             tu-delivery dispatch, webhook sets delivered
+7. telegram             new order, packing brief, unmatched transfer, oversold
 8. cutover              vit-store checkout off. one system
 
 PHASE B: stock that tells the truth
