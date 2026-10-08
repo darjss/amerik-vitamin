@@ -1,0 +1,40 @@
+name: verify
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: amerik
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d amerik"
+          --health-interval 2s
+          --health-retries 30
+    env:
+      # Throwaway CI database. Tests create and drop their own databases on it.
+      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/amerik
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: voidzero-dev/setup-vp@d5616419e3a9637febec6da1475cee9d07a317fd # v1.20.0
+        with:
+          cache: true
+          node-version: "24"
+      - run: vp check
+      - run: vp run test
+      - run: vp run -r build

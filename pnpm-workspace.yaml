@@ -11,6 +11,7 @@ catalog:
   "@effect/platform-node": 4.0.1
   "@effect/sql-pg": 4.0.1
   "@effect/tsgo": 0.50.0
+  "@effect/vitest": 4.0.1
   "@oxlint/plugins": 1.87.0
   "@solidjs/router": 2.0.0-next.35
   "@solidjs/web": 2.0.0-rc.13
@@ -25,12 +26,16 @@ catalog:
   typescript: 7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@1.1.0
   vite-plus: 1.1.0
+  vitest: 5.0.3
 overrides:
   vite@*: "catalog:"
   "@effect/sql-pg": "catalog:"
   "@effect/platform-node": "catalog:"
   "@cloudflare/workers-types": "catalog:"
   effect: "catalog:"
+  # vite-plus 1.1.0 bundles vitest 5.0.3. A second copy splits the test runner.
+  vitest: "catalog:"
+  typescript: "catalog:"
 peerDependencyRules:
   allowAny:
     - vite

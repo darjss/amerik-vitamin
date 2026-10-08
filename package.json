@@ -11,7 +11,9 @@
     "deploy": "vp run --filter @amerik/infra deploy",
     "destroy": "vp run --filter @amerik/infra destroy",
     "migrate": "vp run --filter @amerik/db migrate",
-    "ready": "vp check && vp run -r build"
+    "ready": "vp check && vp run test && vp run -r build",
+    "prepare": "vp config && effect-tsgo patch --oxlint",
+    "test": "vp run --filter @amerik/api test"
   },
   "devDependencies": {
     "@effect/tsgo": "catalog:",
