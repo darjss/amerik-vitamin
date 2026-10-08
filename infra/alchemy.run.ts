@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import * as Alchemy from "alchemy";
 import { AlchemyContext } from "alchemy/AlchemyContext";
 import * as Cloudflare from "alchemy/Cloudflare";
+import * as Command from "alchemy/Command";
 import * as Docker from "alchemy/Docker";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -50,7 +51,7 @@ const localPostgres = Effect.gen(function* start() {
 export default Alchemy.Stack(
   "amerik-vitamin",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), Docker.providers()),
+    providers: Layer.mergeAll(Cloudflare.providers(), Command.providers(), Docker.providers()),
     // Docker containers belong to one machine, so dev keeps its state local.
     state: Layer.unwrap(
       AlchemyContext.pipe(
