@@ -15,6 +15,7 @@ import { localDatabase } from "../apps/api/src/infrastructure/database";
 import { ApiWorker } from "../apps/api/src/worker";
 
 const envFile = new URL("../.env", import.meta.url);
+
 if (existsSync(envFile)) {
   process.loadEnvFile(envFile);
 }
@@ -61,10 +62,13 @@ export default Alchemy.Stack(
   },
   Effect.gen(function* provision() {
     yield* deployStage;
+
     if ((yield* AlchemyContext).dev) {
       yield* localPostgres;
     }
+
     const api = yield* ApiWorker;
+
     const web = yield* Cloudflare.Website.Vite("Web", {
       compatibility: {
         date: "2026-09-08",

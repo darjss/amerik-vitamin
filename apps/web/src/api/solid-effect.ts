@@ -13,6 +13,7 @@ export const createRuntime = <R>(layer: Layer.Layer<R>) => {
   onCleanup(() => {
     Effect.runFork(runtime.disposeEffect);
   });
+
   return runtime;
 };
 
@@ -22,32 +23,41 @@ export const createRuntime = <R>(layer: Layer.Layer<R>) => {
 export const runEffect = <A, E>(effect: Effect.Effect<A, E, AppServices>): AsyncIterable<A> => {
   // context resolves at the *reading* computation
   const runtime = useContext(RuntimeContext);
+
   return {
     [Symbol.asyncIterator]() {
       const fiber = runtime.runFork(effect);
       let yielded = false;
       let closed = false;
       const DONE = { done: true, value: undefined } as const;
+
       return {
         async next(): Promise<IteratorResult<A>> {
           if (yielded || closed) {
             return DONE;
           }
+
           const exit = await Effect.runPromise(Fiber.await(fiber));
+
           if (closed) {
             return DONE;
           }
+
           if (Exit.isSuccess(exit)) {
             yielded = true;
+
             return { done: false, value: exit.value };
           }
+
           closed = true;
+
           // a pure-interrupt cause means Solid closed the iterator — normal
           // completion. A mixed cause (interrupt + finalizer defect) must
           // still surface, so this is hasInterruptsOnly, not hasInterrupts
           if (Cause.hasInterruptsOnly(exit.cause)) {
             return DONE;
           }
+
           throw Cause.squash(exit.cause);
         },
         async return(): Promise<IteratorResult<A>> {
@@ -56,7 +66,9 @@ export const runEffect = <A, E>(effect: Effect.Effect<A, E, AppServices>): Async
             closed = true;
             await Effect.runPromise(Fiber.interrupt(fiber));
           }
+
           closed = true;
+
           return DONE;
         },
       };

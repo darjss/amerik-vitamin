@@ -12,6 +12,7 @@ import * as Redacted from "effect/Redacted";
 /** Local Postgres, parsed from DATABASE_URL. infra/alchemy.run.ts starts it in Docker. */
 export const localDatabase = Effect.gen(function* parse() {
   const url = new URL(Redacted.value(yield* Config.Redacted("DATABASE_URL")));
+
   return {
     database: url.pathname.slice(1),
     host: url.hostname,
@@ -30,15 +31,19 @@ export const Postgres = Effect.gen(function* provision() {
   if (globalThis.__ALCHEMY_RUNTIME__) {
     return yield* Cloudflare.Hyperdrive.Connection.ref("Postgres");
   }
+
   const { dev } = yield* AlchemyContext;
+
   if (dev) {
     const origin = yield* localDatabase;
+
     return yield* Cloudflare.Hyperdrive.Connection("Postgres", {
       caching: { disabled: true },
       dev: { ...origin, sslmode: "disable" },
       origin,
     });
   }
+
   const origin = {
     database: yield* Config.String("PLANETSCALE_DATABASE"),
     host: yield* Config.String("PLANETSCALE_HOST"),
@@ -47,7 +52,9 @@ export const Postgres = Effect.gen(function* provision() {
     scheme: "postgres",
     user: yield* Config.String("PLANETSCALE_USER"),
   } as const;
+
   const path = yield* Path.Path;
+
   // Migrations run on every deploy, before the Worker that needs them.
   const migrations = yield* Command.Exec("Migrations", {
     command: "node src/migrate.ts",
@@ -61,9 +68,11 @@ export const Postgres = Effect.gen(function* provision() {
     memo: false,
     timeout: "5 minutes",
   });
+
   // Hyperdrive needs an uploaded trust root even for publicly issued
   // certificates. PlanetScale's Let's Encrypt chain ends at ISRG Root X1.
   const fs = yield* FileSystem.FileSystem;
+
   const authority = yield* Cloudflare.MtlsCertificate.MtlsCertificate(
     "DatabaseCertificateAuthority",
     {
@@ -73,6 +82,7 @@ export const Postgres = Effect.gen(function* provision() {
       ),
     },
   ).pipe(retain());
+
   return yield* Cloudflare.Hyperdrive.Connection("Postgres", {
     caching: { disabled: true },
     mtls: { caCertificateId: authority.mtlsCertificateId, sslmode: "verify-full" },

@@ -44,6 +44,7 @@ export default ApiWorker.make(
       ),
       HttpRouter.add("GET", "/health", health.pipe(Effect.provide(database))),
     );
+
     return {
       fetch: yield* routes.pipe(Layer.provide(HttpServer.layerServices), HttpRouter.toHttpEffect),
     };

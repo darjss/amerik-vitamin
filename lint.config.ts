@@ -3,9 +3,11 @@ import solidV2Strict from "eslint-plugin-solid/configs/v2-strict";
 import { defineConfig } from "oxlint";
 
 const effectFiles = ["apps/api/**", "packages/**", "apps/web/src/api/**", "infra/**"];
+
 const webFiles = ["apps/web/**"];
 
 const agentIgnores = [".agent/**", ".agents/**", ".claude/**", ".codex/**", ".opencode/**"];
+
 const generatedIgnores = ["**/file-routes.d.ts", "packages/db/migrations/**"];
 
 export const formatIgnores = [
@@ -32,6 +34,7 @@ const effectErrorRules = {
 
 // eslint-plugin-solid ships ESLint's numeric levels; oxlint wants names.
 const levelNames = ["off", "warn", "error"] as const;
+
 const solidRules = Object.fromEntries(
   Object.entries(solidV2Strict.rules).map(([name, level]) => [name, levelNames[level]]),
 );
