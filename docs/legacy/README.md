@@ -8,6 +8,7 @@ What two years of vit-store and its earlier repos actually did, mined from 9 rep
 | [agent-history.md](agent-history.md) | What the owner asked agents to do from Jan to Sep 2026: business rules, the domain model the rewrite needs, workflows, integrations, recurring chores, decisions and reversals. Input for the new design. |
 | [archaeology.md](archaeology.md) | Where each of the 12 LEGACY.md bugs was born. Also why ADR 0012 has a 12-hour timer, when each cache layer appeared, and the nastiest bugs fixed with models. |
 | [prehistory.md](prehistory.md) | The 8 repos before amerik-vitamin, read commit by commit. Includes the schema lineage and the 2025-01-16 commit that deleted variants. |
+| [analytics.md](analytics.md) | What customers actually did, from PostHog: launch spike, outage, the noindex drop, Facebook in-app traffic, bank hand-off failures, searches, top products, errors. [analytics.html](analytics.html) is the interactive version. |
 | [timeline.html](timeline.html) | Interactive timeline, Oct 2024 to Oct 2026, with 118 milestones. Open it in a browser. |
 | [stats.html](stats.html) | Token and session stats: harnesses, models, categories, prompting hours. Open it in a browser. |
 
