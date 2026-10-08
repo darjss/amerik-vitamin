@@ -65,6 +65,11 @@ export const lint = defineConfig({
       rules: { "effecttsgo/strict-effect-provide": "off" },
     },
     {
+      // drizzle's migrator error union reads as `any` to effect-tsgo; the call dies on failure anyway.
+      files: ["packages/db/src/migrations.ts"],
+      rules: { "effecttsgo/any-unknown-in-error-context": "off" },
+    },
+    {
       files: webFiles,
       jsPlugins: ["eslint-plugin-solid"],
       rules: { ...solidRules, "solid/reactivity": "error" },
