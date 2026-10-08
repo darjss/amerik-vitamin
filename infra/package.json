@@ -10,6 +10,7 @@
     "destroy": "env -u npm_execpath -u npm_config_user_agent node ./node_modules/alchemy/bin/cli.js destroy --yes --stage production"
   },
   "dependencies": {
+    "@effect/platform-node": "catalog:",
     "alchemy": "catalog:",
     "effect": "catalog:"
   },

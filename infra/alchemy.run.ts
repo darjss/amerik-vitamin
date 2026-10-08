@@ -10,7 +10,7 @@ import * as Redacted from "effect/Redacted";
 
 import ApiWorkerLive from "../apps/api/src/index";
 import { deployStage } from "../apps/api/src/infrastructure/stage";
-import { localDatabase } from "../apps/api/src/resources";
+import { localDatabase } from "../apps/api/src/infrastructure/database";
 import { ApiWorker } from "../apps/api/src/worker";
 
 const envFile = new URL("../.env", import.meta.url);
@@ -27,8 +27,8 @@ const postgresPassword = (password: Redacted.Redacted<string>) => ({
 // Local dev only. Production Postgres is the existing PlanetScale database.
 const localPostgres = Effect.gen(function* start() {
   const origin = yield* localDatabase;
-  const data = yield* Docker.Volume("PostgresData");
-  yield* Docker.Container("Postgres", {
+  const data = yield* Docker.Volume("PostgresData", {});
+  yield* Docker.Container("LocalPostgres", {
     environment: {
       POSTGRES_DB: origin.database,
       POSTGRES_USER: origin.user,

@@ -9,7 +9,4 @@ export default defineConfig({
     rules: { "vite-plus/prefer-vite-plus-imports": "error" },
     options: { typeAware: true, typeCheck: true },
   },
-  run: {
-    cache: true,
-  },
 });

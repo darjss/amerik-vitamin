@@ -8,7 +8,7 @@
   },
   "scripts": {
     "generate": "drizzle-kit generate",
-    "migrate": "node src/migrate.ts"
+    "migrate": "node --env-file-if-exists=../../.env src/migrate.ts"
   },
   "dependencies": {
     "@effect/sql-pg": "catalog:",
