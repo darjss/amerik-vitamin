@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vit-store token receipts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fbfaf6; --surface: #ffffff; --line: #e8e6df; --grid: #efeee9;
+  --ink: #141413; --ink-2: #55534d; --ink-3: #8a877f;
+  --accent: #eda100; --accent-ink: #6b4a00; --hot: #eb6834;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #4a3aa7;
+  --muted-bar: #b7d3f6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+    --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+    --accent: #c98500; --accent-ink: #ffd27a; --hot: #d95926;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
+    --muted-bar: #184f95;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+  --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+  --accent: #c98500; --accent-ink: #ffd27a; --hot: #d95926;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
+  --muted-bar: #184f95;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 Onest, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 980px; margin: 0 auto; padding: 48px 16px 80px; }
+h1, h2 { font-family: Unbounded, system-ui, sans-serif; letter-spacing: -0.02em; margin: 0; }
+h1 { font-size: clamp(2.6rem, 9vw, 5.2rem); line-height: 1; font-weight: 700; }
+h2 { font-size: clamp(1.25rem, 3.4vw, 1.6rem); font-weight: 600; margin-bottom: 4px; }
+.eyebrow { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 12px; }
+.lede { color: var(--ink-2); max-width: 60ch; margin: 16px 0 0; font-size: 1.05rem; }
+.hero h1 span { color: var(--accent); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 36px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.tile b { display: block; font-family: Unbounded, sans-serif; font-size: 1.8rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile span { color: var(--ink-2); font-size: 0.9rem; }
+section { margin-top: 64px; }
+.sub { color: var(--ink-2); margin: 0 0 20px; max-width: 64ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; }
+.callouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; }
+.callout small { color: var(--ink-3); display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.callout strong { font-size: 1.05rem; }
+.bars { display: grid; gap: 6px; }
+.bar-row { display: grid; grid-template-columns: minmax(96px, 170px) 1fr minmax(64px, auto); gap: 10px; align-items: center; font-size: 0.92rem; padding: 3px 4px; border-radius: 6px; }
+.bar-row:hover { background: var(--grid); }
+.bar-row .lbl { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row .val { font-variant-numeric: tabular-nums; text-align: right; color: var(--ink); }
+.track { height: 14px; position: relative; }
+.fill { height: 100%; border-radius: 0 4px 4px 0; background: var(--s1); min-width: 2px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.fill.hot { background: var(--hot); }
+.fill.dim { background: var(--muted-bar); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.85rem; color: var(--ink-2); margin: 0 0 12px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink-3); font: 11px Onest, sans-serif; }
+.grid line { stroke: var(--grid); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.82rem; padding: 6px 9px; border-radius: 8px; opacity: 0; transition: opacity .12s; z-index: 9; max-width: 260px; }
+.two { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 760px) { .two { grid-template-columns: 1fr 1fr; } }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--ink-3); font-weight: 500; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+td.n, th.n { text-align: right; }
+.table-wrap { overflow-x: auto; }
+.list { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.list li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: baseline; }
+.list .big { font-family: Unbounded, sans-serif; font-weight: 600; min-width: 4.4ch; font-variant-numeric: tabular-nums; }
+.list .q { color: var(--ink-2); font-size: 0.92rem; }
+.words { display: flex; flex-wrap: wrap; gap: 8px; }
+.word { background: var(--grid); border-radius: 999px; padding: 6px 12px; font-size: 0.92rem; }
+.word b { font-variant-numeric: tabular-nums; margin-left: 6px; color: var(--accent-ink); }
+.foot { margin-top: 72px; color: var(--ink-3); font-size: 0.85rem; max-width: 70ch; }
+.foot li { margin-bottom: 4px; }
+@media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <header class="hero">
+    <div class="eyebrow">vit-store · Jan 12 to Sep 24, 2026 · 8 harnesses</div>
+    <h1><span id="h-total"></span> tokens<br>to sell vitamins</h1>
+    <p class="lede">Every agent session I could find that touched amerikvitamin.mn, from opencode in January to pi in September. Most of it was the model re-reading the same context from cache.</p>
+    <div class="tiles" id="tiles"></div>
+  </header>
+
+  <section>
+    <h2>Which harness I lived in</h2>
+    <p class="sub">Tokens per harness. Claude Code and Cursor did real work but kept no token counts, so their bars are empty. Claude Code transcripts were also auto-deleted.</p>
+    <div class="callouts" id="harness-callouts"></div>
+    <div class="card"><div class="bars" id="harness-bars"></div></div>
+    <div class="card table-wrap" style="margin-top:12px"><table id="harness-table"></table></div>
+  </section>
+
+  <section>
+    <h2>Who wrote the code</h2>
+    <p class="sub">Lines added through edit, write and apply_patch calls, grouped by model family. It undercounts edits done through sed or shell scripts. GLM is the single biggest family (Devin ran on glm-5-2), but the GPT models together wrote about <b id="gpt-lines"></b> lines.</p>
+    <div class="card"><div class="bars" id="model-bars"></div></div>
+  </section>
+
+  <section>
+    <h2>Where the tokens went</h2>
+    <p class="sub">Each session got a tag from a Sonnet agent that read its prompts. Inventory chores (matching stock lists, dedupe, price edits, catalog rebuilds) took <b id="inv-share"></b> of everything. They are the jobs an admin screen should do.</p>
+    <div class="card"><div class="bars" id="cat-bars"></div></div>
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow" style="margin-bottom:10px">The five most expensive inventory sessions</div>
+      <ul class="list" id="inv-list"></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Harness churn by month</h2>
+    <p class="sub">Sessions started per month. opencode carried the pre-launch months, then bpi took over in May, Devin and Claude Code arrived in June, and pi plus Cursor took over in August.</p>
+    <div class="legend" id="month-legend"></div>
+    <div class="card"><svg id="month-chart" viewBox="0 0 900 300" role="img" aria-label="Sessions per month by harness"></svg></div>
+  </section>
+
+  <section class="two">
+    <div>
+      <h2>When I prompt</h2>
+      <p class="sub">Human prompts by hour, Ulaanbaatar time. Peak is the 14:00 hour. Nothing at all from 06:00 to 08:00.</p>
+      <div class="card"><svg id="hour-chart" viewBox="0 0 440 220" role="img" aria-label="Prompts by hour of day"></svg></div>
+    </div>
+    <div>
+      <h2>Busiest days</h2>
+      <p class="sub">Two days in late June did 590 prompts between them. That was the Messenger bot build plus the storefront QA sweep.</p>
+      <div class="card"><ul class="list" id="day-list"></ul></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Vibes</h2>
+    <p class="sub">What I typed most at the machines, across <b id="n-prompts"></b> human prompts.</p>
+    <div class="card"><div class="words" id="words"></div></div>
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow" style="margin-bottom:10px">Biggest single sessions</div>
+      <ul class="list" id="big-list"></ul>
+    </div>
+  </section>
+
+  <ul class="foot">
+    <li>Token totals add input, output, cache read and cache write as the harness recorded them. Codex counters are cumulative, so I summed the per-turn deltas.</li>
+    <li>Dollar cost only exists where the harness stores it (pi, bpi, opencode). Subscription plans show $0.</li>
+    <li>Claude Code account-wide numbers (not per project) since mid June: about 9.3B cache reads on Opus 4.8. They are not in any total here.</li>
+    <li>Sessions from ecom-template worktrees are excluded. 1,044 sessions remain, 374 of them spawned by other agents.</li>
+  </ul>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+const D = {"harness": {"bpi": {"sessions": 236, "sub": 122, "prompts": 1072, "tokens": 945625070, "added": 54784, "tools": 18499}, "claude": {"sessions": 49, "sub": 0, "prompts": 366, "tokens": 0, "added": 0, "tools": 0}, "codex": {"sessions": 94, "sub": 23, "prompts": 455, "tokens": 787076068, "added": 25433, "tools": 7272}, "cursor": {"sessions": 129, "sub": 38, "prompts": 605, "tokens": 210533, "added": 46120, "tools": 13371}, "devin": {"sessions": 120, "sub": 96, "prompts": 1545, "tokens": 1203840524, "added": 50058, "tools": 14007}, "droid": {"sessions": 2, "sub": 0, "prompts": 0, "tokens": 0, "added": 0, "tools": 0}, "opencode": {"sessions": 286, "sub": 96, "prompts": 1124, "tokens": 931511996, "added": 60886, "tools": 13099}, "pi": {"sessions": 128, "sub": 89, "prompts": 532, "tokens": 914897378, "added": 20953, "tools": 10692}}, "fam_lines": [["GLM", 48827], ["GPT-5.6 Sol", 36964], ["Cursor Composer", 28250], ["Claude Opus 4.x", 24015], ["GPT-5.5", 22053], ["GPT-5.4", 18628], ["Kimi", 16667], ["GPT-5.3 Codex", 15513], ["Grok", 11123], ["other / unknown", 11122], ["GPT-5.6 Luna", 6817], ["x-preview (free)", 5890], ["DeepSeek", 5052], ["Devin SWE", 3058], ["stealth ox-alpha", 2010], ["MiniMax", 1577], ["GPT older", 629], ["big-pickle", 39], ["GPT-5.6 other", 0]], "fam_tok": [["GPT-5.6 Sol", 1453764847], ["GLM", 1089047370], ["GPT-5.5", 400442189], ["GPT-5.6 Luna", 274657976], ["DeepSeek", 273626595], ["GPT-5.4", 230631591], ["GPT-5.3 Codex", 224810735], ["Kimi", 203253424], ["x-preview (free)", 164108091], ["Devin SWE", 145484423], ["Claude Opus 4.x", 88896612], ["stealth ox-alpha", 67900057], ["MiniMax", 51973245], ["other / unknown", 49633960], ["GPT-5.6 other", 46116544], ["big-pickle", 11487547], ["GPT older", 6600405], ["Cursor Composer", 725958], ["Grok", 0]], "cache": 4495756957, "fresh": 284532373, "cost": 1100.4043980184006, "months": {"2026-01": {"cursor": 1, "opencode": 70}, "2026-02": {"cursor": 8, "opencode": 83, "codex": 3}, "2026-03": {"opencode": 6, "codex": 10}, "2026-04": {"opencode": 13, "bpi": 8, "codex": 4}, "2026-05": {"cursor": 33, "opencode": 71, "bpi": 82, "codex": 8}, "2026-06": {"claude": 42, "devin": 67, "opencode": 7, "bpi": 18, "codex": 31}, "2026-07": {"claude": 8, "devin": 52, "opencode": 4, "bpi": 128, "pi": 38, "codex": 35}, "2026-08": {"cursor": 62, "opencode": 32, "pi": 89, "codex": 3}, "2026-09": {"cursor": 25, "claude": 1, "devin": 1, "pi": 1}}, "cats": {"infra_deploy": {"sessions": 67, "tokens": 390601100}, "bugfix": {"sessions": 94, "tokens": 500889591}, "tooling_meta": {"sessions": 146, "tokens": 249399522}, "ui_design": {"sessions": 71, "tokens": 596787491}, "feature": {"sessions": 72, "tokens": 437731178}, "other": {"sessions": 64, "tokens": 13588603}, "review_qa": {"sessions": 262, "tokens": 1044583581}, "seo_marketing": {"sessions": 34, "tokens": 96733068}, "payments_integration": {"sessions": 39, "tokens": 342286499}, "inventory_ops": {"sessions": 94, "tokens": 666608845}, "messenger_ai": {"sessions": 35, "tokens": 244173033}, "analytics_reports": {"sessions": 30, "tokens": 131479400}, "delivery": {"sessions": 16, "tokens": 33021220}, "orders_ops": {"sessions": 4, "tokens": 35278438}}, "inventory_top": [[141685460, "2026-08-22", "pi", "match pasted shipment stock lines to products, update stock and prices, activate drafts, build 340kg import list"], [131593967, "2026-04-08", "codex", "Extract products from photos with Gemini, dedupe, match against DB, activate/deactivate"], [116823701, "2026-02-09", "opencode", "Reconcile DB products with new inventory JSON; enrich, dedupe, bulk apply"], [51278791, "2026-05-31", "codex", "Price list images to JSON, dedupe, compare to DB, add 110 products, update prices"], [41679374, "2026-08-04", "pi", "Fix AI product import picking wrong Amazon images; move to Workers AI"]], "hours": [120, 115, 67, 26, 3, 2, 0, 0, 3, 26, 111, 147, 185, 463, 481, 440, 380, 446, 315, 397, 389, 143, 315, 168], "top_days": [["2026-06-25", 312], ["2026-06-24", 278], ["2026-07-07", 191], ["2026-06-30", 166], ["2026-08-25", 164], ["2026-09-01", 164], ["2026-06-29", 153], ["2026-06-26", 113]], "weekday": {"Tue": 1242, "Wed": 908, "Sat": 351, "Thu": 626, "Fri": 605, "Sun": 471, "Mon": 539}, "words": [["still", 128], ["please", 125], ["again", 106], ["man", 77], ["bro", 45], ["broken", 40], ["fuck", 38], ["shit", 38], ["fucked", 21], ["fucking", 16], ["wtf", 14], ["bruh", 9]], "n_human_prompts": 4742, "shortest": [["continue", 120], ["do it", 27], ["test", 10], ["try again", 7], ["merge it", 6], ["yeah", 6], ["its done", 5], ["okay b", 5], ["env var", 5], ["okay a", 5]], "biggest_sessions": [{"key": "pi:019ff028-0744-71ab-acff-f224eb10424c", "tokens": 221069464, "date": "2026-08-11", "title": null, "first": "look at the ermote admin rewrite branch and plan there review the plan wdyt", "sub": false}, {"key": "devin:good-pelican", "tokens": 144720783, "date": "2026-06-25", "title": "Amerikvitamin.mn Storefront UI QA Orchestration", "first": "hey im doing a prod ready polish mature ecommerce giant ui consistency quality assurance pass on the store front use use orchestrate skill to give specific part", "sub": false}, {"key": "codex:019f4b3f-2c0c-7d10-a9d3-87f0a92f2c5d", "tokens": 143836977, "date": "2026-07-10", "title": null, "first": "want you to use subagents to explore the progress of the v2 branch and its state i made some new changes yesterday to the repo are they merged", "sub": false}, {"key": "pi:01a028a5-726f-7053-b455-9836809bbcf7", "tokens": 141685460, "date": "2026-08-22", "title": null, "first": "hi look at @stock.md i want you to model to match the name of this to the products in the db and match it as best as you can make me review them then and if its", "sub": false}, {"key": "bpi:019f55cf-ecc8-7064-aa08-9a7b6a31530d", "tokens": 135612589, "date": "2026-07-12", "title": "/improve skill run over the whole repo", "first": "<skill name=\"improve\" location=\"/home/darjs/.pi/agent/skills/improve/SKILL.md\">\nReferences are relative to /home/darjs/.pi/agent/skills/improve.\n\n# Improve\n\nYou", "sub": false}], "subagent_share": {"sub_tokens": 1224042877, "all": 4783161569}};
+const $ = id => document.getElementById(id);
+const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(2) + "B" : n >= 1e6 ? Math.round(n / 1e6) + "M" : n >= 1e3 ? (n / 1e3).toFixed(n >= 1e4 ? 0 : 1) + "k" : String(n);
+const int = n => n.toLocaleString("en-US");
+const tip = $("tip");
+const showTip = (e, html) => { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 14, innerWidth - 270) + "px"; tip.style.top = e.clientY + 14 + "px"; };
+const hideTip = () => { tip.style.opacity = 0; };
+
+const H_ORDER = ["opencode", "devin", "bpi", "pi", "codex", "cursor", "claude"];
+const H_COLOR = Object.fromEntries(H_ORDER.map((h, i) => [h, `var(--s${i + 1})`]));
+const H_NAME = { opencode: "opencode", devin: "Devin", bpi: "bpi", pi: "pi", codex: "Codex", cursor: "Cursor", claude: "Claude Code + droid" };
+
+const harness = Object.entries(D.harness).filter(([k]) => k !== "droid");
+const total = harness.reduce((s, [, v]) => s + v.tokens, 0);
+const sessions = Object.values(D.harness).reduce((s, v) => s + v.sessions, 0);
+$("h-total").textContent = fmt(total);
+$("n-prompts").textContent = int(D.n_human_prompts);
+
+const tiles = [
+  [int(sessions), "agent sessions"],
+  [int(D.n_human_prompts), "prompts I typed myself"],
+  [Math.round(D.cache / total * 100) + "%", "of tokens were cache reads"],
+  ["$" + int(Math.round(D.cost)), "logged API cost (pi, bpi, opencode only)"],
+  [Math.round(D.subagent_share.sub_tokens / D.subagent_share.all * 100) + "%", "of tokens burned by subagents"],
+];
+$("tiles").innerHTML = tiles.map(([b, s]) => `<div class="tile"><b>${b}</b><span>${s}</span></div>`).join("");
+
+function bars(el, rows, { color = () => "", label = r => r[0], value = r => r[1], show = v => fmt(v), title = r => "" } = {}) {
+  const max = Math.max(...rows.map(value));
+  el.innerHTML = rows.map((r, i) => `<div class="bar-row" data-i="${i}"><span class="lbl">${label(r)}</span><div class="track"><div class="fill ${color(r)}" style="width:0" data-w="${value(r) / max * 100}"></div></div><span class="val">${show(value(r))}</span></div>`).join("");
+  el.querySelectorAll(".bar-row").forEach(row => {
+    const r = rows[+row.dataset.i];
+    row.addEventListener("pointermove", e => { const t = title(r); t ? showTip(e, t) : hideTip(); });
+    row.addEventListener("pointerleave", hideTip);
+  });
+  requestAnimationFrame(() => el.querySelectorAll(".fill").forEach(f => f.style.width = f.dataset.w + "%"));
+}
+
+const hs = H_ORDER.map(h => [h, h === "claude" ? { ...D.harness.claude, sessions: D.harness.claude.sessions + (D.harness.droid?.sessions || 0) } : D.harness[h]]);
+const by = key => hs.slice().sort((a, b) => b[1][key] - a[1][key])[0];
+$("harness-callouts").innerHTML = [
+  ["Most tokens", by("tokens"), v => fmt(v.tokens)],
+  ["Most sessions", by("sessions"), v => int(v.sessions)],
+  ["Most of my prompts", by("prompts"), v => int(v.prompts)],
+  ["Most lines written", by("added"), v => fmt(v.added)],
+].map(([t, [h, v], f]) => `<div class="callout"><small>${t}</small><strong>${H_NAME[h]}</strong> · ${f(v)}</div>`).join("");
+bars($("harness-bars"), hs.slice().sort((a, b) => b[1].tokens - a[1].tokens), {
+  label: r => H_NAME[r[0]], value: r => r[1].tokens, show: v => v ? fmt(v) : "no data",
+  title: r => `<b>${H_NAME[r[0]]}</b><br>${int(r[1].sessions)} sessions, ${int(r[1].sub)} subagents<br>${int(r[1].prompts)} prompts, ${int(r[1].tools)} tool calls`,
+});
+$("harness-table").innerHTML = `<thead><tr><th>Harness</th><th class="n">Sessions</th><th class="n">Subagent</th><th class="n">Prompts</th><th class="n">Tool calls</th><th class="n">Lines added</th><th class="n">Tokens</th></tr></thead><tbody>` +
+  hs.map(([h, v]) => `<tr><td>${H_NAME[h]}</td><td class="n">${int(v.sessions)}</td><td class="n">${int(v.sub)}</td><td class="n">${int(v.prompts)}</td><td class="n">${int(v.tools)}</td><td class="n">${int(v.added || 0)}</td><td class="n">${v.tokens ? fmt(v.tokens) : "n/a"}</td></tr>`).join("") + "</tbody>";
+
+const fl = D.fam_lines.filter(([, v]) => v > 0).slice(0, 14);
+$("gpt-lines").textContent = fmt(D.fam_lines.filter(([k]) => k.startsWith("GPT")).reduce((s, [, v]) => s + v, 0));
+const tokOf = Object.fromEntries(D.fam_tok);
+bars($("model-bars"), fl, {
+  color: (r) => r[0] === fl[0][0] ? "" : "dim", show: v => fmt(v) + " lines",
+  title: r => `<b>${r[0]}</b><br>${int(r[1])} lines added<br>${tokOf[r[0]] ? fmt(tokOf[r[0]]) + " tokens" : "no token data"}`,
+});
+
+const CAT = { review_qa: "Review, QA, audits", inventory_ops: "Inventory chores", ui_design: "UI design", bugfix: "Bugfix", feature: "Features", infra_deploy: "Infra, deploy", payments_integration: "Payments code", tooling_meta: "Agent tooling", messenger_ai: "Messenger, AI bot", analytics_reports: "Analytics", seo_marketing: "SEO, marketing", orders_ops: "Order ops", delivery: "Delivery code", other: "Other" };
+const cats = Object.entries(D.cats).sort((a, b) => b[1].tokens - a[1].tokens);
+const catTotal = cats.reduce((s, [, v]) => s + v.tokens, 0);
+$("inv-share").textContent = fmt(D.cats.inventory_ops.tokens) + " tokens, " + Math.round(D.cats.inventory_ops.tokens / catTotal * 100) + "%,";
+bars($("cat-bars"), cats, {
+  label: r => CAT[r[0]] || r[0], value: r => r[1].tokens, color: r => r[0] === "inventory_ops" ? "hot" : "",
+  title: r => `<b>${CAT[r[0]] || r[0]}</b><br>${r[1].sessions} sessions<br>${Math.round(r[1].tokens / catTotal * 100)}% of tagged tokens`,
+});
+$("inv-list").innerHTML = D.inventory_top.map(([t, d, h, w]) => `<li><span class="big">${fmt(t)}</span><span><b>${d}</b> · ${H_NAME[h] || h}<br><span class="q">${w}</span></span></li>`).join("");
+
+const months = Object.keys(D.months);
+const mc = $("month-chart"), W = 900, Hh = 300, pl = 34, pb = 26, pt = 8;
+const mMax = Math.max(...months.map(m => Object.values(D.months[m]).reduce((a, b) => a + b, 0)));
+const step = Math.ceil(mMax / 4 / 25) * 25, yTop = step * 4;
+const y = v => Hh - pb - v / yTop * (Hh - pb - pt);
+const bw = (W - pl) / months.length;
+let svg = '<g class="grid">';
+for (let v = 0; v <= yTop; v += step) svg += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+svg += "</g>";
+months.forEach((m, i) => {
+  let acc = 0; const x = pl + i * bw + bw * 0.18, w = bw * 0.64;
+  const segs = H_ORDER.filter(h => D.months[m][h]);
+  segs.forEach((h, j) => {
+    const v = D.months[m][h], y0 = y(acc), y1 = y(acc + v); acc += v;
+    const top = j === segs.length - 1;
+    const hgt = Math.max(0, y0 - y1 - 2);
+    svg += `<path d="M${x},${y0 - 0} V${y1 + (top ? 4 : 0)} ${top ? `Q${x},${y1} ${x + 4},${y1} H${x + w - 4} Q${x + w},${y1} ${x + w},${y1 + 4}` : `H${x + w}`} V${y0} Z" transform="translate(0,${-0})" fill="${H_COLOR[h]}" stroke="var(--surface)" stroke-width="2" data-m="${m}" data-h="${h}" data-v="${v}"/>`;
+  });
+  svg += `<text x="${x + w / 2}" y="${Hh - 8}" text-anchor="middle">${new Date(m + "-01").toLocaleString("en", { month: "short" })}</text>`;
+});
+mc.innerHTML = svg;
+mc.querySelectorAll("path").forEach(p => {
+  p.addEventListener("pointermove", e => { const tot = Object.values(D.months[p.dataset.m]).reduce((a, b) => a + b, 0); showTip(e, `<b>${p.dataset.m}</b><br>${H_NAME[p.dataset.h]}: ${p.dataset.v} sessions<br>month total ${tot}`); });
+  p.addEventListener("pointerleave", hideTip);
+});
+$("month-legend").innerHTML = H_ORDER.map(h => `<span><i style="background:${H_COLOR[h]}"></i>${H_NAME[h]}</span>`).join("");
+
+const hc = $("hour-chart"), HW = 440, HH = 220, hpl = 30, hpb = 22;
+const hMax = Math.max(...D.hours), hTop = Math.ceil(hMax / 100) * 100;
+const hy = v => HH - hpb - v / hTop * (HH - hpb - 8);
+const hbw = (HW - hpl) / 24;
+let hs2 = '<g class="grid">';
+for (let v = 0; v <= hTop; v += hTop / 4) hs2 += `<line x1="${hpl}" x2="${HW}" y1="${hy(v)}" y2="${hy(v)}"/><text x="${hpl - 5}" y="${hy(v) + 4}" text-anchor="end">${v}</text>`;
+hs2 += "</g>";
+D.hours.forEach((v, h) => {
+  const x = hpl + h * hbw + 1, w = hbw - 2, top = hy(v), r = Math.min(3, (HH - hpb - top) / 2);
+  hs2 += `<path d="M${x},${HH - hpb} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${HH - hpb} Z" fill="${v === hMax ? "var(--accent)" : "var(--s1)"}" data-h="${h}" data-v="${v}"/>`;
+  if (h % 3 === 0) hs2 += `<text x="${x + w / 2}" y="${HH - 6}" text-anchor="middle">${String(h).padStart(2, "0")}</text>`;
+});
+hc.innerHTML = hs2;
+hc.querySelectorAll("path").forEach(p => {
+  p.addEventListener("pointermove", e => showTip(e, `<b>${String(p.dataset.h).padStart(2, "0")}:00</b> · ${p.dataset.v} prompts`));
+  p.addEventListener("pointerleave", hideTip);
+});
+
+$("day-list").innerHTML = D.top_days.slice(0, 6).map(([d, n]) => `<li><span class="big">${n}</span><span>${new Date(d).toLocaleDateString("en", { weekday: "long", month: "short", day: "numeric" })}</span></li>`).join("") +
+  `<li><span class="big">${int(D.weekday.Tue)}</span><span>prompts on Tuesdays, the busiest weekday</span></li>`;
+
+const fucks = D.words.filter(([w]) => w.startsWith("fuck")).reduce((s, [, n]) => s + n, 0);
+const cont = (D.shortest.find(([w]) => w === "continue") || [0, 0])[1];
+const doit = (D.shortest.find(([w]) => w === "do it") || [0, 0])[1];
+const chips = [["\"continue\"", cont], ["\"do it\"", doit], ["fuck*", fucks], ...D.words.filter(([w]) => !w.startsWith("fuck")).slice(0, 7).map(([w, n]) => [`"${w}"`, n])];
+$("words").innerHTML = chips.map(([w, n]) => `<span class="word">${w}<b>${n}</b></span>`).join("");
+$("big-list").innerHTML = D.biggest_sessions.map(s => `<li><span class="big">${fmt(s.tokens)}</span><span><b>${s.date}</b> · ${H_NAME[s.key.split(":")[0]] || s.key.split(":")[0]}<br><span class="q">${(s.title || s.first).replace(/<[^>]+>/g, "").slice(0, 120).replace(/[&<]/g, c => ({ "&": "&amp;", "<": "&lt;" })[c])}</span></span></li>`).join("");
+</script>
+</body>
+</html>
