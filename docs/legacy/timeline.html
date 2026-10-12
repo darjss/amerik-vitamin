@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vit-store timeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fbfaf6; --surface: #ffffff; --line: #e8e6df; --grid: #efeee9;
+  --ink: #141413; --ink-2: #55534d; --ink-3: #8a877f;
+  --accent: #eda100; --accent-ink: #6b4a00;
+  --feat: #2a78d6; --fire: #e34948; --rewrite: #4a3aa7; --data: #eb6834; --ship: #1baf7a; --agent: #e87ba4;
+  --l-dash: #2a78d6; --l-mono: #eb6834; --l-store: #1baf7a; --l-side: #eda100; --l-rewrite: #e87ba4;
+  --c-sess: #4a3aa7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+    --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+    --accent: #c98500; --accent-ink: #ffd27a;
+    --feat: #3987e5; --fire: #e66767; --rewrite: #9085e9; --data: #d95926; --ship: #199e70; --agent: #d55181;
+    --l-dash: #3987e5; --l-mono: #d95926; --l-store: #199e70; --l-side: #c98500; --l-rewrite: #d55181;
+    --c-sess: #9085e9;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+  --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+  --accent: #c98500; --accent-ink: #ffd27a;
+  --feat: #3987e5; --fire: #e66767; --rewrite: #9085e9; --data: #d95926; --ship: #199e70; --agent: #d55181;
+  --l-dash: #3987e5; --l-mono: #d95926; --l-store: #199e70; --l-side: #c98500; --l-rewrite: #d55181;
+  --c-sess: #9085e9;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Onest, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 940px; margin: 0 auto; padding: 48px 16px 96px; }
+h1, h2, h3 { font-family: Unbounded, system-ui, sans-serif; letter-spacing: -0.02em; margin: 0; }
+h1 { font-size: clamp(2.4rem, 8.5vw, 4.8rem); line-height: 1.02; font-weight: 700; }
+h1 span { color: var(--accent); }
+.eyebrow { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 12px; }
+.lede { color: var(--ink-2); max-width: 62ch; margin: 16px 0 0; font-size: 1.05rem; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.block { margin-top: 28px; }
+.block h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+.block .sub { color: var(--ink-2); margin: 0 0 12px; font-size: 0.95rem; max-width: 64ch; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.85rem; color: var(--ink-2); margin-bottom: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink-3); font: 10.5px Onest, sans-serif; }
+svg .lbl { fill: var(--ink-2); font-size: 11.5px; }
+.grid line { stroke: var(--grid); }
+
+.gags { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.gag { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+.gag b { display: block; font-family: Unbounded, sans-serif; font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.gag span { color: var(--ink-2); font-size: 0.85rem; line-height: 1.35; display: block; }
+
+.filters { position: sticky; top: 0; z-index: 5; display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 0; margin-top: 36px; background: linear-gradient(var(--bg) 75%, transparent); }
+.chip { appearance: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); font: 500 0.85rem Onest, sans-serif; padding: 7px 12px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, transform .1s; }
+.chip:active { transform: scale(0.97); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.chip i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+
+.era { margin-top: 44px; }
+.era-head { display: grid; gap: 4px; margin-bottom: 18px; }
+.era-head h2 { font-size: clamp(1.2rem, 3.4vw, 1.55rem); }
+.era-head p { margin: 0; color: var(--ink-2); max-width: 64ch; }
+.era-head .when { font-size: 0.8rem; color: var(--ink-3); letter-spacing: 0.08em; text-transform: uppercase; }
+.tl { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; }
+.tl::before { content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px; background: var(--line); border-radius: 2px; }
+.ev { position: relative; padding: 0 0 18px; opacity: 0; transform: translateY(8px); transition: opacity .45s cubic-bezier(.2,.8,.2,1), transform .45s cubic-bezier(.2,.8,.2,1); }
+.ev.in { opacity: 1; transform: none; }
+.ev.hide { display: none; }
+.ev::before { content: ""; position: absolute; left: -25px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--dot); box-shadow: 0 0 0 3px var(--bg); }
+.ev.big::before { width: 16px; height: 16px; left: -27px; top: 4px; }
+.ev .date { font-size: 0.8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.ev .tag { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dot); margin-left: 8px; font-weight: 600; }
+.ev h3 { font-family: Onest, sans-serif; font-weight: 600; font-size: 1.05rem; letter-spacing: 0; margin: 2px 0; }
+.ev.big h3 { font-family: Unbounded, sans-serif; font-size: 1.15rem; letter-spacing: -0.01em; }
+.ev p { margin: 0; color: var(--ink-2); font-size: 0.95rem; max-width: 66ch; }
+.ev q { display: block; margin-top: 6px; font-style: italic; color: var(--ink); font-size: 0.92rem; overflow-wrap: anywhere; }
+.ev .meta { display: inline-block; margin-top: 6px; font-size: 0.8rem; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.ev.big .box { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+
+.end { margin-top: 56px; background: var(--ink); color: var(--bg); border-radius: 18px; padding: 26px 22px; }
+.end h2 { font-size: clamp(1.3rem, 4vw, 1.9rem); }
+.end p { color: color-mix(in oklab, var(--bg) 78%, var(--ink)); margin: 10px 0 0; max-width: 62ch; }
+.foot { margin-top: 28px; color: var(--ink-3); font-size: 0.85rem; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.82rem; padding: 6px 9px; border-radius: 8px; opacity: 0; transition: opacity .12s; z-index: 9; max-width: 260px; }
+@media (prefers-reduced-motion: reduce) { .ev { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1>From <span>"upd"</span> to the rewrite</h1>
+  <p class="lede">Two years of building one vitamin shop for Mongolia. Nine repos and the same 13 database tables throughout. Milestones come from reading every repo's git history and code, plus the 2026 session logs from opencode, Devin, bpi, pi, Codex, Cursor and Claude Code. Agent sessions before 2026 were lost to a laptop reinstall.</p>
+
+  <section class="block">
+    <h2>Every repo, start to last commit</h2>
+    <p class="sub">Bar length is lifespan. The number is commits. Side quests are other people's shops.</p>
+    <div class="card"><svg id="gantt" role="img" aria-label="Repo lifespans"></svg></div>
+  </section>
+
+  <section class="block">
+    <h2>Commits per month, all repos</h2>
+    <div class="legend" id="lin-legend"></div>
+    <div class="card"><svg id="strip" viewBox="0 0 880 200" role="img" aria-label="Commits per month stacked by repo line"></svg></div>
+    <div class="card" style="margin-top:10px"><div class="legend" style="margin-bottom:6px"><span><i style="background:var(--c-sess)"></i>Agent sessions per month (only 2026 survived)</span></div><svg id="sess" viewBox="0 0 880 90" role="img" aria-label="Agent sessions per month"></svg></div>
+  </section>
+
+  <section class="block">
+    <h2>Running jokes, from commit messages</h2>
+    <div class="gags" id="gags"></div>
+  </section>
+
+  <div class="filters" id="filters" role="group" aria-label="Filter milestones"></div>
+  <div id="timeline"></div>
+
+  <div class="end">
+    <div class="eyebrow" style="color:inherit;opacity:.6">Oct 2026</div>
+    <h2>Rewrite it, with the business in the model</h2>
+    <p>Nine repos and two years later, the 13 tables are still from ecom-dashboard. In that time the catalog was rebuilt from scratch four or more times, search was replaced three times, and the storefront got three looks. Variants were deleted in January 2025 and spent the next year and a half being guessed back. The new repo starts from what the agents were actually asked to do: variants, a stock ledger, payment events, dispatch, and a Telegram admin that calls real actions instead of raw SQL.</p>
+  </div>
+  <p class="foot">Dates are commit dates and session start times. Where an incident has no exact date in the logs, it sits at the start of the session where it came up.</p>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+const D = {"eras": [{"name": "The dashboard years", "when": "Oct 2024 to Apr 2025", "blurb": "Four repos. Commits typed by hand, code from Cursor agents, ChatGPT and DeepSeek copy-paste, and hand edits. Next, Lucia, Turso, a Worker, a Docker Hono server. The admin worked. Auth mostly did not: 33 auth commits in ecom-dashboard alone. The schema written here never left.", "ev": [["2024-10-21", "ship", "Admin dashboard lands in one commit", "Next.js 15 with Drizzle, Lucia, shadcn. 91 files and over 6,000 lines: login, product add form with variants and images, brand and category tables.", "first commit", "91 files, 6,075 lines", 1], ["2024-10-22", "feat", "Brand and category sections split", "Brands and categories get their own server actions and queries. The queries file grows by about 138 lines.", "upd", "13 files", 0], ["2024-11-25", "rewrite", "Dashboard rebuilt, first migration", "First Drizzle migration with 13 tables. Products, brands and categories are rewritten with forms and a Zustand add-product store. Auth is commented out. Orders stay mock data.", "upd", "69 files, +4,662 -1,770", 1], ["2024-11-25", "fire", "Build breaks, edit dialogs deleted", "Same day, fix build issues removes the edit product dialogs and the test page that the rewrite had just added.", "fix build issues", "-1,001 lines", 0], ["2024-12-31", "ship", "Auth and rate limit first", "Day one replaces the T3 starter with Google OAuth, session cookies and a token-bucket rate limiter before any product code exists.", "auth and rate limit done", "2 commits", 0], ["2025-01-01", "feat", "Sessions move to Redis", "After a few Google callback URL fixes, sessions are stored in Upstash Redis as a hashed token with a 30-day expiry.", "stores session in redis", "5 commits that day", 0], ["2025-01-08", "data", "First real schema", "Replaces the example table with users, customers, brands, categories, products, orders and payments on SQLite with Drizzle.", "upd", "4 commits", 1], ["2025-01-16", "data", "Variants deleted in a commit called upd", "Repo #1 had a product variants table. This commit drops sku and hasVariants, so one row equals one sellable item. Every later repo guessed potency and count from product names. In 2026 agents spent 667M tokens on that guess.", "upd", "570107d", 1], ["2025-02-10", "feat", "Cloudflare Worker with bot and scraper", "Hono and grammY on Workers, an Amazon scraper, and a Telegram alert with Approve and Decline buttons. The buttons only edit the message text. No order id, nothing saved.", "upd", "10 files, 798 lines", 1], ["2025-02-11", "feat", "nanoid added for image keys", "A small commit adds nanoid and tsconfig changes, preparing random keys for R2 image uploads.", "upd", "4 files", 0], ["2025-02-12", "feat", "R2 image upload route", "Adds an R2 bucket binding and an /upload/image route that stores the file under images/nanoid and returns a URL.", "image upload", "4 files", 0], ["2025-02-12", "fire", "Bot token committed, upload code breaks", "The Telegram token goes into wrangler.json under a misspelled key. The R2 URL line is invalid code, bucket. with no property, so the build breaks. This is the last commit.", "fix image", "last commit in repo", 0], ["2025-02-14", "feat", "Seed data and temp signup", "A temporary user signup and a database seed script appear, so the dashboard can show fake products without hand entry.", "temp user signup and seed db", null, 0], ["2025-02-17", "ship", "ecom-back deploys as a Docker image", "The Worker code is moved to a Bun and Hono server. It has a Dockerfile and a GitHub Action that pushes darjs/ecom-back to Docker Hub. The .env is committed in the first commit.", "first commit deploying", "13 files", 1], ["2025-02-17", "fire", "Env file removed from tracking only", "The next commit adds .env to gitignore and .dockerignore. The secrets stay in git history.", "remove env lol", null, 0], ["2025-02-17", "feat", "Redis session auth added", "Sessions use a SHA-256 hashed token in Upstash Redis with a 30 day lifetime and refresh after 15 days. An IP allowlist is added as an option.", "add auth", "5 auth commits that day", 0], ["2025-02-17", "fire", "Workflow folder renamed three times", "The CI file sits in .gihub, then workflows.yaml, then workflows/docker-push.yml before the GitHub Action works.", "fix github actionthird attempt", "3 commits", 0], ["2025-02-17", "fire", "Auth turned off for testing", "The auth middleware is commented out in index.ts and never turned back on. Every route is open in the last version.", "disable auth for testing", null, 0], ["2025-02-19", "feat", "Add order flow works", "The add-order form writes the customer, order, details and payment in one transaction. Stock and sales rows are written only if the payment succeeded.", "order add basically done", null, 0], ["2025-02-23", "fire", "Nine auth middleware fixes in a day", "Switched UI to neobrutalist, then spent the rest of the day repeatedly patching the session middleware.", "fix auth middle", "9 auth commits in one day", 1], ["2025-02-24", "feat", "Upload images by URL to R2", "A new route takes a list of image URLs, fetches them in parallel and stores them in R2 using Bun S3Client. It returns public r2.dev URLs.", "change response of image upload from urls", "4 deploy-fix commits", 0], ["2025-02-24", "fire", "CORS fights end the repo", "Four commits fix CORS for the storefront. The last one is the last commit in the repo.", "fixing cors final final", "4 commits, last in repo", 0], ["2025-02-25", "ship", "Image upload finished", "Product image upload replaces the abandoned uploadthing attempt of a week earlier.", "upload image done", null, 0], ["2025-03-10", "feat", "Purchases, brands, categories in a day", "Purchase CRUD that raises stock, plus brand and category CRUD, all land on the same day.", "purchase flow crud done", "7 commits that day", 0], ["2025-03-11", "data", "Sales table and cost analytics", "A sales table stores average purchase cost at sale time, so revenue and profit charts can be computed.", "implementing sales and analytics stuff backend", null, 0], ["2025-03-19", "ship", "Charts on the home page", "Recharts sales and top-product charts appear on the dashboard home.", "add charts to home page", null, 0], ["2025-03-24", "fire", "Redis cache breaks auth again", "Adds Redis caching for analytics and the same day makes several fixes to auth and session caching.", "fixing auth redis", "7 commits that day", 0], ["2025-04-09", "fire", "Session JSON parse bug chase", "Several commits add logging, then remove JSON parsing from the session read path to stop sessions from failing.", "remove auth json parsing", "5 auth commits", 0], ["2025-04-10", "rewrite", "Cursor pagination everywhere", "Products, orders and purchases move to cursor-based pagination and grid views, about 1700 lines added and 860 removed.", "overhaul grids redesign purchasescursor based pagination for all", "17 files", 0], ["2025-04-14", "rewrite", "tRPC added, last commit", "tRPC 11 and react-query are wired in with only a stub cart router. This is the final commit of the repo.", "add trpc", null, 0]]}, {"name": "vit-mono, the first storefront", "when": "Apr to Jun 2025", "blurb": "A Turborepo with a Next admin and an Astro store. The cart worked. QPay was a button to a page that never existed, createOrder forgot to return, and the build failed for weeks.", "ev": [["2025-04-14", "ship", "Turborepo with admin and Astro store", "In one day: shadcn monorepo template, Next admin dashboard, Astro app, and separate ui, db and tRPC packages.", "seperated tprc as package", "10 commits in one day", 1], ["2025-04-15", "fire", "First build errors", "The Astro store could not fetch the backend URL at build time. Four commits of 'trying to fix build errors' followed.", "trying to fix build errors again", "first of about 32 build commits", 0], ["2025-04-16", "feat", "Product actions and product page", "The admin got product create and edit actions. The storefront got its first product page.", "add some product actions and create product page", null, 0], ["2025-04-21", "feat", "Cart works in the browser", "The cart lives in localStorage with a custom cartUpdated event. No server cart exists, and the cart router stays a template stub.", "cart functionality basically done", "14 commits that day", 0], ["2025-04-21", "fire", "CORS fights", "Four commits in a row on CORS middleware between the Astro store and the Next backend.", "fixing cors issues?", null, 0], ["2025-04-22", "rewrite", "Switch to Cloudflare adapter", "After a 404 on deploy and a Vercel adapter attempt on 04-18, the store moved to the Cloudflare Workers adapter with a wrangler config.", "add cloudflare adapter", null, 0], ["2025-05-02", "feat", "Auth work starts", "Phone OTP login for the store begins with login and OTP screens, then a failed view transitions try.", "adding otp auth wip trying to fix view transitions", null, 0], ["2025-05-06", "feat", "Checkout and payment screens", "Checkout form, address form and a payment screen with Khaan Bank transfer details and a QPay button. QPay itself was never built.", "add order done wip payment", "3 payment wip commits in 2 days", 1], ["2025-05-23", "fire", "First build-fix streak", "Auth merge broke the build. Seven commits in two days, including 'help' and 'help x2'.", "help x2", "7 commits on 05-23, 6 more on 05-25", 0], ["2025-05-31", "feat", "Store auth mostly done", "OTP login works with Redis. Right after, a long run of build fixes starts.", "store auth mostly done", null, 0], ["2025-06-01", "fire", "Eight agains", "The build failed over and over on workspace package bundling. Then three commits tried to fix Astro actions.", "fix build again again again again again again again again", "12 build and action fixes in 2 days", 1], ["2025-06-08", "fire", "Next type errors and cookies", "Next.js type errors were fixed after four tries. Cross-domain CORS and cookie problems took over next.", "auth done?", null, 0], ["2025-06-12", "ship", "Cookie auth done", "The store session moved to a cookie checked in tRPC context, with Redis OTP storage.", "cookie auth done", null, 0], ["2025-06-19", "rewrite", "Astro actions auth removed", "The old Astro actions auth was deleted. The store went back to tRPC for login.", "remove old auth astro actions", null, 0], ["2025-06-25", "fire", "Last commits: cookie tests", "The final commits tune cookie config and remove debug routes. The history stops here.", "remove extra routes", "last of 100 commits", 0]]}, {"name": "The lost era", "when": "Jul 2025 to Jan 2026", "blurb": "vit-store is born. Code from Cursor agents, ChatGPT and DeepSeek copy-paste and hand edits, but every agent session from this stretch died in a laptop reinstall, so git is the only witness. Six stack swaps in six months.", "ev": [["2025-07-07", "ship", "First commit, big scaffold", "Better-T-Stack scaffold lands with D1, Drizzle, tRPC, Hono and a full ecommerce schema including payments, in 90 files.", "first commit create bts fix d1 local init db kv auth procedures start scaffold", "22,025 lines added", 1], ["2025-07-07", "fire", "7 of 12 legacy bugs born on day one", "The first two vit-store commits, built with Cursor and ChatGPT or DeepSeek paste before any surviving session log, create the name rebuild, the integer product_cost, phone as a foreign key, stock on delete, non-atomic image deletes and out_of_stock as a status. They survive every later rewrite.", "trpc routers done?", "18b3225, 0753bf7", 1], ["2025-08-02", "fire", "Auth, twice in one day", "Two commits with the same message finish auth and fix env and HTTPS in dev with Caddy. Auth stays a problem for months.", "auth done fully fix env trpc fix https in dev with caddy", "2 commits same day", 0], ["2025-08-05", "rewrite", "TanStack Start out, Router in", "The dashboard moves from TanStack Start to plain TanStack Router. The old Start app is deleted the same day.", "migrated to tsrouter instead of tsstart :) so much simpler", "73 files changed", 1], ["2025-09-02", "fire", "CORS debugging day", "Image upload hits a CORS error. Six commits of logging, redeploying and removing logging follow.", "add loggin trying to fix cors error 2", "9 commits that day", 0], ["2025-09-10", "feat", "Rate limit and retro UI", "Rate limiting goes in, then retro-styled UI components. A full retro overhaul of the admin lands the next day.", "overhauling to retro ui", "4 commits in 2 days", 0], ["2025-10-04", "feat", "Orders, search, customers, Mongolian text", "Admin gets search and pagination for orders and products, a customer CRUD route, and Mongolian UI text. Alchemy log files are cleaned out.", "add customer route with crud and search add defailt error 404 routes", "3 days of order work", 0], ["2025-10-09", "data", "Soft delete arrives", "The schema gets deleted_at columns and indexes on products, brands, carts and cart items, with product router changes to match.", "change db schmea to use soft delete home page mock ui product page skeleton", "22 files changed", 0], ["2025-10-13", "feat", "tRPC cache middleware", "A middleware hashes procedure path and input into a cache key and serves cached results, aimed at analytics and the new home page.", "add cache middleware trpc touch up ui make home page better", "19 files changed", 0], ["2025-10-13", "feat", "KV tRPC cache is born", "Cache middleware lands in commit 169cc48. It had no invalidation, so admin dashboards ran stale for about 50 minutes.", "", "git only", 0], ["2025-10-20", "rewrite", "Zod to valibot, Alchemy deploy", "Validation moves from zod to valibot, a shared package appears, and the repo deploys with Alchemy for the first time.", "migrate from zod to valibot new shared package lint errors deployment with alchemy success", "55 files changed", 1], ["2025-10-23", "rewrite", "storev2 and the api package", "The new storefront apps/storev2 is created with an Alchemy preset, and the server logic moves into packages/api. About 10,700 lines are deleted.", "migrate to storev2 with alchemy preset created api package", "+2,692 / -10,762", 0], ["2025-10-27", "rewrite", "Solid for the storefront", "The storefront moves to Solid islands in Astro. A patch to solid-primitives/storage follows on 10-29 to fix hydration, then the cart moves to a Solid store.", "Patch @solid-primitives/storage to fix hydration issues", "3 commits in 3 days", 0], ["2025-11-11", "feat", "First Messenger webhook", "A Hono webhook handles Facebook verification and events, and bank transfer notifications are sent through Messenger. The payment page with Khaan and QPay logos ships.", "fixed hydration issues added messenger bot and migrated to queries architecture", "92 files changed", 0], ["2025-11-11", "fire", "Stop tracking .env", "Minutes after the Messenger commit, .env is removed from git tracking and .gitignore is fixed.", "Remove .env from git tracking and fix gitignore", "4 minutes later", 0], ["2025-11-12", "rewrite", "D1 out, PlanetScale in", "The database moves from Cloudflare D1 to PlanetScale, reached through a Hyperdrive binding defined in Alchemy.", "migrate to planetscale db fix suspense on admin", "+7,821 / -11,262", 1], ["2025-11-21", "data", "Real seed data", "Real product data goes into the seed, with order confirmation and a redesigned product page.", "add real seed data order confrim product page redesign", null, 0], ["2025-12-08", "feat", "Upstash Search enters the repo", "Commit 004acaf adds the SDK and a sync file. Every product edit later pays for a full index rebuild.", "", "git only", 0], ["2026-01-13", "ship", "Hyperdrive for remote dev", "Alchemy is upgraded to v0.83.1 and Hyperdrive is configured for remote dev. Three commits fix local DB connection and auth routes.", "upgrade alchemy to v0.83.1 and configure hyperdrive for remote dev", "3 commits that day", 0]]}, {"name": "Agents take the wheel", "when": "Jan to Apr 2026", "blurb": "opencode shows up. By February the commit messages turn into tidy changelog lines, a sign agents were now writing them too.", "ev": [["2026-01-12", "agent", "First surviving agent session", "Everything before this died with the reinstall. opencode, on Hyperdrive for local dev. That fight took about a week of sessions.", null, "opencode · 70 sessions in Jan", 1], ["2026-02-09", "data", "Catalog rebuild #1", "The DB had grown to 1.6k products and 9.7k images from old scrapes. Wiped down to about 422 and reconciled with a new inventory JSON. The AI add-product flow (Firecrawl to Amazon, Gemini to Mongolian, images to R2) shipped the same day.", "the goal is to make the db just like the product-new.json but reuse the old details if it matches", "117M tokens"], ["2026-02-15", "feat", "QPay webhook and payment flow", "Bonum dropped. QPay webhook arrives with no body, so the server calls QPay back to check."], ["2026-02-24", "feat", "Inline stock and expiry editing", "Expiry is one YYYY-MM per product. Most products never got one."], ["2026-04-08", "data", "Catalog rebuild #2, from shelf photos", "Photos of physical stock run through Gemini, deduped and matched to the DB. Extracted ones become active, everything else inactive.", "if name and iu and dose and price match its a duplicate find more duplicates", "132M tokens · Codex"], ["2026-04-15", "feat", "Storefront AI assistant", "Full-screen chat from a floating button, Mongolian first. Later disabled, then deleted."], ["2026-04-29", "agent", "bpi arrives", "A one-day burst of 15 refactor commits splitting product forms into feature folders."]]}, {"name": "Launch", "when": "May 2026", "blurb": "Ads start around May 8. Visitors arrive. Orders mostly do not.", "ev": [["2026-05-08", "ship", "Public launch and the first ads", "Around May 8. 1k to 2k visitors a day. Checkout-to-paid conversion around 0.8%.", "use my posthog mcp to see last 30 hours daya i havent got new orders since yesterday", null, 1], ["2026-05-13", "rewrite", "Checkout rebuilt five times", "Blur validation, inline payment, collapsible summary, sticky header. Session replay later showed the real cause: Facebook and Instagram in-app browsers."], ["2026-05-13", "fire", "30 hours with zero orders", "SEO changes (trailing slashes, SSR, prerender) broke /api/trpc on prod."], ["2026-05-21", "feat", "Messenger failure queue and webview detection", "Admin alert failures stop showing up as 500s to customers."], ["2026-05-21", "fire", "Stash pop eats unstaged work", "Agents stashed and popped across sessions. An admin UI overhaul vanished and was rebuilt from edit logs in session transcripts.", "the stashing and stash popping in the session lost other changes as well", "gpt-5.5, composer-2.5", 0], ["2026-05-31", "data", "Catalog rebuild #3, from price list images", "Supplier price sheets read by Gemini. 110 new products, prices updated.", "make script only add new products skip over existing ones man wtf", "51M tokens · Codex"]]}, {"name": "The swarm", "when": "Jun to Jul 2026", "blurb": "Claude Code and Devin join. Orchestrators spawn reviewers that spawn fixers. July has 263 commits.", "ev": [["2026-06-15", "agent", "Claude Code arrives", "49 sessions in three weeks, then mostly gone. Transcripts were auto-deleted, only the prompts survived."], ["2026-06-15", "fire", "\"Cloudflare is down\"", "It was an ISP-level outage in Mongolia. A tweet was drafted, then deleted."], ["2026-06-21", "ship", "Khan Bank auto reconciliation", "A Durable Object logs into Khan with a remembered device and matches transfers by payment number and amount. Same confirm function as QPay.", "no second stock/sales path", null, 1], ["2026-06-21", "feat", "Khaan auto-reconcile ships with a hole", "A stale matching transfer could confirm a later unpaid order. A review caught it 16 days later, before any known loss.", "i want to make the transfer flow automatic using an automated approach", "codex gpt-5.5", 0], ["2026-06-24", "agent", "Devin arrives, Flue agent app scaffolded", "Customer Messenger bot built on Flue and Kimi K2.6. 278 prompts that day."], ["2026-06-24", "rewrite", "Flue Messenger bot goes live", "Duplicate replies start on day one. Patches follow on 06-25 and a full rewrite on 2026-10-01 after 99 days.", "", "gpt-5.5", 0], ["2026-06-25", "agent", "Busiest day: 312 prompts", "Storefront QA orchestration plus the bot learning the real FAQ: 11:00 delivery, 6,000 MNT fee, rural cargo, no discounts.", "hey im doing a prod ready polish mature ecommerce giant ui consistency quality assurance pass", "Devin · 145M tokens in one session", 1], ["2026-06-26", "feat", "Admin agent: Codemode over business data", "PSID-gated admin bot with a query tool and ingestion from chat. Tagged pre-agent-rewrite."], ["2026-06-30", "feat", "\"created\" status for unpaid orders", "Until now paid and unpaid orders looked the same in admin."], ["2026-06-30", "fire", "QPay invoice stored only in KV", "A fire-and-forget pre-create writes the invoice to KV. Four paid invoices totalling 739,000 MNT later had no order link.", "", "commit 47d67be", 1], ["2026-07-02", "rewrite", "Sorbet pop", "About 30 feat commits in one day: Unbounded and Onest, cream surfaces, category washes, pill dock, new checkout. The look that stuck.", null, null, 1], ["2026-07-07", "feat", "Mongolian admin, Workers Cache, search overhaul", "KV endpoint cache replaced. Search learns dosage tokens and symptom aliases."], ["2026-07-07", "feat", "Workers Cache replaces the KV cache", "The owner asks to drop the KV endpoint cache for catalog reads. PR 130 moves them to the Cloudflare Cache API with tag purging.", "drop our kv cache for endpoints change trpc cache middleware from kv to new cache api", "claude Code", 0], ["2026-07-07", "fire", "Stale transfer and 25P02 caught", "Money-path reviews found the stale-transfer hole and a Postgres aborted-transaction trap within hours. Both fixed the same night.", "", "devin glm-5-2", 0], ["2026-07-08", "feat", "Khan transaction ledger and restock notify", "One bank transfer can confirm one payment. Out-of-stock products stay visible with \"notify me\"."], ["2026-07-11", "rewrite", "Astro 7 and edge HTML cache", "Dropped the Alchemy Astro adapter, which had been blocking upgrades."], ["2026-07-11", "rewrite", "Side quest: ecom-template", "A kit for independently deployed client stores, built on Astro, Solid and Elysia. 429 commits in 11 days, while vit-store got 263 that month.", null, null, 0], ["2026-07-11", "feat", "Astro 7 HTML edge cache", "Catalog HTML is cached at the edge and purged by RPC. Price and stock stay fresh, the rest can go stale.", "cache as much as possible for the fastest load times while purging tags succinctly", "gpt-5.6-terra, gpt-5.6-luna", 0], ["2026-07-12", "agent", "orch-v2 audits", "bpi fans out admin, server, agent, storefront and infra audits. 128 bpi sessions in July."], ["2026-07-18", "agent", "18 PRs merged in one day", "Issue author agents, review agents, merge. #226 to #246."], ["2026-07-21", "ship", "v2 goes to prod", "PR #126 merged. The redesigned storefront is live.", null, null, 1], ["2026-07-22", "rewrite", "Side quest: store-kit replaces it", "A multi-tenant commerce kernel with a Solid 2 storefront for DUND by 07-27. Not part of the store line.", null, null, 0]]}, {"name": "Running a shop", "when": "Aug to Sep 2026", "blurb": "Less building, more operating. pi and Cursor take over. Money paths break in new and creative ways.", "ev": [["2026-08-05", "fire", "TU zone list goes down, checkout goes with it", "Fix: customers stop picking delivery zones. Admin picks at dispatch."], ["2026-08-05", "fire", "Four paid QPay invoices unlinked", "A customer said their order never showed. Four QPay payments totalling 739,000 MNT had no invoice record. Three got refunded or shipped through Facebook.", "customer said ordered but not shwoing up on dashboard", "gpt-5.6-sol, 4 sessions", 1], ["2026-08-07", "feat", "Zones chosen at admin dispatch", "PR #262. Checkout now asks only phone, address and notes."], ["2026-08-09", "rewrite", "Search goes back to Upstash", "The MiniSearch Durable Object is deleted. Upstash Redis Search takes over with versioned full-catalog rebuilds.", "", "PR 267", 0], ["2026-08-10", "ship", "store-kit goes quiet", "Last commits are private demos for HK Concept, Huurhun Clothes and Keen Store. The manifesto later refuses it outright.", "Store-kit sells shops to other people. This repo sells vitamins.", null, 0], ["2026-08-11", "agent", "The biggest session", "One pi session planning an admin rewrite used 221M tokens.", "look at the ermote admin rewrite branch and plan there review the plan wdyt", "pi · 221M tokens", 1], ["2026-08-22", "data", "Catalog rebuild #4, from pasted stock text", "Shipment lines in Mongolian slang matched to products by photo. Drafts activated, a 340 kg import list planned.", "the db amount fields are fucked/wrong for now the real truth is in product name or image", "142M tokens · pi"], ["2026-08-25", "feat", "Payment recovery stack", "Bank logos, handoff detection, QR-first flows, resume pending payment. PRs #295 to #308."], ["2026-08-28", "fire", "Repeated orders after bank handoff", "One customer made three identical 1,121,000 MNT orders in 110 seconds after Facebook returned them to the home page. Fixes spanned 12 commits over three days.", "find the repeated orders people made that is like the same products same address same phone number all not paid", "gpt-5.6-sol, grok-4.6", 1], ["2026-08-29", "fire", "PlanetScale outage", "About 15 minutes of error 58000. Catalog reads and the restock cron both fell over."], ["2026-08-31", "ship", "Admin moves to Telegram", "Order alerts via Telegram, then an admin assistant with playbooks for stock, price and ship-all, then a 10:00 morning brief.", "at everyday at 10 am it shows all paid orders and ask the admin to ship all orders", null, 1], ["2026-09-01", "rewrite", "Vite 8 foundation, scripts out", "56k lines of scripts and data dumps moved to vit-playground in one commit."], ["2026-09-08", "fire", "Khan misses two transfers", "Confirmed by hand."], ["2026-09-09", "feat", "Full noindex", "After a summer of SEO and AEO work, the site goes quiet on search engines."], ["2026-09-24", "agent", "Last agent session in the logs", "Devin. Then the decision to rewrite the whole thing."]]}, {"name": "The rewrite", "when": "Oct 2026", "blurb": "amerik-vitamin: Solid 2, Effect 4, drizzle 1.0, Alchemy 2. Eight docs before any app code.", "ev": [["2026-10-01", "rewrite", "The manifesto", "Eight docs in one day. vit-store gets an autopsy: 88,000 lines, 2 test files, 12 bugs never to repeat.", "So we burn it down and keep the lessons.", null, 1], ["2026-10-01", "data", "The DB sees 3% of the business", "233 orders and 50.9M₮ in the database against roughly 1.5B₮ a year in reality. Every sales.product_cost is 0. The real ledger is a paper notebook.", "The system sees about 3% of the business.", null, 0], ["2026-10-01", "rewrite", "Messenger bot rewritten on Agents SDK", "Flue is removed. A Codex review adds a 12-hour handoff pause to the plan, with an explicit resume button as well.", "", "ADR 0012", 0], ["2026-10-08", "feat", "First real code: a Postgres test harness", "A repo that once banned tests opens with a test harness.", "chore: Postgres test harness (@amerik/db/testing)", null, 0]]}], "months": [["2024-10", {"dash": 2}], ["2024-11", {"dash": 2}], ["2024-12", {"dash": 2}], ["2025-01", {"dash": 14}], ["2025-02", {"dash": 63}], ["2025-03", {"dash": 38}], ["2025-04", {"dash": 28, "mono": 44}], ["2025-05", {"mono": 27}], ["2025-06", {"mono": 29}], ["2025-07", {"store": 6}], ["2025-08", {"store": 16}], ["2025-09", {"store": 19}], ["2025-10", {"store": 23}], ["2025-11", {"store": 10}], ["2025-12", {"store": 3}], ["2026-01", {"store": 4}], ["2026-02", {"store": 33}], ["2026-03", {}], ["2026-04", {"store": 24}], ["2026-05", {"store": 50}], ["2026-06", {"store": 113}], ["2026-07", {"side": 598, "store": 263}], ["2026-08", {"side": 27, "store": 77}], ["2026-09", {"store": 70}], ["2026-10", {"rewrite": 36, "store": 38}]], "sess": {"2026-01": 71, "2026-02": 94, "2026-03": 16, "2026-04": 25, "2026-05": 194, "2026-06": 165, "2026-07": 265, "2026-08": 186, "2026-09": 28}, "repos": [["ecommerce-dashboard", "2024-10-21", "2024-11-25", 4, "dash"], ["ecom-dashboard", "2024-12-31", "2025-04-14", 123, "dash"], ["ecom-worker", "2025-02-10", "2025-02-12", 4, "dash"], ["ecom-back", "2025-02-17", "2025-02-24", 18, "dash"], ["vit-mono", "2025-04-14", "2025-06-25", 100, "mono"], ["vit-store", "2025-07-07", "2026-10-07", 749, "store"], ["ecom-template", "2026-07-11", "2026-07-21", 429, "side"], ["store-kit", "2026-07-22", "2026-08-10", 196, "side"], ["amerik-vitamin", "2026-10-01", "2026-10-08", 36, "rewrite"]], "gags": [["commit messages about auth or login", 153], ["about the build", 55], ["about CORS", 14], ["commits named just \"upd\"", 30], ["commits between midnight and 5am", 242], ["repos with a commented-out auth middleware", 3], ["of the 12 legacy bugs born on day one, before any surviving session log", 7]], "total_commits": 1659};
+const TYPES = { ship: ["Shipped", "var(--ship)"], feat: ["Feature", "var(--feat)"], rewrite: ["Rewrite", "var(--rewrite)"], fire: ["Incident", "var(--fire)"], data: ["Data", "var(--data)"], agent: ["Agents", "var(--agent)"] };
+const LIN = { dash: ["Dashboard repos", "var(--l-dash)"], mono: ["vit-mono", "var(--l-mono)"], store: ["vit-store", "var(--l-store)"], side: ["Side quests", "var(--l-side)"], rewrite: ["amerik-vitamin", "var(--l-rewrite)"] };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const fmtDate = d => new Date(d + "T00:00:00").toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" });
+const tip = document.getElementById("tip");
+const hover = (el, text) => { el.addEventListener("pointermove", e => { tip.innerHTML = text; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 12, innerWidth - 270) + "px"; tip.style.top = e.clientY + 12 + "px"; }); el.addEventListener("pointerleave", () => tip.style.opacity = 0); };
+const nEv = D.eras.reduce((s, e) => s + e.ev.length, 0);
+document.getElementById("eyebrow").textContent = `amerikvitamin.mn · Oct 2024 to Oct 2026 · ${D.repos.length} repos · ${D.total_commits.toLocaleString("en")} commits · ${nEv} milestones`;
+
+const roundedBar = (x, top, w, base, r) => { r = Math.min(r, (base - top) / 2, w / 2); return `M${x},${base} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${base} Z`; };
+
+{
+  const g = document.getElementById("gantt"), W = 880, rowH = 30, pl = 150, top = 22;
+  const t0 = new Date("2024-10-01").getTime(), t1 = new Date("2026-10-31").getTime(), x = d => pl + (new Date(d).getTime() - t0) / (t1 - t0) * (W - pl - 10);
+  const H = top + D.repos.length * rowH + 6;
+  g.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  let s = '<g class="grid">';
+  for (let y = 2025; y <= 2026; y++) for (const m of [1, 7]) { const d = `${y}-${String(m).padStart(2, "0")}-01`; s += `<line x1="${x(d)}" x2="${x(d)}" y1="${top - 6}" y2="${H}"/><text x="${x(d)}" y="${top - 10}" text-anchor="middle">${m === 1 ? y : "Jul"}</text>`; }
+  s += "</g>";
+  D.repos.forEach(([name, a, b, n, lin], i) => {
+    const y = top + i * rowH + 6, x0 = x(a), w = Math.max(6, x(b) - x0);
+    s += `<text class="lbl" x="${pl - 10}" y="${y + 12}" text-anchor="end">${name}</text>`;
+    s += `<rect x="${x0}" y="${y}" width="${w}" height="16" rx="4" fill="${LIN[lin][1]}" data-t="${esc(`<b>${name}</b><br>${a} to ${b}<br>${n} commits`)}"/>`;
+    s += `<text x="${x0 + w + 6}" y="${y + 12}" style="fill:var(--ink-2)">${n}</text>`;
+  });
+  g.innerHTML = s;
+  g.querySelectorAll("rect").forEach(r => hover(r, r.dataset.t));
+}
+
+{
+  document.getElementById("lin-legend").innerHTML = Object.values(LIN).map(([n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("");
+  const svg = document.getElementById("strip"), W = 880, H = 200, pl = 30, pb = 34, pt = 6;
+  const tot = D.months.map(([, v]) => Object.values(v).reduce((a, b) => a + b, 0)), max = Math.ceil(Math.max(...tot) / 200) * 200;
+  const y = v => H - pb - v / max * (H - pb - pt), slot = (W - pl) / D.months.length, bw = slot * 0.62;
+  let s = '<g class="grid">';
+  for (let v = 0; v <= max; v += max / 4) s += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  s += "</g>";
+  D.months.forEach(([m, v], i) => {
+    const x = pl + i * slot + (slot - bw) / 2; let acc = 0;
+    const segs = Object.keys(LIN).filter(k => v[k]);
+    segs.forEach((k, j) => {
+      const y0 = y(acc), y1 = y(acc + v[k]); acc += v[k];
+      const last = j === segs.length - 1;
+      const d = last ? roundedBar(x, y1, bw, y0, 3) : `M${x},${y0} V${y1} H${x + bw} V${y0} Z`;
+      s += `<path d="${d}" fill="${LIN[k][1]}" stroke="var(--surface)" stroke-width="${segs.length > 1 ? 1.5 : 0}" data-t="${esc(`<b>${m}</b><br>${LIN[k][0]}: ${v[k]} commits<br>month total ${tot[i]}`)}"/>`;
+    });
+    const d = new Date(m + "-01T00:00:00");
+    if (i % 2 === 0) s += `<text x="${x + bw / 2}" y="${H - pb + 14}" text-anchor="middle">${d.toLocaleString("en", { month: "short" })}</text>`;
+    if (m.endsWith("-01") || i === 0) s += `<text x="${x + bw / 2}" y="${H - pb + 27}" text-anchor="middle" style="font-weight:600">${m.slice(0, 4)}</text>`;
+  });
+  svg.innerHTML = s;
+  svg.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+
+  const sv = document.getElementById("sess"), SH = 90, sb = 16, smax = 300, sy = v => SH - sb - v / smax * (SH - sb - 4);
+  let t = `<g class="grid"><line x1="${pl}" x2="${W}" y1="${SH - sb}" y2="${SH - sb}"/></g>`;
+  D.months.forEach(([m], i) => {
+    const v = D.sess[m] || 0, x = pl + i * slot + (slot - bw) / 2;
+    if (v) t += `<path d="${roundedBar(x, sy(v), bw, SH - sb, 3)}" fill="var(--c-sess)" data-t="${esc(`<b>${m}</b><br>${v} agent sessions`)}"/>`;
+    else if (m >= "2025-07" && m < "2026-01") t += `<text x="${x + bw / 2}" y="${SH - sb - 4}" text-anchor="middle" style="font-size:9px">?</text>`;
+  });
+  t += `<text x="${pl + 2}" y="12" style="fill:var(--ink-2)">? = sessions existed but were lost</text>`;
+  sv.innerHTML = t;
+  sv.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+}
+
+document.getElementById("gags").innerHTML = D.gags.map(([label, n]) => `<div class="gag"><b>${n}</b><span>${esc(label)}</span></div>`).join("");
+
+document.getElementById("timeline").innerHTML = D.eras.map(era => `
+  <section class="era">
+    <div class="era-head"><span class="when">${esc(era.when)}</span><h2>${esc(era.name)}</h2><p>${esc(era.blurb)}</p></div>
+    <ol class="tl">${era.ev.map(([d, t, title, body, quote, meta, big]) => `
+      <li class="ev${big ? " big" : ""}" data-type="${t}" style="--dot:${TYPES[t][1]}">
+        <div class="${big ? "box" : ""}">
+          <span class="date">${fmtDate(d)}</span><span class="tag">${TYPES[t][0]}</span>
+          <h3>${esc(title)}</h3>
+          <p>${esc(body)}</p>
+          ${quote ? `<q>${esc(quote)}</q>` : ""}
+          ${meta ? `<span class="meta">${esc(meta)}</span>` : ""}
+        </div>
+      </li>`).join("")}
+    </ol>
+  </section>`).join("");
+
+const filters = document.getElementById("filters");
+filters.innerHTML = `<button class="chip" aria-pressed="true" data-f="all">All</button>` + Object.entries(TYPES).map(([k, [n, c]]) => `<button class="chip" aria-pressed="false" data-f="${k}"><i style="background:${c}"></i>${n}</button>`).join("");
+filters.addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  filters.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", c === b));
+  document.querySelectorAll(".ev").forEach(ev => ev.classList.toggle("hide", b.dataset.f !== "all" && ev.dataset.type !== b.dataset.f));
+  document.querySelectorAll(".era").forEach(s => s.hidden = !s.querySelector(".ev:not(.hide)"));
+});
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { rootMargin: "0px 0px -8% 0px" });
+document.querySelectorAll(".ev").forEach(ev => io.observe(ev));
+</script>
+</body>
+</html>

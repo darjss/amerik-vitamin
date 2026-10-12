@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vit-store analytics autopsy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Onest:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fbfaf6; --surface: #ffffff; --line: #e8e6df; --grid: #efeee9;
+  --ink: #141413; --ink-2: #55534d; --ink-3: #8a877f;
+  --accent: #eda100; --accent-ink: #6b4a00;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+  --bad: #e34948; --dim: #b7d3f6; --mark: #4a3aa7;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+    --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+    --accent: #c98500; --accent-ink: #ffd27a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --bad: #e66767; --dim: #184f95; --mark: #9085e9;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #121211; --surface: #1a1a19; --line: #2c2c2a; --grid: #262624;
+  --ink: #f6f5f1; --ink-2: #c3c2b7; --ink-3: #8f8d85;
+  --accent: #c98500; --accent-ink: #ffd27a;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+  --bad: #e66767; --dim: #184f95; --mark: #9085e9;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 Onest, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+main { max-width: 980px; margin: 0 auto; padding: 48px 16px 96px; }
+h1, h2 { font-family: Unbounded, system-ui, sans-serif; letter-spacing: -0.02em; margin: 0; }
+h1 { font-size: clamp(2.4rem, 8.5vw, 4.8rem); line-height: 1.02; font-weight: 700; }
+h1 span { color: var(--accent); }
+h2 { font-size: clamp(1.2rem, 3.4vw, 1.55rem); font-weight: 600; margin-bottom: 4px; }
+.eyebrow { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-3); margin-bottom: 12px; }
+.lede { color: var(--ink-2); max-width: 62ch; margin: 16px 0 0; font-size: 1.05rem; }
+section { margin-top: 60px; }
+.sub { color: var(--ink-2); margin: 0 0 16px; max-width: 66ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 36px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.tile b { display: block; font-family: Unbounded, sans-serif; font-size: 1.7rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile span { color: var(--ink-2); font-size: 0.88rem; line-height: 1.35; display: block; }
+.two { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 780px) { .two { grid-template-columns: 1fr 1fr; } }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--ink-3); font: 10.5px Onest, sans-serif; }
+svg .note { fill: var(--ink-2); font-size: 10.5px; }
+.grid line { stroke: var(--grid); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.85rem; color: var(--ink-2); margin-bottom: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.bars { display: grid; gap: 5px; }
+.bar-row { display: grid; grid-template-columns: minmax(110px, 260px) 1fr minmax(48px, auto); gap: 10px; align-items: center; font-size: 0.9rem; padding: 3px 4px; border-radius: 6px; }
+.bar-row:hover { background: var(--grid); }
+.bar-row .lbl { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-row .val { font-variant-numeric: tabular-nums; text-align: right; }
+.track { height: 14px; display: flex; gap: 2px; }
+.seg { height: 100%; min-width: 2px; border-radius: 0 4px 4px 0; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.seg + .seg { border-radius: 0 4px 4px 0; }
+.track .seg:not(:last-child) { border-radius: 0; }
+.callout { border-left: 3px solid var(--accent); padding: 6px 0 6px 14px; margin-top: 14px; color: var(--ink-2); max-width: 70ch; }
+.callout b { color: var(--ink); }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--ink-3); font-weight: 500; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.06em; }
+td.n, th.n { text-align: right; }
+.table-wrap { overflow-x: auto; }
+.dupe { display: grid; gap: 8px; margin-top: 12px; }
+.dupe div { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--grid); font-size: 0.9rem; }
+.dupe div span:nth-child(n+2) { font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.errs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.errs li { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: baseline; }
+.errs .big { font-family: Unbounded, sans-serif; font-weight: 600; min-width: 4.4ch; font-variant-numeric: tabular-nums; }
+.errs code { font-size: 0.84rem; background: var(--grid); padding: 1px 5px; border-radius: 5px; overflow-wrap: anywhere; }
+.errs small { color: var(--ink-3); display: block; }
+.quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 12px; }
+.quote { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+.quote b { display: block; font-size: 0.95rem; margin-bottom: 6px; }
+.quote p { margin: 0; color: var(--ink-2); font-size: 0.9rem; }
+.quote .tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+.quote .tags span { font-size: 0.75rem; background: var(--grid); border-radius: 999px; padding: 2px 8px; color: var(--ink-2); }
+.rules { margin: 0; padding-left: 20px; display: grid; gap: 8px; color: var(--ink-2); }
+.rules b { color: var(--ink); }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--bg); font-size: 0.82rem; padding: 6px 9px; border-radius: 8px; opacity: 0; transition: opacity .12s; z-index: 9; max-width: 280px; }
+.foot { margin-top: 64px; color: var(--ink-3); font-size: 0.85rem; max-width: 72ch; }
+.foot li { margin-bottom: 4px; }
+@media (prefers-reduced-motion: reduce) { .seg { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">PostHog · project vit-store · Dec 2025 to Oct 8, 2026</div>
+  <h1>What the <span>customers</span> actually did</h1>
+  <p class="lede">The archaeology so far came from git and agent logs, which only show what got built. This page shows what happened on the other side of the screen: who came, from where, what they searched for, where they gave up, and which errors they ran into.</p>
+  <div class="tiles" id="tiles"></div>
+
+  <section>
+    <h2>The whole story in one line</h2>
+    <p class="sub">Unique visitors per day since launch. Every big event from the timeline is visible here. The ad launch spike came first, then the site went dark for two and a half weeks, then a long slow grind. When the site was set to noindex, traffic halved.</p>
+    <div class="card"><svg id="daily" viewBox="0 0 900 260" role="img" aria-label="Daily unique visitors"></svg></div>
+    <div class="card" style="margin-top:10px"><div class="legend" style="margin-bottom:4px"><span><i style="background:var(--s3)"></i>Orders per day (order_created plus the older order_placed event)</span></div><svg id="dailyOrders" viewBox="0 0 900 100" role="img" aria-label="Daily orders"></svg></div>
+  </section>
+
+  <section>
+    <h2>Money the browser saw</h2>
+    <p class="sub">Server-side <code>order_created</code> events with <code>$revenue</code>, tracked since Jun 30. These are orders created, not orders paid. The paid number lives in the DB, and the manifesto says the DB only sees about 3% of the business anyway.</p>
+    <div class="two">
+      <div class="card"><svg id="revenue" viewBox="0 0 440 220" role="img" aria-label="Order value per month"></svg></div>
+      <div class="card table-wrap"><table id="monthTable"></table></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Facebook is the storefront</h2>
+    <p class="sub">Since launch, 41% of visitors arrived inside the Facebook app's browser, and 87% were on a phone. Those visitors are the most likely to buy, and their payment hand-off is the most fragile part of the funnel.</p>
+    <div class="two">
+      <div class="card"><div class="bars" id="surfaces"></div></div>
+      <div class="card">
+        <div class="legend"><span><i style="background:var(--s1)"></i>In-app (FB/IG)</span><span><i style="background:var(--s4)"></i>Normal browser</span></div>
+        <svg id="surfaceFunnel" viewBox="0 0 440 200" role="img" aria-label="Funnel reach by surface"></svg>
+      </div>
+    </div>
+    <p class="callout">In-app visitors added to cart <b>19.2%</b> of the time, compared with <b>13.1%</b> in normal browsers. They reached checkout <b>10.9%</b> of the time, against <b>8.1%</b>. The people coming from Facebook want to buy. The checkout loses them at the bank hand-off.</p>
+  </section>
+
+  <section>
+    <h2>The bank app hand-off</h2>
+    <p class="sub">A customer taps a bank, and the phone is supposed to open that bank's app. A "no hand-off" event means the app never opened. 42% of Khan bank taps never opened the app, and all 5 qPay wallet taps failed. This is the root of the repeated-orders bug, where a customer placed three orders of 1,121,000₮ in 110 seconds.</p>
+    <div class="card">
+      <div class="legend"><span><i style="background:var(--s3)"></i>App opened</span><span><i style="background:var(--bad)"></i>No hand-off</span><span><i style="background:var(--dim)"></i>Unknown (left before either fired)</span></div>
+      <div class="bars" id="banks"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What people searched for</h2>
+    <p class="sub">The search event fires as people type, so "ma", "mag", "magn" and "magne" are one person spelling magnesium. Inositol is the most searched term overall. People search in both Mongolian and English ("Витамин d", "Омега", "Магни").</p>
+    <div class="two">
+      <div class="card"><div class="eyebrow">Full words</div><div class="bars" id="searches"></div></div>
+      <div class="card"><div class="eyebrow">Magnesium, one keystroke at a time</div><div class="bars" id="typing"></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Most viewed products</h2>
+    <p class="sub">Unique people who opened each product page. Vitamin D3+K2 and magnesium glycinate dominate. That's the same pair mom puts at the top of her collages.</p>
+    <div class="card"><div class="bars" id="products"></div></div>
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow">The variant problem, seen from the customer's side</div>
+      <p class="sub" style="margin:0">These look like one product: Micro Ingredients D3 5,000 IU + K2 100 mcg, 300 softgels. In the catalog they are three products, with three names and two different prices.</p>
+      <div class="dupe" id="dupes"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Errors customers actually hit</h2>
+    <p class="sub">Browser exceptions since launch, most frequent first. August had 2,934 of them.</p>
+    <div class="card"><ul class="errs" id="errors"></ul></div>
+  </section>
+
+  <section>
+    <h2>What the replays showed</h2>
+    <p class="sub">Replay Vision, PostHog's AI session watcher, summarized 21 recorded sessions between Aug 28 and Sep 3. Eleven went cleanly, mostly OTP logins and guest checkouts. Ten hit friction, and almost all of it sits between the cart, the order and the payment hand-off.</p>
+    <div class="two">
+      <div class="card"><div class="eyebrow">Friction themes, sessions affected</div><div class="bars" id="uxThemes"></div></div>
+      <div class="card"><div class="eyebrow">How it went</div><svg id="uxOutcome" viewBox="0 0 440 200" role="img" aria-label="Session outcomes"></svg></div>
+    </div>
+    <div class="quotes" id="uxQuotes"></div>
+    <div class="card" style="margin-top:12px">
+      <div class="eyebrow">UX rules for the rewrite, straight from these sessions</div>
+      <ol class="rules" id="uxRules"></ol>
+    </div>
+  </section>
+
+  <section>
+    <h2>Browse at night, buy at noon</h2>
+    <p class="sub">Ulaanbaatar time. Visitors peak at 22:00. Orders peak at 12:00 and 16:00, around lunch and late afternoon. People pick things out in bed and pay the next day.</p>
+    <div class="two">
+      <div class="card"><div class="eyebrow">Visitors by hour</div><svg id="hourV" viewBox="0 0 440 180" role="img" aria-label="Visitors by hour"></svg></div>
+      <div class="card"><div class="eyebrow">Orders by hour</div><svg id="hourO" viewBox="0 0 440 180" role="img" aria-label="Orders by hour"></svg></div>
+    </div>
+  </section>
+
+  <ul class="foot">
+    <li>All numbers are one-off HogQL queries against PostHog project vit-store, not saved metrics. The connection could not read the metric catalog.</li>
+    <li>Visitors means unique people with a <code>$pageview</code>. Localhost is excluded from the monthly table.</li>
+    <li>Browser-side <code>payment_confirmed</code> undercounts badly, because many customers never come back to the tab after paying. Use the DB for paid orders.</li>
+    <li>Daily orders combine <code>order_placed</code> (browser, until July) and <code>order_created</code> (server, from Jun 30). The overlap days may double count.</li>
+  </ul>
+</main>
+<div class="tip" id="tip"></div>
+<script>
+const D = {
+  daily: [["2026-04-25",4,0],["2026-04-27",1,0],["2026-04-28",4,1],["2026-04-29",1,0],["2026-04-30",4,0],["2026-05-01",3,0],["2026-05-02",2,0],["2026-05-03",1,0],["2026-05-04",1,0],["2026-05-05",3,0],["2026-05-06",17,0],["2026-05-07",3,3],["2026-05-08",181,0],["2026-05-09",292,3],["2026-05-10",372,3],["2026-05-11",347,4],["2026-05-12",327,4],["2026-05-13",302,8],["2026-05-14",129,1],["2026-05-15",109,3],["2026-05-16",76,3],["2026-05-17",104,4],["2026-05-18",264,7],["2026-05-19",188,5],["2026-05-20",111,8],["2026-05-21",105,10],["2026-05-22",69,14],["2026-05-23",50,8],["2026-05-24",22,0],["2026-05-25",23,0],["2026-05-26",24,2],["2026-05-27",35,0],["2026-05-28",3,4],["2026-05-29",3,0],["2026-05-30",1,0],["2026-05-31",1,0],["2026-06-01",1,0],["2026-06-06",1,0],["2026-06-15",23,6],["2026-06-16",16,2],["2026-06-17",16,0],["2026-06-18",17,2],["2026-06-19",26,6],["2026-06-20",20,4],["2026-06-21",28,6],["2026-06-22",26,2],["2026-06-23",48,14],["2026-06-24",74,2],["2026-06-25",55,2],["2026-06-26",24,2],["2026-06-27",16,6],["2026-06-28",18,0],["2026-06-29",25,0],["2026-06-30",29,1],["2026-07-01",34,1],["2026-07-02",35,1],["2026-07-03",31,0],["2026-07-04",16,0],["2026-07-05",20,2],["2026-07-06",40,2],["2026-07-07",37,10],["2026-07-08",31,5],["2026-07-09",35,5],["2026-07-10",18,1],["2026-07-11",28,0],["2026-07-12",7,1],["2026-07-13",6,1],["2026-07-14",10,0],["2026-07-15",12,1],["2026-07-16",23,1],["2026-07-17",16,1],["2026-07-18",21,0],["2026-07-19",27,0],["2026-07-20",31,6],["2026-07-21",31,3],["2026-07-22",38,3],["2026-07-23",33,4],["2026-07-24",33,2],["2026-07-25",30,3],["2026-07-26",25,4],["2026-07-27",37,4],["2026-07-28",40,3],["2026-07-29",34,2],["2026-07-30",55,7],["2026-07-31",45,5],["2026-08-01",35,3],["2026-08-02",52,4],["2026-08-03",39,3],["2026-08-04",47,0],["2026-08-05",37,2],["2026-08-06",43,5],["2026-08-07",33,4],["2026-08-08",33,0],["2026-08-09",36,2],["2026-08-10",37,9],["2026-08-11",59,4],["2026-08-12",40,0],["2026-08-13",33,2],["2026-08-14",29,1],["2026-08-15",19,1],["2026-08-16",37,6],["2026-08-17",51,6],["2026-08-18",43,7],["2026-08-19",56,2],["2026-08-20",45,5],["2026-08-21",30,2],["2026-08-22",32,9],["2026-08-23",27,2],["2026-08-24",52,4],["2026-08-25",42,11],["2026-08-26",46,9],["2026-08-27",48,12],["2026-08-28",52,10],["2026-08-29",38,13],["2026-08-30",44,5],["2026-08-31",64,9],["2026-09-01",53,3],["2026-09-02",67,10],["2026-09-03",64,10],["2026-09-04",72,13],["2026-09-05",57,9],["2026-09-06",63,8],["2026-09-07",92,7],["2026-09-08",71,6],["2026-09-09",54,4],["2026-09-10",26,2],["2026-09-11",19,3],["2026-09-12",28,2],["2026-09-13",25,4],["2026-09-14",26,4],["2026-09-15",24,7],["2026-09-16",28,0],["2026-09-17",25,4],["2026-09-18",15,3],["2026-09-19",10,0],["2026-09-20",9,1],["2026-09-21",22,2],["2026-09-22",16,2],["2026-09-23",18,2],["2026-09-24",19,2],["2026-09-25",9,1],["2026-09-26",15,0],["2026-09-27",14,2],["2026-09-28",10,2],["2026-09-29",17,0],["2026-09-30",8,0],["2026-10-01",11,0],["2026-10-02",13,1],["2026-10-03",15,0],["2026-10-04",15,0],["2026-10-05",18,2],["2026-10-06",12,0],["2026-10-07",24,0],["2026-10-08",9,0]],
+  marks: [["2026-05-08","ads launch"],["2026-05-28","site goes dark"],["2026-06-15","back"],["2026-07-21","v2 to prod"],["2026-08-05","zones to admin"],["2026-08-28","repeat-order fix"],["2026-09-09","noindex"]],
+  months: [["Dec 2025",52,103,5,3,3],["Jan",89,160,3,1,1],["Feb",41,528,33,10,25],["Mar",66,526,8,7,5],["Apr",78,348,11,2,2],["May",2885,11946,554,143,94],["Jun",418,2325,145,48,55],["Jul",766,4393,321,100,78],["Aug",1115,6213,638,151,152],["Sep",823,5381,406,131,113],["Oct*",108,534,32,3,3]],
+  revenue: [["Jun",1,131000],["Jul",76,16579000],["Aug",143,36013100],["Sep",93,20048000],["Oct*",3,533000]],
+  surfaces: [["Facebook in-app",2459],["Chrome (phone)",1525],["Safari (iPhone)",1104],["Chrome (desktop)",512],["Edge (desktop)",109],["Chrome iOS",84],["Samsung Internet",57],["Firefox (desktop)",38]],
+  funnel: { inapp: [2446, 469, 267], normal: [3489, 457, 283] },
+  banks: [["Khan bank",77,40,32],["Sono",13,12,1],["Trade and Development bank",11,5,6],["Xac bank",6,6,0],["State bank 3.0",6,5,1],["Social Pay",5,5,0],["qPay wallet",5,0,5],["Toki App",4,3,0],["Ard App",2,1,1],["PayOn",1,0,1]],
+  searches: [["inositol",106],["magnesium",73],["berberine",62],["omega",58],["zinc",53],["Витамин d",51],["collagen",51],["Магни ба Эрдэс",50],["omega 3",46],["vitamin d",38],["creatine",28],["biotin",24],["choline",22],["vitamin c",20],["quercetin",18],["tudca",16]],
+  typing: [["ma",29],["mag",30],["magn",30],["magne",24],["magnes",17],["magnesium",73]],
+  products: [["D3 + K2 2,000 IU, 300 softgels",190,120000],["Magnesium Glycinate 1,000 mg, 240 caps",135,115000],["D3 + K2 5,000 IU, 300 softgels",115,110000],["Micro Ingredients D3 + K2 2,000 IU, 300",83,125000],["Triple Strength Omega-3, 240 softgels",78,155000],["Methylated B Complex, 240 caps",54,85000],["NatureBell Magnesium Glycinate 500 mg",52,110000],["Micro Ingredients D3 & K2 5,000 IU (MK-7)",50,135000],["Micro Ingredients D3 + K2 5,000 IU (MK-7)",45,110000],["Micro Ingredients D3 50,000 IU + K2, 240",44,145000],["Multi Collagen Peptides, 2 lb",27,200000],["Myo & D-Chiro Inositol, 240 caps",27,135000]],
+  dupes: [["Vitamin D3+k2 5,000 IU D3 + 100 MCG K2 300 Softgels",115,"110,000₮"],["Micro Ingredients, Vitamin D3 & K2, 5,000 IU D3 & 100 mcg K2 (MK-7), 300 Softgels",50,"135,000₮"],["Micro Ingredients, Vitamin D3 + K2, 5,000 IU D3 + 100 mcg K2 (MK-7), 300 Softgels",45,"110,000₮"]],
+  errors: [[2728,"Too many OTP attempts. Please try again later.","from just 4 people: the 4-digit OTP form kept re-submitting itself after each failure"],[1368,"Transition was aborted because of invalid state","454 people. View transitions colliding with navigation"],[1078,"Multiple elements found with view-transition-name: product-image-…","about 420 people across a dozen product ids. The same product image rendered twice on one page"],[170,"Script error.","56 people, cross-origin script with no details"],[88,"Load failed","55 people, flaky mobile networks"],[69,"Not a QPay payment","7 people. The provider-flip bug, here only the client-side share"],[63,"Importing a module script failed.","8 people, stale chunks after a deploy"]],
+  ux: {
+    themes: [["Cart edited after the order was created: new order ids, stale totals", 3], ["Abandoned at the payment step", 3], ["404 on a payment link or page", 3], ["Bank app hand-off failed, customer started over", 2], ["Guest's own order missing from the profile page", 2], ["Cart emptied or kept after ordering", 2], ["Tab-hopping and QR or copy friction on the payment page", 1], ["Product image rendered as a solid block", 1], ["Login prompt in the middle of browsing", 1]],
+    outcome: [["Clean", 11], ["Friction", 10]],
+    quotes: [
+      ["The 1,121,000₮ customer", "10 items in the cart. Tapped Khan bank, the app hand-off happened outside the browser, and the customer came back and started a new checkout instead of resuming the existing one. That's the repeated-orders bug, recorded.", ["qpay deeplink handoff failure", "repeated checkout order creation"]],
+      ["Order 0NDQ934J, 236,000₮", "Created an order, went back to the cart, removed the zinc. The cart total updated, but the payment link still showed the old items and the old total. Tried QPay, then Sono, then left.", ["stale order total after cart update", "payment abandonment"]],
+      ["KXUUW16H, then O8VYH6SV", "Ordered 2 items, kept shopping in a new tab, hit a 404 on a payment link, added 2 more items and checked out again. Two orders now exist. Pressed 'Шилжүүлсэн' on the second.", ["404 page error", "duplicate order creation"]],
+      ["Order GC855DYO31", "Came back from the Sono app with the cart still full. The profile page said 'Захиалга олдсонгүй' (no orders found). Bounced between the payment link and the profile looking for the order.", ["cart persisted after order creation", "empty order history on profile page"]],
+      ["Kids Omega-3", "The product image showed as a solid yellow block. Opened the same product in a new tab to see it, compared it with Triple Strength, then came back and bought it anyway.", ["rendering issue with product images"]],
+    ],
+    rules: [
+      "<b>One open checkout per customer.</b> While an order is unpaid, the cart edits that order and the payment link always shows the live total. No silent new order ids.",
+      "<b>Returning from a bank app lands on the pending payment</b>, showing \"did it go through?\" with live status. Never the home page, never a new checkout.",
+      "<b>The payment link is the order page.</b> Guests find their order by phone without logging in. The profile never says \"no orders\" right after someone ordered.",
+      "<b>Old payment links never 404.</b> A paid, expired or cancelled order shows its state.",
+      "<b>Show only the payment methods that work.</b> No Sono until it's approved. Put QR first in the Facebook in-app browser, the place where 42% of Khan bank taps never open the app.",
+      "<b>Clear the cart only when payment is confirmed</b>, not at order creation and not at random.",
+      "<b>One image per product per page.</b> No duplicate view-transition names, and an image never renders as a blank block.",
+      "<b>Browsing never asks for a login.</b> These customers buy first and sign in later, if ever.",
+    ],
+  },
+  hours: [[0,9,244],[1,10,145],[2,3,78],[3,3,49],[4,0,35],[5,1,57],[6,1,117],[7,5,209],[8,9,283],[9,18,343],[10,11,348],[11,20,437],[12,30,381],[13,17,443],[14,22,452],[15,13,476],[16,31,453],[17,19,415],[18,25,420],[19,12,355],[20,14,404],[21,14,403],[22,13,532],[23,16,389]],
+};
+
+const $ = id => document.getElementById(id);
+const int = n => n.toLocaleString("en-US");
+const mnt = n => n >= 1e6 ? (n / 1e6).toFixed(1) + "M₮" : int(n) + "₮";
+const tip = $("tip");
+const hover = (el, html) => { el.addEventListener("pointermove", e => { tip.innerHTML = html; tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 12, innerWidth - 290) + "px"; tip.style.top = e.clientY + 12 + "px"; }); el.addEventListener("pointerleave", () => tip.style.opacity = 0); };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+const rbar = (x, top, w, base, r = 3) => { r = Math.min(r, (base - top) / 2, w / 2); if (r <= 0) return `M${x},${base} V${top} H${x + w} V${base} Z`; return `M${x},${base} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${base} Z`; };
+
+const totalRev = D.revenue.reduce((s, r) => s + r[2], 0), totalOrders = D.revenue.reduce((s, r) => s + r[1], 0);
+$("tiles").innerHTML = [
+  ["372", "peak visitors in a day, May 10, two days after the ads launched"],
+  ["17 days", "of near-zero traffic, May 28 to Jun 14, while the site was down"],
+  ["41%", "of visitors since launch came through Facebook's in-app browser"],
+  ["42%", "of Khan bank taps never opened the bank app"],
+  [mnt(totalRev), `of order value across ${totalOrders} server-tracked orders since Jun 30`],
+  ["2,728", "OTP errors from just 4 people"],
+].map(([b, s]) => `<div class="tile"><b>${b}</b><span>${s}</span></div>`).join("");
+
+{
+  const svg = $("daily"), W = 900, H = 260, pl = 32, pb = 24, pt = 26;
+  const t0 = new Date(D.daily[0][0]).getTime(), t1 = new Date(D.daily.at(-1)[0]).getTime();
+  const x = d => pl + (new Date(d).getTime() - t0) / (t1 - t0) * (W - pl - 6);
+  const max = 400, y = v => H - pb - v / max * (H - pb - pt);
+  let s = '<g class="grid">';
+  for (let v = 0; v <= max; v += 100) s += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+  for (const m of ["2026-05-01","2026-06-01","2026-07-01","2026-08-01","2026-09-01","2026-10-01"]) s += `<text x="${x(m)}" y="${H - 6}" text-anchor="middle">${new Date(m).toLocaleString("en", { month: "short" })}</text>`;
+  s += "</g>";
+  s += `<rect x="${x("2026-05-28")}" y="${pt}" width="${x("2026-06-15") - x("2026-05-28")}" height="${H - pb - pt}" fill="var(--bad)" opacity="0.08"/>`;
+  D.marks.forEach(([d, label], i) => {
+    const xx = x(d), ly = pt - 8 + (i % 2) * 11;
+    s += `<line x1="${xx}" x2="${xx}" y1="${ly + 3}" y2="${H - pb}" stroke="var(--mark)" stroke-dasharray="2 3" opacity="0.7"/><text class="note" x="${xx + 3}" y="${ly}">${label}</text>`;
+  });
+  const pts = D.daily.map(([d, v]) => `${x(d)},${y(v)}`).join(" L");
+  s += `<path d="M${x(D.daily[0][0])},${H - pb} L${pts} L${x(D.daily.at(-1)[0])},${H - pb} Z" fill="var(--s1)" opacity="0.12"/>`;
+  s += `<path d="M${pts}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"/>`;
+  s += `<line id="cross" x1="0" x2="0" y1="${pt}" y2="${H - pb}" stroke="var(--ink-3)" opacity="0"/><circle id="dot" r="4" fill="var(--s1)" stroke="var(--surface)" stroke-width="2" opacity="0"/>`;
+  s += `<rect x="${pl}" y="${pt}" width="${W - pl}" height="${H - pb - pt}" fill="transparent" id="hit"/>`;
+  svg.innerHTML = s;
+  const hit = svg.querySelector("#hit"), cross = svg.querySelector("#cross"), dot = svg.querySelector("#dot");
+  hit.addEventListener("pointermove", e => {
+    const r = svg.getBoundingClientRect(), px = (e.clientX - r.left) / r.width * W;
+    let best = D.daily[0], bd = Infinity;
+    for (const row of D.daily) { const dd = Math.abs(x(row[0]) - px); if (dd < bd) { bd = dd; best = row; } }
+    cross.setAttribute("x1", x(best[0])); cross.setAttribute("x2", x(best[0])); cross.setAttribute("opacity", 0.5);
+    dot.setAttribute("cx", x(best[0])); dot.setAttribute("cy", y(best[1])); dot.setAttribute("opacity", 1);
+    tip.innerHTML = `<b>${new Date(best[0]).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}</b><br>${best[1]} visitors · ${best[2]} orders`;
+    tip.style.opacity = 1; tip.style.left = Math.min(e.clientX + 12, innerWidth - 200) + "px"; tip.style.top = e.clientY + 12 + "px";
+  });
+  hit.addEventListener("pointerleave", () => { tip.style.opacity = 0; cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); });
+
+  const so = $("dailyOrders"), OH = 100, ob = 14, omax = 15, oy = v => OH - ob - v / omax * (OH - ob - 6);
+  const bw = Math.max(2, (W - pl) / ((t1 - t0) / 864e5) - 1.5);
+  let o = `<g class="grid"><line x1="${pl}" x2="${W}" y1="${OH - ob}" y2="${OH - ob}"/><line x1="${pl}" x2="${W}" y1="${oy(10)}" y2="${oy(10)}"/><text x="${pl - 6}" y="${oy(10) + 4}" text-anchor="end">10</text></g>`;
+  D.daily.forEach(([d, , v]) => { if (v) o += `<path d="${rbar(x(d) - bw / 2, oy(v), bw, OH - ob, 1.5)}" fill="var(--s3)" data-t="${esc(`<b>${d}</b><br>${v} orders`)}"/>`; });
+  so.innerHTML = o;
+  so.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+}
+
+{
+  const svg = $("revenue"), W = 440, H = 220, pl = 40, pb = 24, pt = 10;
+  const max = 40e6, y = v => H - pb - v / max * (H - pb - pt), slot = (W - pl) / D.revenue.length, bw = slot * 0.55;
+  let s = '<g class="grid">';
+  for (let v = 0; v <= max; v += 10e6) s += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v / 1e6}M</text>`;
+  s += "</g>";
+  D.revenue.forEach(([m, n, v], i) => {
+    const x0 = pl + i * slot + (slot - bw) / 2;
+    s += `<path d="${rbar(x0, y(v), bw, H - pb, 4)}" fill="var(--s3)" data-t="${esc(`<b>${m} 2026</b><br>${n} orders · ${mnt(v)}<br>avg ${mnt(Math.round(v / n))}`)}"/>`;
+    s += `<text x="${x0 + bw / 2}" y="${H - 8}" text-anchor="middle">${m}</text>`;
+    if (v > 5e6) s += `<text class="note" x="${x0 + bw / 2}" y="${y(v) - 5}" text-anchor="middle">${mnt(v)}</text>`;
+  });
+  svg.innerHTML = s;
+  svg.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+  $("monthTable").innerHTML = `<thead><tr><th>Month</th><th class="n">Visitors</th><th class="n">Added to cart</th><th class="n">Checkout</th><th class="n">Orders</th></tr></thead><tbody>` +
+    D.months.map(([m, v, , atc, co, o]) => `<tr><td>${m}</td><td class="n">${int(v)}</td><td class="n">${int(atc)}</td><td class="n">${int(co)}</td><td class="n">${int(o)}</td></tr>`).join("") + `</tbody>`;
+}
+
+function bars(el, rows, { label = r => r[0], segs, total = r => segs(r).reduce((a, b) => a + b.v, 0), show = r => int(total(r)), title }) {
+  const max = Math.max(...rows.map(total));
+  el.innerHTML = rows.map((r, i) => `<div class="bar-row" data-i="${i}"><span class="lbl" title="${esc(label(r))}">${esc(label(r))}</span><div class="track">${segs(r).map(sg => `<div class="seg" style="width:0;background:${sg.c}" data-w="${sg.v / max * 100}"></div>`).join("")}</div><span class="val">${show(r)}</span></div>`).join("");
+  if (title) el.querySelectorAll(".bar-row").forEach(row => hover(row, title(rows[+row.dataset.i])));
+  requestAnimationFrame(() => el.querySelectorAll(".seg").forEach(s => s.style.width = s.dataset.w + "%"));
+}
+
+bars($("surfaces"), D.surfaces, { segs: r => [{ v: r[1], c: r[0].startsWith("Facebook") ? "var(--s1)" : "var(--dim)" }], title: r => `<b>${r[0]}</b><br>${int(r[1])} visitors since May` });
+
+{
+  const svg = $("surfaceFunnel"), W = 440, H = 200, pl = 34, pb = 26, pt = 10;
+  const steps = ["Visit", "Add to cart", "Checkout"];
+  const rate = (a, i) => a[i] / a[0] * 100;
+  const max = 100, y = v => H - pb - v / max * (H - pb - pt), slot = (W - pl) / 3, bw = slot * 0.3;
+  let s = '<g class="grid">';
+  for (let v = 0; v <= 100; v += 25) s += `<line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/><text x="${pl - 6}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`;
+  s += "</g>";
+  steps.forEach((st, i) => {
+    const cx = pl + i * slot + slot / 2;
+    [["inapp", "var(--s1)", -1], ["normal", "var(--s4)", 1]].forEach(([k, c, side]) => {
+      const v = rate(D.funnel[k], i), x0 = side < 0 ? cx - bw - 1 : cx + 1;
+      s += `<path d="${rbar(x0, y(v), bw, H - pb, 3)}" fill="${c}" data-t="${esc(`<b>${k === "inapp" ? "In-app" : "Normal browser"}</b> · ${st}<br>${int(D.funnel[k][i])} people · ${v.toFixed(1)}%`)}"/>`;
+      if (i) s += `<text class="note" x="${x0 + bw / 2}" y="${y(v) - 5}" text-anchor="middle">${v.toFixed(1)}%</text>`;
+    });
+    s += `<text x="${cx}" y="${H - 8}" text-anchor="middle">${st}</text>`;
+  });
+  svg.innerHTML = s;
+  svg.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+}
+
+bars($("banks"), D.banks, {
+  segs: r => [{ v: r[2], c: "var(--s3)" }, { v: r[3], c: "var(--bad)" }, { v: Math.max(0, r[1] - r[2] - r[3]), c: "var(--dim)" }],
+  total: r => r[1], show: r => `${int(r[1])} taps`,
+  title: r => `<b>${r[0]}</b><br>${r[1]} taps · ${r[2]} opened · ${r[3]} no hand-off<br>${Math.round(r[3] / r[1] * 100)}% failed`,
+});
+
+bars($("searches"), D.searches, { segs: r => [{ v: r[1], c: /[а-яё]/i.test(r[0]) ? "var(--s5)" : "var(--s1)" }], title: r => `<b>${esc(r[0])}</b><br>${r[1]} searches` });
+bars($("typing"), D.typing, { label: r => `"${r[0]}"`, segs: r => [{ v: r[1], c: r[0] === "magnesium" ? "var(--s1)" : "var(--dim)" }] });
+bars($("products"), D.products, { segs: r => [{ v: r[1], c: "var(--s1)" }], show: r => `${r[1]}`, title: r => `<b>${esc(r[0])}</b><br>${r[1]} people · ${int(r[2])}₮` });
+$("dupes").innerHTML = D.dupes.map(([n, p, price]) => `<div><span>${esc(n)}</span><span>${p} people</span><span>${price}</span></div>`).join("");
+$("errors").innerHTML = D.errors.map(([n, msg, note]) => `<li><span class="big">${int(n)}</span><span><code>${esc(msg)}</code><small>${esc(note)}</small></span></li>`).join("");
+
+bars($("uxThemes"), D.ux.themes, { segs: r => [{ v: r[1], c: "var(--bad)" }], show: r => `${r[1]}`, title: r => `<b>${esc(r[0])}</b><br>${r[1]} of 21 summarized sessions` });
+{
+  const svg = $("uxOutcome"), W = 440, H = 200, cx = 110, cy = 100, r = 74, rin = 46;
+  const total = D.ux.outcome.reduce((s, o) => s + o[1], 0); let a0 = -Math.PI / 2, s = "";
+  const colors = ["var(--s3)", "var(--bad)"];
+  D.ux.outcome.forEach(([k, v], i) => {
+    const a1 = a0 + v / total * Math.PI * 2 - 0.03, large = a1 - a0 > Math.PI ? 1 : 0;
+    const p = (ang, rr) => `${cx + rr * Math.cos(ang)},${cy + rr * Math.sin(ang)}`;
+    s += `<path d="M${p(a0, r)} A${r},${r} 0 ${large} 1 ${p(a1, r)} L${p(a1, rin)} A${rin},${rin} 0 ${large} 0 ${p(a0, rin)} Z" fill="${colors[i]}" data-t="${esc(`<b>${k}</b><br>${v} sessions`)}"/>`;
+    s += `<rect x="230" y="${70 + i * 34}" width="12" height="12" rx="3" fill="${colors[i]}"/><text class="note" x="250" y="${80 + i * 34}" style="font-size:13px">${k}: ${v} sessions</text>`;
+    a0 = a1 + 0.03;
+  });
+  s += `<text x="${cx}" y="${cy + 6}" text-anchor="middle" style="font: 600 20px Unbounded, sans-serif; fill: var(--ink)">${total}</text>`;
+  svg.innerHTML = s;
+  svg.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+}
+$("uxQuotes").innerHTML = D.ux.quotes.map(([h, body, tags]) => `<div class="quote"><b>${esc(h)}</b><p>${esc(body)}</p><div class="tags">${tags.map(x => `<span>${esc(x)}</span>`).join("")}</div></div>`).join("");
+$("uxRules").innerHTML = D.ux.rules.map(x => `<li>${x}</li>`).join("");
+
+const hourChart = (el, idx, color, peakFn) => {
+  const W = 440, H = 180, pl = 30, pb = 22, pt = 8;
+  const vals = D.hours.map(h => h[idx]), max = Math.ceil(Math.max(...vals) / 10) * 10;
+  const y = v => H - pb - v / max * (H - pb - pt), bw = (W - pl) / 24;
+  let s = `<g class="grid"><line x1="${pl}" x2="${W}" y1="${y(0)}" y2="${y(0)}"/><line x1="${pl}" x2="${W}" y1="${y(max / 2)}" y2="${y(max / 2)}"/><text x="${pl - 5}" y="${y(max / 2) + 4}" text-anchor="end">${max / 2}</text><line x1="${pl}" x2="${W}" y1="${y(max)}" y2="${y(max)}"/><text x="${pl - 5}" y="${y(max) + 4}" text-anchor="end">${max}</text></g>`;
+  D.hours.forEach((h, i) => {
+    const x0 = pl + i * bw + 1;
+    s += `<path d="${rbar(x0, y(h[idx]), bw - 2, H - pb, 2)}" fill="${peakFn(h[idx], vals) ? "var(--accent)" : color}" data-t="${esc(`<b>${String(h[0]).padStart(2, "0")}:00</b> · ${h[idx]}`)}"/>`;
+    if (i % 3 === 0) s += `<text x="${x0 + bw / 2}" y="${H - 6}" text-anchor="middle">${String(h[0]).padStart(2, "0")}</text>`;
+  });
+  el.innerHTML = s;
+  el.querySelectorAll("path").forEach(p => hover(p, p.dataset.t));
+};
+hourChart($("hourV"), 2, "var(--s1)", (v, a) => v === Math.max(...a));
+hourChart($("hourO"), 1, "var(--s3)", (v, a) => v >= 30);
+</script>
+</body>
+</html>
