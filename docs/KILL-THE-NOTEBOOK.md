@@ -21,7 +21,7 @@ she trusts it completely        it has never lost an order
 
 Every row is a requirement. Miss one and the notebook stays on the table.
 
-## The four ways we win
+## The five ways we win
 
 ### 1. Most lines write themselves
 
@@ -67,7 +67,7 @@ The app turns it into a draft:
 
 Supplement bottles have UPC barcodes. The phone camera reads them through the browser's `BarcodeDetector`, with a library fallback.
 
-- **Receiving a shipment:** scan, scan, scan. Each beep is +1 on that product. Tapping done receives the shipment and moves stock.
+- **Receiving a shipment:** the expected lines are already there, from the supplier sheet or the parsed Amazon order. Scan, scan, scan, or tap confirm on lines that match. Each beep is +1 on that product. Done means the shipment is received and stock updates.
 - **Counting:** scan, or use big +/- steppers for things without barcodes. This is how the opening inventory count happens.
 - **Unknown barcode:** she picks the product once and its `gtin` is stored. Google wants that in Product structured data anyway.
 - **Packing check, later:** scan each bottle as it goes in the bag, and a wrong product beeps red before it ships.
@@ -81,6 +81,19 @@ Supplement bottles have UPC barcodes. The phone camera reads them through the br
 - **Corrections are visible.** Edits keep history, like a crossed-out line.
 - **Big type, Cyrillic, one thumb.** Cheap Android, bad light, standing up.
 
+### 5. The collage comes out of the DB
+
+The notebook is not her only ledger. For new arrivals her real system is the Facebook collage: product photos with prices, 70+ images per arrival, 9 to 12 products per image, repeats included. She has never entered an arrival in the dashboard, so the site's stock gets synced by hand from her posts. Asking her to use the dashboard instead loses, because the dashboard gives her nothing. The collage gets her orders.
+
+So the DB makes the collage for her:
+
+- **Generate her layout, not a nicer one.** Render it from in-stock variants: 9 to 12 products per image, a clear price on each, grouped by brand or category, in her crude style. Crude converts, see [CREATIVE.md](CREATIVE.md).
+- **One tap out.** Download to her phone, or post through Zernio with a human tap. Nothing posts on its own.
+- **Stock is right as a side effect.** Out-of-stock variants drop off the next collage. Prices come from the DB, so her post and the site always agree.
+- **This needs the variant model.** Every variant needs a clean product photo and a short display name. "NatureBell D3+K2 240" goes on the image, not the Amazon title.
+
+While she still posts her own collages, a scheduled job reads each new collage image with a vision model, matches it against variants by brand, potency and count, and sends a short diff to Telegram ("4 products in today's posts don't match the DB"). The owner taps fix or ignore. It replaces the multi-day agent sessions that did this sync by hand.
+
 ## The switch-over
 
 She stops using the notebook when she trusts the app more than paper. Earn that.
@@ -93,6 +106,7 @@ She stops using the notebook when she trusts the app more than paper. Earn that.
 ## How we know we won
 
 ```text
+arrivals synced from her posts by hand    → 0
 share of orders entered by hand            → toward 0%
 median seconds per manual line             → under 10
 mismatches in the nightly check            → 0 for 7 straight days
