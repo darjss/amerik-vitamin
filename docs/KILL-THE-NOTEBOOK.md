@@ -87,12 +87,12 @@ The notebook is not her only ledger. For new arrivals her real system is the Fac
 
 So the DB makes the collage for her:
 
-- **Generate her layout, not a nicer one.** Render it from in-stock variants: 9 to 12 products per image, a clear price on each, grouped by brand or category, in her crude style. Crude converts, see [CREATIVE.md](CREATIVE.md).
+- **Generate her layout, not a nicer one.** Render it from in-stock products: 9 to 12 products per image, a clear price on each, grouped by brand or category, in her crude style. Crude converts, see [CREATIVE.md](CREATIVE.md).
 - **One tap out.** Download to her phone, or post through Zernio with a human tap. Nothing posts on its own.
-- **Stock is right as a side effect.** Out-of-stock variants drop off the next collage. Prices come from the DB, so her post and the site always agree.
-- **This needs the variant model.** Every variant needs a clean product photo and a short display name. "NatureBell D3+K2 240" goes on the image, not the Amazon title.
+- **Stock is right as a side effect.** Out-of-stock products drop off the next collage. Prices come from the DB, so her post and the site always agree.
+- **This needs structured products** ([ADR 0003](adr/0003-flat-products-no-variants.md)). Every product needs a clean product photo and a short display name. "NatureBell D3+K2 240" goes on the image, not the Amazon title.
 
-While she still posts her own collages, a scheduled job reads each new collage image with a vision model, matches it against variants by brand, potency and count, and sends a short diff to Telegram ("4 products in today's posts don't match the DB"). The owner taps fix or ignore. It replaces the multi-day agent sessions that did this sync by hand.
+While she still posts her own collages, a scheduled job reads each new collage image with a vision model, matches it against products by brand, potency and count, and sends a short diff to Telegram ("4 products in today's posts don't match the DB"). The owner taps fix or ignore. It replaces the multi-day agent sessions that did this sync by hand.
 
 ## The switch-over
 
