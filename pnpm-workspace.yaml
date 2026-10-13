@@ -6,23 +6,25 @@ packages:
 catalogMode: prefer
 
 catalog:
-  "@cloudflare/vite-plugin": 1.63.0
-  "@cloudflare/workers-types": 5.20261007.1
-  "@effect/platform-node": 4.0.1
-  "@effect/sql-pg": 4.0.1
-  "@effect/tsgo": 0.50.0
-  "@effect/vitest": 4.0.1
+  "@cloudflare/vite-plugin": 1.63.1
+  "@cloudflare/workers-types": 5.20261012.1
+  "@effect/platform-node": 4.0.3
+  "@effect/sql-pg": 4.0.3
+  "@effect/tsgo": 0.51.1
+  "@effect/vitest": 4.0.3
   "@oxlint/plugins": 1.87.0
-  "@solidjs/router": 2.0.0-next.35
-  "@solidjs/web": 2.0.0-rc.13
-  "@types/node": ^24
+  "@solidjs/router": 2.0.0-next.38
+  "@solidjs/vite-plugin": 3.0.0-next.49
+  "@solidjs/web": 2.0.0-rc.14
+  "@types/node": 26.6.5
   alchemy: 2.0.0-beta.81
-  drizzle-kit: 1.0.0-rc.5-ab785fc
-  drizzle-orm: 1.0.0-rc.5-ab785fc
-  effect: 4.0.1
+  drizzle-kit: 1.0.0-rc.5-5935859
+  drizzle-orm: 1.0.0-rc.5-5935859
+  effect: 4.0.3
   eslint-plugin-solid: 0.18.1
+  filesystem-routing: 0.4.0
   oxlint: 1.87.0
-  solid-js: 2.0.0-rc.13
+  solid-js: 2.0.0-rc.14
   typescript: 7.0.2
   vite: npm:@voidzero-dev/vite-plus-core@1.1.0
   vite-plus: 1.1.0
