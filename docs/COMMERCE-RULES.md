@@ -89,4 +89,4 @@ Those are all of them.
 ## Hard lines
 
 - **Cancel orders, never delete them.**
-- **The bot and the model go through the same order and payment functions as everything else.** Those functions enforce these rules. The model never places an order or moves money on its own.
+- **The bot and the model go through the same order and payment functions as everything else.** Those functions enforce these rules. The model can create an order from an agreed chat, as a `new` order with source `messenger_human` and one-tap undo. It never records a payment and never moves stock directly.
