@@ -9,7 +9,7 @@ Terms are in [GLOSSARY.md](../../GLOSSARY.md). Hard-to-reverse calls are in [doc
 These are settled. Don't reopen them without the owner.
 
 - **Catalog.** One flat row per SKU ([ADR 0003](../adr/0003-flat-products-no-variants.md)), rebuilt from mom's collages ([ADR 0002](../adr/0002-rebuild-catalog-not-import.md)). Stock starts unknown (`null`) and gets a number at the first count or receipt. A null-stock product sells freely with no oversold pings.
-- **Collage reading.** An Effect script sends each collage image to gpt-6-luna and gets tiles back: brand, line, potency, count, form, flavor, price. The prices on the image are selling prices ("130k" is 130,000₮). Then dedupe by identity key, search Amazon for the ASIN and images, review on a page, and load. The owner drops the 70+ images in `~/dev/scratchpad/amerik-vitamin/collages`.
+- **Collage reading.** The collages come from mom's Facebook page, the profile at `facebook.com/profile.php?id=100057596651892`. agent-browser opens it with the owner's exported Facebook session and downloads the latest posts' images. An Effect script sends each image to gpt-6-luna and gets tiles back: brand, line, potency, count, form, flavor, price ("130k" is 130,000₮). Products repeat across images, so tiles merge by identity key. Each product is then matched to its Amazon page for the ASIN and images. Luna reads the label and supplement-facts images for serving size, servings per container and daily dose, because the Amazon text often leaves them out. Luna also assigns a category, and brand logos get fetched for the brands table. The owner reviews everything in a local HTML report before anything loads to prod.
 - **Legacy migration.** Customers, orders, lines and payments all migrate. Every order line gets matched to a new product: by script first, then the agent matches the rest by hand. Pending orders become cancelled, and shipped ones become delivered.
 - **Customers.** A TypeID per customer, and phone is the key. Only people who order are stored. People who only chat live in the bot's state.
 - **Order number.** Plain digits, `#10234`, also used as the bank-transfer reference.
@@ -27,8 +27,10 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T1. Data in
 
-- **Schema v2.** Products (flat, identity key, unique ASIN, nullable stock), customers, orders, order lines, payments, `order_events`, stock moves, bank transactions, outbox, supplier orders and lines, delivery zones. Commerce functions follow COMMERCE-RULES. Done when the commerce-rule test file passes on local Postgres and prod runs the migration.
-- **Catalog from collages.** Done when every product in the latest collage set has one row, there are no identity duplicates, each has an ASIN and images on R2, and the owner has reviewed it.
+Each tier adds the tables it uses. T1 creates the catalog and order tables, T2 adds the bank inbox, outbox and supplier orders, T4 adds delivery zones, and T5 adds slugs.
+
+- **Schema v2.** Brands (with logo), categories, products (flat, identity key, unique ASIN, category, nullable stock, serving size, servings per container, daily dose, weight), product images, customers, orders, order lines, payments, `order_events`, stock moves. Commerce functions follow COMMERCE-RULES. `apps/api/src` holds domain code directly, and `apps/api/infra` holds the Cloudflare and Alchemy resources beside it. Done when the commerce-rule test file passes on local Postgres and prod runs the migration.
+- **Catalog from collages.** Done when every product in the latest collage posts has one row with a category, there are no identity duplicates, each has an ASIN, label facts and images on R2, each brand has a logo, and the owner has signed off the review report.
 - **Legacy migration.** Done when the reconciliation report matches vit-store's own SQL counts and totals, and every old order line points at a product.
 - **First prod deploy** of API and web.
 
@@ -63,7 +65,7 @@ Point the Zernio, QPay and TU webhooks at the new Workers, migrate the delta sin
 
 ## Blocked on the owner
 
-- The 70+ collage images (T1).
+- An exported Facebook session for reading the collage posts (T1).
 - The Zernio pilot-page key, and the main page connected in Zernio (T2, T3).
 - The Amazon cookies (T2).
 - The TU v3 API spec and our webhook registered with TU (T4).
