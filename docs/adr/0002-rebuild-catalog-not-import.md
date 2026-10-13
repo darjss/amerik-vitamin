@@ -1,0 +1,3 @@
+# The catalog is rebuilt, not imported
+
+vit-store's 528 product rows are not migrated. The catalog comes from mom's price-labelled Facebook collages (70+ images, 9 to 16 products each), which are the real catalog. A vision model reads each tile into structured identity fields and a price, and each product is then matched to its Amazon page for its ASIN and images. The legacy rows store potency, count and form inside long names, hold duplicate SKUs at different prices, and split stock across duplicates, and cleaning them cost more agent time than starting over. Customers, orders and payments still migrate, and every legacy order line gets matched to a new product: by script first, then by hand.
