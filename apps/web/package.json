@@ -10,13 +10,18 @@
     "preview": "vp preview"
   },
   "dependencies": {
-    "@solidjs/router": "2.0.0-next.32",
+    "@amerik/contracts": "workspace:*",
+    "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "effect": "catalog:",
     "filesystem-routing": "0.4.0",
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "@solidjs/vite-plugin": "3.0.0-next.35",
+    "@cloudflare/vite-plugin": "catalog:",
+    "@cloudflare/workers-types": "catalog:",
+    "@solidjs/vite-plugin": "3.0.0-next.47",
+    "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"

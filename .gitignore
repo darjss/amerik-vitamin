@@ -31,3 +31,7 @@ dist-ssr
 
 # AI agent worktrees
 .claude/worktrees/
+
+# Alchemy and Wrangler local state
+.alchemy
+.wrangler

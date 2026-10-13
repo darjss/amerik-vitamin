@@ -1,0 +1,15 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "ea7dde10-04b8-4659-add8-0c2ccb1cabfd",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "ddl": [
+    {
+      "name": "shop",
+      "entityType": "schemas"
+    }
+  ],
+  "renames": []
+}

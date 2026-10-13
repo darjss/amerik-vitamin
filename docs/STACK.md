@@ -7,47 +7,61 @@ Beta and RC are fine here. Pin them exactly, and track the newest release past t
 ## Shape
 
 ```text
-apps/api         Effect RPC, webhooks (QPay, tu-delivery, Telegram), cron (Khaan, auto-cancel, morning brief)
-apps/web         Solid 2 start: mom's dashboard now, the three storefronts later, keyed by hostname
-apps/messenger   the bot, ported from vit-store: Ingress + Conversation Durable Objects
-packages/db      drizzle schema and migrations
-infra            Alchemy stack
+apps/api             Effect RPC, /health, webhooks (QPay, tu-delivery, Telegram), cron (Khaan, auto-cancel, morning brief)
+apps/web             Solid 2 start: mom's dashboard now, the three storefronts later, keyed by hostname
+apps/messenger       the bot, ported from vit-store: Ingress + Conversation Durable Objects (not built yet)
+packages/contracts   the Api RpcGroup and its tagged errors
+packages/db          drizzle schema (Postgres schema `shop`), migrations, the Database service
+infra                Alchemy stack `amerik-vitamin`
 ```
 
-- **`apps/web` reaches `apps/api` through a service binding,** the same shape as tranzfer2.
+- **`apps/web` reaches `apps/api` through a service binding,** the same shape as tranzfer2. SSR calls the binding directly. The browser posts to `/rpc` on the web Worker, which forwards it.
 - **Workers Cache purges only hit the Worker that calls them.** So `apps/api` tells `apps/web` to purge, over a binding, and `apps/web` purges itself.
+- **Layout.** The workspace follows tranzfer2 (vp, pnpm catalogs, `apps/*`, `packages/*`, `infra`). The API's inner split (`implementation/`, `infrastructure/`) and everything about Postgres, Hyperdrive and Docker follow executor-v2 (`apps/hosted/cloud`). Details in [STRUCTURE.md](STRUCTURE.md).
 
 ## Database (decided)
 
-- **One database:** the existing PlanetScale Postgres that vit-store uses. v2 tables live in their own Postgres schema next to `ecom_vit_*`. The old tables get dropped after cutover.
-- **No PlanetScale branches.** They cost money. Dev and tests run on local Postgres. Only `main` deploys to prod and runs migrations.
-- **Workers reach it through Hyperdrive.** The precedent is `~/dev/tranzfer2-references/apps/t3code/infra/relay`: `Cloudflare.Hyperdrive.Connection`, `Drizzle.Postgres(hyperdrive.connectionString)`, and transactions via `db.$client.withTransaction`. tranzfer2 itself runs on D1, so copy its Worker and RPC shape, not its database code.
+- **One database:** the existing PlanetScale Postgres that vit-store uses. v2 tables live in the Postgres schema `shop`, next to `ecom_vit_*` in `public`. The old tables get dropped after cutover. `drizzle.config.ts` sets `schemaFilter: ["shop"]`, so drizzle-kit never diffs them.
+- **No PlanetScale branches.** They cost money. Alchemy never provisions a PlanetScale database or branch. Dev and tests run on local Postgres in Docker, which `vp run dev` starts. Only `main` deploys to prod.
+- **Workers reach it through Hyperdrive.** Production uses the `PLANETSCALE_*` origin with `verify-full` and an uploaded ISRG Root X1 certificate. Dev points Hyperdrive at the Docker Postgres from `DATABASE_URL`. The precedents are `~/dev/tranzfer2-references/apps/executor-v2/apps/hosted/cloud/src/infrastructure/database.ts` and `~/dev/tranzfer2-references/apps/t3code/infra/relay`. tranzfer2 itself runs on D1, so copy its Worker and RPC shape, not its database code.
+- **Migrations.** `vp run migrate` applies `packages/db/migrations` to `DATABASE_URL`, with the journal in `shop.migrations`. A production deploy runs the same script through a `Command.Exec` resource, and the Hyperdrive connection depends on it.
+- **Transactions** go through `db.$client.withTransaction`. There is no D1-style batch.
 
 ## Now
 
-| Tool                   | Version                                                                                                                     | Why                                                  |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| vite-plus (`vp`)       | 0.3.2 in the scaffold, and so is the `vite` alias to `@voidzero-dev/vite-plus-core`. **Bump both to 1.0.0**, like tranzfer2 | One CLI for install, dev, build, lint, format        |
-| pnpm                   | 12, workspace catalogs                                                                                                      | Same as tranzfer2                                    |
-| solid-js, @solidjs/web | 2.0.0-rc.13                                                                                                                 | API frozen. Fine-grained, small, server components   |
-| @solidjs/vite-plugin   | 3.0.0-next.35 (next.47 exists, bump when needed)                                                                            | Start mode: generated entries, SSR, server functions |
-| @solidjs/router        | 2.0.0-next.32                                                                                                               | next.34 was too new for the minimum release age      |
-| filesystem-routing     | 0.4.0                                                                                                                       | File routes, required by the router                  |
+| Tool                      | Version                                                             | Why                                                                                                                                            |
+| ------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| vite-plus (`vp`)          | 1.1.0, and the `vite` alias to `@voidzero-dev/vite-plus-core` 1.1.0 | One CLI for install, dev, build, lint, format                                                                                                  |
+| pnpm                      | 12, workspace catalogs                                              | Same as tranzfer2                                                                                                                              |
+| typescript                | 7.0.2                                                               | Native compiler, same as tranzfer2                                                                                                             |
+| effect                    | 4.0.1                                                               | RPC contracts with tagged errors, services, config. 4.0.2 is inside the 24h release age                                                        |
+| @effect/sql-pg            | 4.0.1                                                               | Postgres driver under drizzle's `effect-postgres`                                                                                              |
+| drizzle-orm, drizzle-kit  | 1.0.0-rc.5-ab785fc                                                  | Effect-native Drizzle. The rc tag tranzfer2 and the relay use                                                                                  |
+| alchemy                   | 2.0.0-beta.81                                                       | Stages (prod plus local dev), Hyperdrive, Docker, Command                                                                                      |
+| @cloudflare/workers-types | 5.20261007.1                                                        | Newest past the release age                                                                                                                    |
+| solid-js, @solidjs/web    | 2.0.0-rc.13                                                         | API frozen. rc.14 is inside the release age                                                                                                    |
+| @solidjs/vite-plugin      | 3.0.0-next.47                                                       | Start mode: generated entries, SSR, server functions. `renderMode: "async"` needs next.40 or newer, and next.43 passes an option rc.13 rejects |
+| @solidjs/router           | 2.0.0-next.35                                                       | next.36 is inside the release age                                                                                                              |
+| filesystem-routing        | 0.4.0                                                               | File routes, required by the router                                                                                                            |
+| @cloudflare/vite-plugin   | 1.63.0                                                              | Builds the web Worker. Alchemy injects its own copy in dev and deploy                                                                          |
+
+`effect`, `@effect/sql-pg`, `@effect/platform-node` and `@cloudflare/workers-types` are pnpm `overrides` to their catalog version. Without that, optional peers resolve to stale copies and drizzle-orm installs twice, which breaks types between `@amerik/db` and alchemy.
 
 ## Planned
 
-| Tool                                                       | Why                                                                                                                         |
-| ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Effect 4.0.0 (stable since 2026-10-01)                     | RPC contracts with tagged errors, services, config. The `http`, `rpc` and `sql` modules are marked unstable, so pin exactly |
-| drizzle-orm 1.0 rc, `effect-postgres`                      | Effect-native Drizzle over Hyperdrive                                                                                       |
-| Alchemy 2 (beta.79+)                                       | Stages: prod plus local dev. Hyperdrive, secrets, cron, `Cloudflare.cache()`                                                |
-| better-auth                                                | Google sign-in only, long-lived sessions for mom's phone                                                                    |
-| Cloudflare Workers Cache                                   | The only cache. `Cache-Control` + `Cache-Tag`, purge on product edit                                                        |
-| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #346                                                                                 |
-| [`khaan-client`](https://github.com/darjss/khaan-client)   | Khaan transactions for transfer matching                                                                                    |
-| Zernio                                                     | Messenger, posts, reels, comment-to-DM, analytics                                                                           |
-| Remotion                                                   | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies                           |
-| postal-mime                                                | Parse Amazon emails in the `email()` handler                                                                                |
+| Tool                                                       | Why                                                                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| better-auth                                                | Google sign-in only, long-lived sessions for mom's phone                                          |
+| Cloudflare Workers Cache                                   | The only cache. `Cache-Control` + `Cache-Tag`, purge on product edit                              |
+| `agents@0.24.0`, `chat@4.41.0`, `@zernio/chat-sdk-adapter` | The bot, as built in vit-store #339 to #346                                                       |
+| [`khaan-client`](https://github.com/darjss/khaan-client)   | Khaan transactions for transfer matching                                                          |
+| Zernio                                                     | Messenger, posts, reels, comment-to-DM, analytics                                                 |
+| Remotion                                                   | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies |
+| postal-mime                                                | Parse Amazon emails in the `email()` handler                                                      |
+
+## Messenger is ported as Effect code (decided)
+
+`apps/messenger` is ported fully Effect-ified: services and layers, tagged errors, webhooks decoded with Schema, and Effect `HttpClient` for Zernio, Telegram and OpenAI. It is modeled on executor-v2. vit-store's behavior stays (see [LEGACY.md](LEGACY.md)). The code shape does not.
 
 ## Alchemy gate
 
@@ -75,6 +89,6 @@ Alchemy stays only if it proves deploy, migrations, secrets and rollback on prod
 
 ## Check before relying on
 
-- `@effect/sql-pg` uses `node:net`. Does it run over Hyperdrive on Workers in this repo? The relay reference says yes. It's unproven here until `/health` round-trips.
+- `@effect/sql-pg` uses `node:net`. `/health` round-trips through the local Hyperdrive passthrough in `alchemy dev`. It is unproven against deployed Hyperdrive and PlanetScale until the first production deploy.
 - Does Zernio publish Facebook **Reels**, or just Facebook videos? Instagram Reels are confirmed.
 - Amazon's multi-item add-to-cart URL for the prefilled reorder cart.
