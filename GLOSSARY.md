@@ -8,6 +8,10 @@ The shop's language: what it sells, who buys, and how an order moves. Rules abou
 One sellable SKU, identified by brand, line, potency, count, form and flavor. D3+K2 5,000 IU 300 softgels and D3+K2 10,000 IU 300 softgels are two products.
 _Avoid_: variant, item, listing, SKU row
 
+**Collage**:
+A price-labelled grid of product photos that mom posts to Facebook. The catalog is read from collages.
+_Avoid_: catalog image, price list, post
+
 **Line**:
 The formula a product belongs to within its brand, such as "Vitamin D3 + K2". It groups products. It is not a product.
 _Avoid_: product family, parent product, base product
@@ -39,6 +43,14 @@ _Avoid_: pay later, cash order
 **Balance**:
 An order's total minus the sum of its payments. Positive means the customer owes; negative means a refund is due.
 _Avoid_: debt, remaining, amount due
+
+**Chat order**:
+An order a model created from a human Messenger chat once the customer agreed. It can be undone with one tap.
+_Avoid_: draft, auto order, extracted order
+
+**Supplier order**:
+A purchase we make from Amazon, Eagle Shine or another supplier.
+_Avoid_: purchase, PO, shipment, import
 
 **Stock move**:
 One logged change to a product's stock, with a reason. A sale, a cancellation, a receipt and a count are all stock moves.

@@ -1,0 +1,3 @@
+# Amazon runs on the owner's cookies, from Cloudflare
+
+Amazon gives consumer accounts no API for order lines, and anything that identifies itself as a bot gets walled. So a Worker reads the order history with the owner's own amazon.com cookies, using a small TS scraper that borrows `amazon-orders`' selectors, not a full port. Browser Run was rejected because it signs every request as a bot. orc-box was rejected because the owner wants no VPS dependency. If Amazon blocks Workers, we decide then; there's no pre-built fallback. Reorders check out fully on Amazon, but only after an admin taps "order" in our UI. That tap is the human decision that spends money.

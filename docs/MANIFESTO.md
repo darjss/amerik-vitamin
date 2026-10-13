@@ -144,7 +144,7 @@ Meta wouldn't publish my Flue bot. My coworker said Zernio. Zernio carries it no
 
 - Answers in 4 to 7 seconds, in mom's short Cyrillic voice, even though 70% of customers write in Latin-script Mongolian.
 - Live prices. Live stock. **Expiry dates** (113 conversations in the export asked about expiry, the customers are telling us something).
-- Code handles every tap, every order, every payment. The model answers questions. **The model never places an order on its own.**
+- Code handles every tap, every order, every payment. The model answers questions. **The model never moves money.**
 - Bot orders go through the exact same order function as mom's dashboard. **Every chat sale lands in the database.** This single fact fixes more of the business than any UI ever will.
 - Bot orders are prepay: QPay or transfer before anything gets packed.
 - Hard stuff gets handed to a human: a Telegram ping, one tap to take over, and the bot shuts up. She answers in the page inbox like she always has. One more tap gives the chat back. No timers. The bot never wakes up mid-conversation on its own.
@@ -347,7 +347,7 @@ Break these and the PR gets closed without a review.
 5. **No fake success.** A failed payment lookup does not become `pending`. A failed courier call does not become `dispatched`. Say what happened.
 6. **Checkout rechecks Postgres.** Prices and stock from cache are for browsing, never for charging.
 7. **One cache.** Workers Cache with tags. If you want a second cache, you want a bug.
-8. **The model never places an order or moves money on its own.** Code does. The model talks.
+8. **The model never moves money.** It can write down an order it saw agreed in a chat ([ADR 0005](adr/0005-chat-orders-created-automatically.md)), and every such order is one tap to undo. Payments get confirmed by code, and Amazon checkouts run only on a human tap.
 9. **Nothing publishes without a human tap.** Reels, posts, boosts.
 10. **No health claims. Ever. No "official" until the paperwork says so.**
 11. **Mom never needs a laptop.** If a flow only works on desktop, it doesn't work.
