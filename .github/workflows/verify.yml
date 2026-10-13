@@ -19,7 +19,8 @@ jobs:
         image: postgres:17
         env:
           POSTGRES_DB: amerik
-          POSTGRES_PASSWORD: postgres
+          # Throwaway CI container; trust auth keeps credentials out of the file.
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -27,8 +28,8 @@ jobs:
           --health-interval 2s
           --health-retries 30
     env:
-      # Throwaway CI database. Tests create and drop their own databases on it.
-      DATABASE_URL: postgres://postgres:postgres@127.0.0.1:5432/amerik
+      # Tests create and drop their own databases on it.
+      DATABASE_URL: postgres://postgres@127.0.0.1:5432/amerik
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: voidzero-dev/setup-vp@d5616419e3a9637febec6da1475cee9d07a317fd # v1.20.0
