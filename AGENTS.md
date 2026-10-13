@@ -6,6 +6,8 @@ Amerik huns baraa's store, dashboard, Messenger bot, supply and reels. The goal:
 
 - [docs/MANIFESTO.md](docs/MANIFESTO.md): why, and the order of battle (§10).
 - [docs/OPERATING_CONTEXT.md](docs/OPERATING_CONTEXT.md): what's true now. Every fact is tagged measured, reported, inferred or decided. Keep the tag you found.
+- [docs/plan/01-launch.md](docs/plan/01-launch.md): the current milestone, its tiers and the settled decisions.
+- [GLOSSARY.md](GLOSSARY.md): the shop's terms. Use them as written.
 
 ## Read when the task touches it
 

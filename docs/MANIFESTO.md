@@ -360,21 +360,16 @@ Break these and the PR gets closed without a review.
 
 ## 10. Order of battle
 
-Mom is selling right now, by hand, cash on delivery, into a paper notebook. So the downtime goes to the things that take work off her phone today. The storefront can wait. Nobody's looking at it anyway.
+Mom is selling right now, by hand, cash on delivery, into a paper notebook. So the downtime goes to the things that take work off her phone today, and the storefront comes last in the milestone.
 
 ```text
-PHASE A: the bot first, then the dashboard                  ← we are here
-0. foundation           one DB over Hyperdrive, Workers on Alchemy, /health round-trips
-1. schema v2            COMMERCE-RULES as code in Effect. one test file proves every rule
-2. product import       652 vit-store products into shop, old slugs kept. mom spot-checks 20
-3. payments             QPay, Khaan matching, the unmatched-transfer queue. the bot is prepay
-4. the bot              ported from vit-store, all Effect, handoff state machine, Telegram pings.
-                        live on the pilot page
-5. dashboard v1         Today page, one-line entry, COD, pack list. side by side with the notebook.
-                        customers and old orders come over here
-6. delivery             tu-delivery dispatch, webhook sets delivered
-7. telegram             new order, packing brief, unmatched transfer, oversold
-8. cutover              vit-store checkout off. one system
+MILESTONE 1: the launch (docs/plan/01-launch.md)               ← we are here
+T1 data in          schema v2, catalog read from mom's collages, legacy orders migrated
+T2 orders flow in   payments, Telegram pings, chat orders from mom's chats, dashboard, Amazon tracker
+T3 the bot          ported, all Effect, live on the pilot page, Telegram admin AI
+T4 delivery         TU dispatch and webhook, zone matcher, one-tap Amazon reorder
+T5 storefront       server components, a new look, guest checkout
+T6 cutover          vit-store off. one system
 
 PHASE B: stock that tells the truth
 9.  opening count       barcode scan, gtin learned on first beep, A-items exact
