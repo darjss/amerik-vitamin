@@ -14,7 +14,7 @@ export const formatIgnores = [
   ...agentIgnores,
   ...generatedIgnores,
   "tools/oxlint/anti-slop/**",
-  "docs/legacy/*.html",
+  "docs/private/**",
 ];
 
 const effectErrorRules = {

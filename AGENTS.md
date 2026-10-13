@@ -5,7 +5,7 @@ Amerik huns baraa's store, dashboard, Messenger bot, supply and reels. The goal:
 ## Read first
 
 - [docs/MANIFESTO.md](docs/MANIFESTO.md): why, and the order of battle (§10).
-- [docs/OPERATING_CONTEXT.md](docs/OPERATING_CONTEXT.md): what's true now. Every fact is tagged measured, reported, inferred or decided. Keep the tag you found.
+- [docs/private/OPERATING_CONTEXT.md](docs/private/OPERATING_CONTEXT.md): what's true now. Every fact is tagged measured, reported, inferred or decided. Keep the tag you found. `docs/private` is a gitignored clone of the private `darjss/amerik-vitamin-private`, which also holds `legacy/` with real customer data. Never copy anything from it into this public repo.
 - [docs/plan/01-launch.md](docs/plan/01-launch.md): the current milestone, its tiers and the settled decisions.
 - [GLOSSARY.md](GLOSSARY.md): the shop's terms. Use them as written.
 
