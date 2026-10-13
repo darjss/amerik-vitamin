@@ -18,7 +18,7 @@ Those are all of them.
 - **delivered**: the tu-delivery webhook says the customer has it. Pickup and walk-in orders go straight from shipped to delivered.
 - **cancelled**: didn't happen.
 
-s how she sells today.'s how she sells today. The bot, the website and the brand sites are prepay only. A COD order ships unpaid and the money gets recorded when it arrives.
+**COD is for orders mom enters by hand and for chat orders from her chats.** That's how she sells today. The bot, the website and the brand sites are prepay only. A COD order ships unpaid and the money gets recorded when it arrives.
 
 **Auto-cancel:** unpaid prepay orders still `new` after 3 days get cancelled. Stock never moved, so it's harmless. COD orders are never auto-cancelled.
 
