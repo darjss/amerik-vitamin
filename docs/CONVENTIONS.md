@@ -55,6 +55,7 @@ Rules for Effect code, Solid glue and tests. They come from the executor referen
 
 - New test files need the owner's approval.
 - Import from `@effect/vitest`, never `vitest`.
+- Database tests use `testDatabase` from `@amerik/db/testing`: a fresh, migrated Postgres database per layer, created next to `DATABASE_URL` and dropped afterwards. Run them with `vp run test` while local Postgres is up.
 - Keep `expect` outside `if`, ternaries and `&&`. Split the cases, or assert the whole value.
 - Time-based rules use `TestClock`. Assert through the service API or the typed client.
 - A failing assertion means the product or the test is wrong. Fix one of them; do not weaken the assertion.

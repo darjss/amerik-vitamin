@@ -19,9 +19,11 @@ const hasWorkerEnv = (value: unknown): value is { env: Cloudflare.Env } =>
 
 const bindingFetch: typeof globalThis.fetch = async (input, init) => {
   const workers: unknown = await import(workersModule);
+
   if (!hasWorkerEnv(workers)) {
     throw new TypeError("cloudflare:workers did not expose env");
   }
+
   return await workers.env.API.fetch(input, init);
 };
 
