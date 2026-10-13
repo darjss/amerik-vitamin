@@ -37,7 +37,7 @@ Payment terms where money arrives before the order ships. Every bot and website 
 _Avoid_: paid order, online order
 
 **COD**:
-Payment terms where an order ships unpaid and the money arrives on delivery. Only admins create COD orders.
+Payment terms where an order ships unpaid and the money arrives on delivery. Admin orders and chat orders can be COD; bot and website orders never are.
 _Avoid_: pay later, cash order
 
 **Balance**:
