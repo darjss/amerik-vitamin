@@ -8,9 +8,9 @@ import { HttpRouter, HttpServer, HttpServerResponse } from "effect/http";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 
-import { pingDatabase } from "./implementation/health";
-import { ApiHandlers } from "./implementation/rpc";
-import { Postgres } from "./infrastructure/database";
+import { Postgres } from "../infra/database";
+import { pingDatabase } from "./health";
+import { ApiHandlers } from "./rpc";
 import { ApiWorker } from "./worker";
 
 export default ApiWorker.make(

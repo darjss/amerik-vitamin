@@ -58,7 +58,7 @@ export const Postgres = Effect.gen(function* provision() {
   // Migrations run on every deploy, before the Worker that needs them.
   const migrations = yield* Command.Exec("Migrations", {
     command: "node src/migrate.ts",
-    cwd: yield* path.fromFileUrl(new URL("../../../../packages/db", import.meta.url)),
+    cwd: yield* path.fromFileUrl(new URL("../../../packages/db", import.meta.url)),
     env: {
       DATABASE_URL: Redacted.make(
         `postgres://${encodeURIComponent(origin.user)}:${encodeURIComponent(Redacted.value(origin.password))}` +
@@ -78,7 +78,7 @@ export const Postgres = Effect.gen(function* provision() {
     {
       ca: true,
       certificates: yield* fs.readFileString(
-        yield* path.fromFileUrl(new URL("../../certificates/isrg-root-x1.pem", import.meta.url)),
+        yield* path.fromFileUrl(new URL("./certificates/isrg-root-x1.pem", import.meta.url)),
       ),
     },
   ).pipe(retain());
