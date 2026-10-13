@@ -2,7 +2,8 @@ import { antipattern, correctness } from "@effect/tsgo/oxlint-presets";
 import solidV2Strict from "eslint-plugin-solid/configs/v2-strict";
 import { defineConfig } from "oxlint";
 
-const effectFiles = ["apps/api/**", "packages/**", "apps/web/src/api/**", "infra/**"];
+// Effect diagnostics run on all code, so Effect 3 names fail wherever they appear.
+const effectFiles = ["apps/**", "packages/**", "infra/**"];
 
 const webFiles = ["apps/web/**"];
 
@@ -46,7 +47,13 @@ export const lint = defineConfig({
     { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },
     { name: "anti-slop-effect", specifier: "./tools/oxlint/anti-slop/effect/index.ts" },
   ],
-  options: { typeAware: true, typeCheck: true },
+  // A warning fails `vp check`. There is no warning baseline.
+  options: {
+    denyWarnings: true,
+    reportUnusedDisableDirectives: "error",
+    typeAware: true,
+    typeCheck: true,
+  },
   overrides: [
     {
       files: effectFiles,
@@ -70,13 +77,86 @@ export const lint = defineConfig({
       rules: { "effecttsgo/any-unknown-in-error-context": "off" },
     },
     {
+      // The web talks to the API over RPC, never to the database or the infra.
+      files: webFiles,
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: [
+                  "@amerik/db",
+                  "@amerik/db/*",
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "alchemy",
+                  "alchemy/*",
+                ],
+                message: "apps/web reaches data through the Api RPC in @amerik/contracts.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      // Contracts are the wire API: schemas, ids and errors, nothing that runs.
+      files: ["packages/contracts/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: [
+                  "@amerik/db",
+                  "@amerik/db/*",
+                  "drizzle-orm",
+                  "drizzle-orm/*",
+                  "alchemy",
+                  "alchemy/*",
+                  "cloudflare:*",
+                ],
+                message:
+                  "packages/contracts holds wire types only, no database, infra or runtime imports.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      // Infra wires resources; the domain in src depends on it, never the other way.
+      files: ["apps/api/infra/**"],
+      rules: {
+        "no-restricted-imports": [
+          "error",
+          {
+            patterns: [
+              {
+                group: ["../src", "../src/*"],
+                message: "apps/api/infra must not import domain code from src.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      files: ["**/*.test.ts", "**/*.test.tsx"],
+      rules: { "no-console": "error", "vitest/no-focused-tests": "error" },
+    },
+    {
       files: webFiles,
       jsPlugins: ["eslint-plugin-solid"],
       rules: { ...solidRules, "solid/reactivity": "error" },
     },
   ],
-  plugins: ["effecttsgo"],
+  // Setting `plugins` replaces oxlint's defaults, so the default set is listed here too.
+  plugins: ["typescript", "unicorn", "oxc", "vitest", "effecttsgo"],
   rules: {
+    "max-lines": ["error", { max: 600, skipBlankLines: true, skipComments: true }],
     "vite-plus/prefer-vite-plus-imports": "error",
     "oxc/no-accumulating-spread": "error",
     "anti-slop/no-array-filter-map": "error",
