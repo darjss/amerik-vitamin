@@ -7,7 +7,6 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "effect": "catalog:",
-    "typeid-js": "catalog:"
+    "effect": "catalog:"
   }
 }
