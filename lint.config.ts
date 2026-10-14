@@ -11,10 +11,16 @@ const agentIgnores = [".agent/**", ".agents/**", ".claude/**", ".codex/**", ".op
 
 const generatedIgnores = ["**/file-routes.d.ts", "packages/db/migrations/**"];
 
+// Vendored anti-slop stays as upstream wrote it. Our own rules in anti-slop/amerik are linted.
+const vendoredIgnores = [
+  "tools/oxlint/anti-slop/*.*",
+  "tools/oxlint/anti-slop/{effect,rules,shared,vendor}/**",
+];
+
 export const formatIgnores = [
   ...agentIgnores,
   ...generatedIgnores,
-  "tools/oxlint/anti-slop/**",
+  ...vendoredIgnores,
   "docs/private/**",
 ];
 
@@ -41,11 +47,12 @@ const solidRules = Object.fromEntries(
 );
 
 export const lint = defineConfig({
-  ignorePatterns: [...agentIgnores, ...generatedIgnores, "tools/oxlint/anti-slop/**"],
+  ignorePatterns: [...agentIgnores, ...generatedIgnores, ...vendoredIgnores],
   jsPlugins: [
     { name: "vite-plus", specifier: "vite-plus/oxlint-plugin" },
     { name: "anti-slop", specifier: "./tools/oxlint/anti-slop/index.ts" },
     { name: "anti-slop-effect", specifier: "./tools/oxlint/anti-slop/effect/index.ts" },
+    { name: "amerik", specifier: "./tools/oxlint/anti-slop/amerik/index.ts" },
   ],
   // A warning fails `vp check`. There is no warning baseline.
   options: {
@@ -182,6 +189,10 @@ export const lint = defineConfig({
     "anti-slop-effect/no-manual-tagged-construction": "error",
     "anti-slop-effect/no-service-constructor-imports": "error",
     "anti-slop-effect/prefer-effect-match": "error",
+    "amerik/no-silent-ignore": "error",
+    "amerik/no-sql-template": "error",
+    "amerik/no-string-id": "error",
+    "amerik/one-clock": "error",
   },
   settings: solidV2Strict.settings,
 });
