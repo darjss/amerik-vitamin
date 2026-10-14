@@ -1,0 +1,1892 @@
+{
+  "version": "8",
+  "dialect": "postgres",
+  "id": "03f88452-2495-4448-8393-39755e5ecd54",
+  "prevIds": [
+    "ea7dde10-04b8-4659-add8-0c2ccb1cabfd"
+  ],
+  "ddl": [
+    {
+      "name": "shop",
+      "entityType": "schemas"
+    },
+    {
+      "values": [
+        "courier",
+        "pickup",
+        "in_store"
+      ],
+      "name": "fulfillment",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "placed",
+        "edited",
+        "payment_recorded",
+        "paid",
+        "shipped",
+        "delivered",
+        "cancelled"
+      ],
+      "name": "order_event_type",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "messenger_bot",
+        "messenger_human",
+        "web",
+        "brand_site",
+        "phone",
+        "walk_in",
+        "notebook"
+      ],
+      "name": "order_source",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "new",
+        "paid",
+        "shipped",
+        "delivered",
+        "cancelled"
+      ],
+      "name": "order_status",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "qpay",
+        "transfer",
+        "cash"
+      ],
+      "name": "payment_method",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "prepay",
+        "cod"
+      ],
+      "name": "payment_terms",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "softgel",
+        "capsule",
+        "tablet",
+        "chewable",
+        "gummy",
+        "lozenge",
+        "powder",
+        "liquid",
+        "other"
+      ],
+      "name": "product_form",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "values": [
+        "sale",
+        "cancel",
+        "edit",
+        "receipt",
+        "count"
+      ],
+      "name": "stock_move_reason",
+      "entityType": "enums",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "brands",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "categories",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "customers",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "order_events",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "order_lines",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "orders",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "payments",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "products",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "slug_history",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "isRlsEnabled": false,
+      "name": "stock_moves",
+      "entityType": "tables",
+      "schema": "shop"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "brands"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "brands"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "slug",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "brands"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "logo",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "brands"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "brands"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "categories"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "categories"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "slug",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "categories"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "position",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "categories"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "categories"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "phone",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "psid",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "address",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "legacy_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "order_event_type",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "type",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "actor",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "data",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "product_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "quantity",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "unit_price",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "unit_cost",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": {
+        "type": "always",
+        "name": "orders_number_seq",
+        "increment": "1",
+        "startWith": "10000",
+        "minValue": "1",
+        "maxValue": "2147483647",
+        "cache": 1,
+        "cycle": false
+      },
+      "name": "number",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "customer_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "order_status",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "status",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "payment_terms",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "terms",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "order_source",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "source",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "fulfillment",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "fulfillment",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "address",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "notes",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "delivery_fee",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "total",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "legacy_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "amount",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "payment_method",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "method",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "provider_ref",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "actor",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "legacy_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "brand_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "category_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "line",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "potency",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "count",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "product_form",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "form",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "flavor",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "name",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "slug",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "price",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "stock",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "cost",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "asin",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "gtin",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "serving_size",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "servings",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "daily_units",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": "'{}'",
+      "generated": null,
+      "identity": null,
+      "name": "images",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "description",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "archived_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "slug",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "slug_history"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "product_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "slug_history"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "product_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "change",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "stock_move_reason",
+      "typeSchema": "shop",
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "reason",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "order_id",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "note",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "actor",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "name": "created_at",
+      "entityType": "columns",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "order_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "order_events_order_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "product_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "order_lines_product_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "orders_status_created_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "customer_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "orders_customer_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "order_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "payments_order_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "category_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "products_category_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "product_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "created_at",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "name": "stock_moves_product_idx",
+      "entityType": "indexes",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "order_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "orders",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "order_events_order_id_orders_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "order_events"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "order_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "orders",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "order_lines_order_id_orders_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "product_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "products",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "order_lines_product_id_products_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "customer_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "customers",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "orders_customer_id_customers_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "orders"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "order_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "orders",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "payments_order_id_orders_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "brand_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "brands",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "products_brand_id_brands_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "category_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "categories",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "products_category_id_categories_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "product_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "products",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "slug_history_product_id_products_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "slug_history"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "product_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "products",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "stock_moves_product_id_products_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "order_id"
+      ],
+      "schemaTo": "shop",
+      "tableTo": "orders",
+      "columnsTo": [
+        "id"
+      ],
+      "onUpdate": "NO ACTION",
+      "onDelete": "NO ACTION",
+      "name": "stock_moves_order_id_orders_id_fkey",
+      "entityType": "fks",
+      "schema": "shop",
+      "table": "stock_moves"
+    },
+    {
+      "columns": [
+        "order_id",
+        "product_id"
+      ],
+      "nameExplicit": false,
+      "name": "order_lines_pkey",
+      "entityType": "pks",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "brands_pkey",
+      "schema": "shop",
+      "table": "brands",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "categories_pkey",
+      "schema": "shop",
+      "table": "categories",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "customers_pkey",
+      "schema": "shop",
+      "table": "customers",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "order_events_pkey",
+      "schema": "shop",
+      "table": "order_events",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "orders_pkey",
+      "schema": "shop",
+      "table": "orders",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "payments_pkey",
+      "schema": "shop",
+      "table": "payments",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "products_pkey",
+      "schema": "shop",
+      "table": "products",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "slug"
+      ],
+      "nameExplicit": false,
+      "name": "slug_history_pkey",
+      "schema": "shop",
+      "table": "slug_history",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
+      "name": "stock_moves_pkey",
+      "schema": "shop",
+      "table": "stock_moves",
+      "entityType": "pks"
+    },
+    {
+      "nameExplicit": true,
+      "columns": [
+        "brand_id",
+        "line",
+        "potency",
+        "count",
+        "form",
+        "flavor"
+      ],
+      "nullsNotDistinct": true,
+      "name": "products_identity",
+      "entityType": "uniques",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "name"
+      ],
+      "nullsNotDistinct": false,
+      "name": "brands_name_key",
+      "schema": "shop",
+      "table": "brands",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "slug"
+      ],
+      "nullsNotDistinct": false,
+      "name": "brands_slug_key",
+      "schema": "shop",
+      "table": "brands",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "name"
+      ],
+      "nullsNotDistinct": false,
+      "name": "categories_name_key",
+      "schema": "shop",
+      "table": "categories",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "slug"
+      ],
+      "nullsNotDistinct": false,
+      "name": "categories_slug_key",
+      "schema": "shop",
+      "table": "categories",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "phone"
+      ],
+      "nullsNotDistinct": false,
+      "name": "customers_phone_key",
+      "schema": "shop",
+      "table": "customers",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "psid"
+      ],
+      "nullsNotDistinct": false,
+      "name": "customers_psid_key",
+      "schema": "shop",
+      "table": "customers",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "legacy_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "customers_legacy_id_key",
+      "schema": "shop",
+      "table": "customers",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "number"
+      ],
+      "nullsNotDistinct": false,
+      "name": "orders_number_key",
+      "schema": "shop",
+      "table": "orders",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "legacy_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "orders_legacy_id_key",
+      "schema": "shop",
+      "table": "orders",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "provider_ref"
+      ],
+      "nullsNotDistinct": false,
+      "name": "payments_provider_ref_key",
+      "schema": "shop",
+      "table": "payments",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "legacy_id"
+      ],
+      "nullsNotDistinct": false,
+      "name": "payments_legacy_id_key",
+      "schema": "shop",
+      "table": "payments",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "slug"
+      ],
+      "nullsNotDistinct": false,
+      "name": "products_slug_key",
+      "schema": "shop",
+      "table": "products",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "asin"
+      ],
+      "nullsNotDistinct": false,
+      "name": "products_asin_key",
+      "schema": "shop",
+      "table": "products",
+      "entityType": "uniques"
+    },
+    {
+      "nameExplicit": false,
+      "columns": [
+        "gtin"
+      ],
+      "nullsNotDistinct": false,
+      "name": "products_gtin_key",
+      "schema": "shop",
+      "table": "products",
+      "entityType": "uniques"
+    },
+    {
+      "value": "\"phone\" ~ '^[0-9]{8}$'",
+      "name": "customers_phone_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "customers"
+    },
+    {
+      "value": "\"quantity\" > 0",
+      "name": "order_lines_quantity_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "value": "\"unit_price\" >= 0",
+      "name": "order_lines_unit_price_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "order_lines"
+    },
+    {
+      "value": "\"amount\" <> 0",
+      "name": "payments_amount_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "payments"
+    },
+    {
+      "value": "\"price\" >= 0",
+      "name": "products_price_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "value": "\"count\" > 0",
+      "name": "products_count_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "products"
+    },
+    {
+      "value": "\"change\" <> 0",
+      "name": "stock_moves_change_check",
+      "entityType": "checks",
+      "schema": "shop",
+      "table": "stock_moves"
+    }
+  ],
+  "renames": []
+}

@@ -12,6 +12,7 @@
     "migrate": "node --env-file-if-exists=../../.env src/migrate.ts"
   },
   "dependencies": {
+    "@amerik/contracts": "workspace:*",
     "@effect/sql-pg": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:"

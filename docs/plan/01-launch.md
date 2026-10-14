@@ -27,7 +27,7 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T1. Data in
 
-- **Schema v2.** Products (flat, identity key, unique ASIN, nullable stock), customers, orders, order lines, payments, `order_events`, stock moves, bank transactions, outbox, supplier orders and lines, delivery zones. Commerce functions follow COMMERCE-RULES. Done when the commerce-rule test file passes on local Postgres and prod runs the migration.
+- **Schema v2.** Brands, categories (one per product), products (flat, identity key, unique ASIN, nullable stock), slug history, customers, orders, order lines, payments, `order_events` and stock moves. Bank transactions, outbox, supplier orders, product aliases (T2) and delivery zones (T4) ship with the feature that uses them. Legacy orders get new order numbers from 10000 and keep `legacy_id`; legacy Facebook and Instagram usernames are dropped. Commerce functions follow COMMERCE-RULES. Done when the commerce-rule test file passes on local Postgres and prod runs the migration.
 - **Catalog from collages.** Done when every product in the latest collage set has one row, there are no identity duplicates, each has an ASIN and images on R2, and the owner has reviewed it.
 - **Legacy migration.** Done when the reconciliation report matches vit-store's own SQL counts and totals, and every old order line points at a product.
 - **First prod deploy** of API and web.
