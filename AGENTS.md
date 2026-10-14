@@ -43,7 +43,7 @@ Amerik huns baraa's store, dashboard, Messenger bot, supply and reels. The goal:
 - The API Worker's resources and bindings live in `apps/api/src/infrastructure` and `index.ts`. `infra/alchemy.run.ts` composes the stack. Each resource has one definition.
 - Worker `name` props stay unset. Alchemy derives stage-scoped names, and an explicit name makes every stage overwrite one Worker.
 - Only `production` and local `dev_<user>` stages boot. Anything else fails.
-- Deploy only from the main checkout, after build and plan review. Commit `apps/web/file-routes.d.ts` when routes change; `vp check` needs it on a fresh clone.
+- Deploy only from the main checkout, after build and plan review.
 - Reactivity changes (components, memos, stores, actions): treat every Solid diagnostic as a defect and never allowlist one you haven't understood. Full repair guide: `apps/web/node_modules/solid-js/skills/reactivity-diagnostics/SKILL.md` (about 6k tokens, search it by code). Most codes come down to:
   - `STRICT_READ_UNTRACKED`, `PENDING_ASYNC_UNTRACKED_READ`: a reactive read outside a tracking scope (destructured props, component body). Read it in JSX, a memo or an effect's compute half; `untrack()` if a one-time snapshot is the intent.
   - `REACTIVE_WRITE_IN_OWNED_SCOPE`, `ACTION_CALLED_IN_OWNED_SCOPE`: a write, `refresh()` or action call during a component body or memo. Move it to an event handler or effect callback.
