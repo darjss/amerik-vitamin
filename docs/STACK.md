@@ -17,7 +17,7 @@ infra                Alchemy stack `amerik-vitamin`
 
 - **`apps/web` reaches `apps/api` through a service binding,** the same shape as tranzfer2. SSR calls the binding directly. The browser posts to `/rpc` on the web Worker, which forwards it.
 - **Workers Cache purges only hit the Worker that calls them.** So `apps/api` tells `apps/web` to purge, over a binding, and `apps/web` purges itself.
-- **Layout.** The workspace follows tranzfer2 (vp, pnpm catalogs, `apps/*`, `packages/*`, `infra`). The API's inner split (`implementation/`, `infrastructure/`) and everything about Postgres, Hyperdrive and Docker follow executor-v2 (`apps/hosted/cloud`). Details in [STRUCTURE.md](STRUCTURE.md).
+- **Layout.** The workspace follows tranzfer2 (vp, pnpm catalogs, `apps/*`, `packages/*`, `infra`). The API's split into domain code in `src` and Cloudflare resources in `infra`, and everything about Postgres, Hyperdrive and Docker, follow executor-v2 (`apps/hosted/cloud`). Details in [STRUCTURE.md](STRUCTURE.md).
 
 ## Database (decided)
 
@@ -54,11 +54,14 @@ Exact versions live in the `pnpm-workspace.yaml` catalog. This table says why ea
 
 ## Lint
 
-`lint.config.ts` is the one lint config. It runs oxlint's defaults plus:
+`lint.config.ts` is the one lint config. Every rule is at error and a warning fails `vp check`, so there is no warning baseline. It runs oxlint's defaults plus:
 
 - [anti-slop](https://github.com/dmmulroy/anti-slop), vendored in `tools/oxlint/anti-slop` with its Effect rules. The copy is ours: change rules there and record the change in its `UPSTREAM.md`.
-- effect-tsgo's `antipattern` and `correctness` presets on Effect code.
+- The `amerik` plugin in `tools/oxlint/anti-slop/amerik`, this repo's own rules: `no-sql-template`, `one-clock`, `no-string-id` and `no-silent-ignore`. Each rule has one RuleTester test beside it, run by `vp run test`.
+- effect-tsgo's `antipattern` and `correctness` presets on all code in `apps`, `packages` and `infra`, so Effect 3 names fail wherever they appear.
 - eslint-plugin-solid v2-strict on `apps/web`.
+- `max-lines` 600 per file.
+- Import boundaries: `apps/web` and `packages/contracts` never import the database or Alchemy, and `apps/api/infra` never imports `apps/api/src`.
 
 Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 

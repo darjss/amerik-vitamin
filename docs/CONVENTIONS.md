@@ -10,7 +10,8 @@ Rules for Effect code, Solid glue and tests. They come from the executor referen
 - A failing input stays a failure. Never turn it into `false`, `null`, `[]` or `"unknown"` to quiet a type.
 - Keep `try/catch`, `throw` and `.catch` at a true adapter edge: a browser API, a webhook signature check or the Worker entry. Contain it in one function that translates straight into a typed failure, and say so in a one-line comment.
 - UI handlers read mutation results as `Exit` from `runPromiseExit` and branch on `Exit.isFailure`. They do not wrap `runPromise` in `try/catch`.
-- Database failures are defects. The one exception is the health probe, which maps any failure to `DatabaseUnavailable` because the caller wants to know.
+- Database failures are defects: pipe database Effects through `dieOnDatabaseError` (see [STRUCTURE.md](STRUCTURE.md#database-access)). The one exception is the health probe, which maps any failure to `DatabaseUnavailable` because the caller wants to know.
+- `Effect.ignore` and `Effect.ignoreCause` take `{ log: true }` or a severity, so a dropped failure still reaches the logs.
 
 ## Unknown data
 
@@ -23,6 +24,8 @@ Rules for Effect code, Solid glue and tests. They come from the executor referen
 - Schema first: `export type Product = typeof Product.Type`. No hand-written interface beside a schema that describes the same shape.
 - Value first: a service object built by a factory exports `ReturnType<typeof make>`. Keep an explicit interface only when several implementations share it.
 - Skip return annotations. Inference is the source of truth.
+- Ids are branded per table in `packages/contracts/src/ids.ts`. An `id` or `*Id` typed as `string` or `Schema.String` fails lint; an outside id (an Amazon order, a QPay invoice) gets its own brand there too.
+- Time comes from Effect: `DateTime.now` or `Clock.currentTimeMillis`, never `Date.now()` or `new Date()`, so `TestClock` moves every clock at once.
 
 ## Named workflows
 
@@ -43,13 +46,14 @@ Rules for Effect code, Solid glue and tests. They come from the executor referen
 ## Database
 
 - Every v2 table is declared with `shop` from `packages/db/src/schema.ts`. Nothing in this repo reads or writes vit-store's `ecom_vit_*` tables.
+- Raw `sql` templates live in `packages/db`. Other code calls a named query from there.
 - Atomic work uses transactions through `db.$client.withTransaction`, not D1-style batches.
 - Migrations are generated with `drizzle-kit generate` and applied with `vp run migrate`. A hand edit to a generated migration needs a one-line comment saying why.
 
 ## Solid
 
 - State that tracks an in-flight mutation (pending rows, optimistic status) is `createOptimistic` or `createOptimisticStore` inside an `action`. It never sits in a plain signal cleaned up by `try/finally`.
-- Reactivity diagnostics are defects. The repair list is in [AGENTS.md](../AGENTS.md#change-and-verify).
+- Reactivity diagnostics are defects. The repair list is in [LIBRARIES.md](LIBRARIES.md#reactivity-diagnostics).
 
 ## Tests
 

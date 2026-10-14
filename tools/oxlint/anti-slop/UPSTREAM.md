@@ -5,3 +5,4 @@
 - Copied from `skills/install-anti-slop/assets/anti-slop` with `skills/install-anti-slop/scripts/install.mjs`, unmodified.
 - Plugins registered in `lint.config.ts`: `anti-slop` (`index.ts`) and `anti-slop-effect` (`effect/index.ts`).
 - Deviations: none yet. This copy is ours. Change rules here, and record each change in this file.
+- `amerik/` is not from upstream. It holds this repo's own rules, registered as the `amerik` plugin, and unlike the vendored files it is linted and formatted.
