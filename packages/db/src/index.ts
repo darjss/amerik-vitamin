@@ -1,4 +1,4 @@
-export { customerByPhone } from "./customers";
+export { customerByPhone } from "./customers.ts";
 
 export {
   Database,
@@ -7,8 +7,8 @@ export {
   dieOnDatabaseError,
   ping,
   transaction,
-} from "./database";
+} from "./database.ts";
 
-export * as schema from "./schema";
+export * as schema from "./schema.ts";
 
-export { moveStock } from "./stock";
+export { moveStock } from "./stock.ts";

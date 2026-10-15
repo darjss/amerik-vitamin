@@ -1,4 +1,4 @@
-export { Api, DatabaseUnavailable, HideDefects } from "./api";
+export { Api, DatabaseUnavailable, HideDefects } from "./api.ts";
 
 export {
   BrandId,
@@ -11,7 +11,7 @@ export {
   PaymentId,
   ProductId,
   StockMoveId,
-} from "./ids";
+} from "./ids.ts";
 
 export {
   EditOrder,
@@ -32,6 +32,6 @@ export {
   StockMoveReason,
   Tugrik,
   WrongOrderStatus,
-} from "./order";
+} from "./order.ts";
 
-export { CountStock, ProductForm, ProductUnavailable } from "./product";
+export { CountStock, ProductForm, ProductUnavailable } from "./product.ts";
