@@ -19,7 +19,7 @@ These are settled. Don't reopen them without the owner.
 - **Amazon** ([ADR 0004](../adr/0004-amazon-via-owner-cookies.md)). It runs on the owner's cookies, pasted once into dashboard Settings and stored encrypted. A small TS scraper on Workers borrows `amazon-orders`' selectors, with no fallback if Amazon blocks Workers. Reorders check out fully after a tap in our UI. The tap screen shows Amazon's real cart and total, and anything over $1,500 is refused.
 - **Dashboard access.** An allowlist of Google emails with no roles. It deploys to prod early, behind Google login, and runs in shadow mode.
 - **Storefront.** A full rebuild with a new look, on Solid 2 server components plus Workers Cache. The 30k lines of Astro are reference only. Checkout never asks for login. Phone-OTP login stays, but it's optional and built last.
-- **Tests.** One commerce-rule test file, Amazon parser parity against upstream's saved HTML pages, and the bot's 145-case eval harness ported from vit-store #343.
+- **Tests.** No commerce-rule test file (owner, 2026-10-15): the commerce functions are checked by running scenarios against local Postgres. Amazon parser parity against upstream's saved HTML pages, and the bot's 145-case eval harness ported from vit-store #343.
 
 ## Tiers
 
@@ -27,7 +27,7 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T1. Data in
 
-- **Schema v2.** Brands, categories (one per product), products (flat, identity key, unique ASIN, nullable stock), slug history, customers, orders, order lines, payments, `order_events` and stock moves. Bank transactions, outbox, supplier orders, product aliases, Messenger identities (customer, page, PSID) (T2) and delivery zones (T4) ship with the feature that uses them. Legacy orders get new order numbers from 10000 and keep `legacy_id`; legacy Facebook and Instagram usernames are dropped. Commerce functions follow COMMERCE-RULES. Done when the commerce-rule test file passes on local Postgres and prod runs the migration.
+- **Schema v2.** Brands, categories (one per product), products (flat, identity key, unique ASIN, nullable stock), slug history, customers, orders, order lines, payments, `order_events` and stock moves. Bank transactions, outbox, supplier orders, product aliases, Messenger identities (customer, page, PSID) (T2) and delivery zones (T4) ship with the feature that uses them. Legacy orders get new order numbers from 10000 and keep `legacy_id`; legacy Facebook and Instagram usernames are dropped. Commerce functions follow COMMERCE-RULES; they stay off the RPC until dashboard login exists. Done when prod runs the migration.
 - **Catalog from collages.** Done when every product in the latest collage set has one row, there are no identity duplicates, each has an ASIN and images on R2, and the owner has reviewed it.
 - **Legacy migration.** Done when the reconciliation report matches vit-store's own SQL counts and totals, and every old order line points at a product.
 - **First prod deploy** of API and web.

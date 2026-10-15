@@ -4,8 +4,8 @@ Use the directory tree as the file inventory. Add a package only for a real boun
 
 ## Packages
 
-- `packages/contracts` (`@amerik/contracts`) owns the wire API: schemas, branded ids, tagged errors and the `Api` RPC group. Errors carry data, not copy; the UI owns the words. Lint stops it importing database code, Alchemy or `cloudflare:*`. Today it holds `Api` with one rpc, `health`, `DatabaseUnavailable`, and in `ids.ts` a branded UUIDv7 per table plus the branded `OrderNumber`. A new table gets its id there, stored in a Postgres `uuid` column. Ids come from Effect's `Model.UuidV7WithGenerate`: a struct field generates one when `makeEffect` gets none, timed by `Clock`. The brand is type-only, so code that takes an id from outside (a URL, a webhook) decodes it with the schema for the kind it expects.
-- `packages/db` (`@amerik/db`) owns the Postgres schema, migrations and `Database`. `Database` is drizzle's Effect Postgres driver (`drizzle-orm/effect-postgres`) over `@effect/sql-pg`. Every table is declared with the `shop` schema from `schema.ts`; `drizzle.config.ts` sets `schemaFilter: ["shop"]` so drizzle-kit never touches vit-store's tables. `src/migrate.ts` applies `migrations/` to `DATABASE_URL`, and keeps its journal in `shop.migrations`.
+- `packages/contracts` (`@amerik/contracts`) owns the wire API: schemas, branded ids, tagged errors and the `Api` RPC group. Errors carry data, not copy; the UI owns the words. Lint stops it importing database code, Alchemy or `cloudflare:*`. Today it holds `Api` with one rpc, `health`, `DatabaseUnavailable`, the order and stock payloads and errors in `order.ts` and `product.ts`, and in `ids.ts` a branded UUIDv7 per table plus the branded `OrderNumber`. `yield* newId(OrderId)` makes a fresh id for an insert. A new table gets its id there, stored in a Postgres `uuid` column. Ids come from Effect's `Model.UuidV7WithGenerate`: a struct field generates one when `makeEffect` gets none, timed by `Clock`. The brand is type-only, so code that takes an id from outside (a URL, a webhook) decodes it with the schema for the kind it expects.
+- `packages/db` (`@amerik/db`) owns the Postgres schema, migrations, `Database`, `transaction`, and the named queries that need raw SQL: `moveStock` and `customerByPhone`. `Database` is drizzle's Effect Postgres driver (`drizzle-orm/effect-postgres`) over `@effect/sql-pg`. Every table is declared with the `shop` schema from `schema.ts`; `drizzle.config.ts` sets `schemaFilter: ["shop"]` so drizzle-kit never touches vit-store's tables. `src/migrate.ts` applies `migrations/` to `DATABASE_URL`, and keeps its journal in `shop.migrations`.
 - `apps/api` (`@amerik/api`) is the API Worker.
   - `src` owns the rules and the RPC handlers, flat, one file per domain. `rpc.ts` is transport only: read the caller, call a service. `health.ts` is the database probe both `/health` and the `health` rpc use.
   - `infra` owns everything Cloudflare or Alchemy: the Hyperdrive resource in `database.ts` and the stage check in `stage.ts`. Stage checks live here and nowhere else. Lint stops `infra` importing from `src`.
@@ -28,7 +28,7 @@ Browser RPC posts to exactly `/rpc`, forwarded by the web Worker to the API bind
 ## Adding an operation
 
 1. Define its payload, result and expected errors in `packages/contracts`. Add an error only when the client does something different with it.
-2. Implement it as a method on a service in `apps/api/src`.
+2. Implement it as an `Effect.fn` in its domain file in `apps/api/src` (`orders.ts`, `stock.ts`) that reads `Database` from context. A write pipes through `transaction` from `@amerik/db`. Reach for a service class only when there are two implementations or captured config.
 3. Add a one-line handler in `rpc.ts`.
 4. Run `vp check` and `vp run build`. New test files need the owner's approval.
 
