@@ -36,7 +36,9 @@ Those are all of them.
 ## Payments
 
 - **Balance = order total minus the sum of its payments.** The dashboard shows it whenever it isn't zero: "owes 20,000₮" or "refund 15,000₮".
-- **A `new` order becomes `paid` when its balance reaches zero or below.**
+- **A `new` order becomes `paid` when its balance reaches zero or below**, from a payment or from an edit that lowers the total.
+- **Money is recorded whatever the status.** A QPay payment that lands after auto-cancel still happened. It shows on the cancelled order as a refund owed.
+- **A refund can't exceed what the order was paid.**
 - **Every payment has a method:** `qpay`, `transfer`, or `cash`.
 - **A provider transaction is counted once.** QPay payment IDs and Khaan transaction fingerprints are stored and unique. Cash payments have none.
 - **Transfers auto-match only when exactly one open order fits:** the amount equals that order's balance, and the description contains its payment number or its customer's phone. Everything else goes to the human queue: zero matches, two matches, too little, too much.
@@ -77,7 +79,7 @@ Those are all of them.
 ## Customers
 
 - **Customers have an ID.** Phone is text, normalized to 8 digits, unique when present. It's nullable, because walk-ins and Messenger-only customers exist.
-- **A Messenger customer carries their page-scoped ID.**
+- **A Messenger customer's page-scoped ID lives in a Messenger identities table** (customer, page, PSID), added with chat orders in T2. One person can write to more than one page.
 - **Changing the phone on an order means picking or creating a different customer.** Nothing has a foreign key on a phone number.
 
 ## Every order records

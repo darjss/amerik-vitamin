@@ -25,7 +25,7 @@ infra                Alchemy stack `amerik-vitamin`
 - **No PlanetScale branches.** They cost money. Alchemy never provisions a PlanetScale database or branch. Dev and tests run on local Postgres in Docker, which `vp run dev` starts. Only `main` deploys to prod.
 - **Workers reach it through Hyperdrive.** Production uses the `PLANETSCALE_*` origin with `verify-full` and an uploaded ISRG Root X1 certificate. Dev points Hyperdrive at the Docker Postgres from `DATABASE_URL`. The precedents are `~/dev/tranzfer2-references/apps/executor/apps/hosted/cloud/src/infrastructure/database.ts` and `~/dev/tranzfer2-references/apps/t3code/infra/relay`. tranzfer2 itself runs on D1, so copy its Worker and RPC shape, not its database code.
 - **Migrations.** `vp run migrate` applies `packages/db/migrations` to `DATABASE_URL`, with the journal in `shop.migrations`. A production deploy runs the same script through a `Command.Exec` resource, and the Hyperdrive connection depends on it.
-- **Transactions** go through `db.$client.withTransaction`. There is no D1-style batch.
+- **Transactions** go through `transaction` from `@amerik/db`, which wraps `db.$client.withTransaction`. There is no D1-style batch.
 
 ## Now
 

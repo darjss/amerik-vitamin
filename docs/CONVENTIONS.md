@@ -47,7 +47,8 @@ Rules for Effect code, Solid glue and tests. They come from executor (`~/dev/tra
 
 - Every v2 table is declared with `shop` from `packages/db/src/schema.ts`. Nothing in this repo reads or writes vit-store's `ecom_vit_*` tables.
 - Raw `sql` templates live in `packages/db`. Other code calls a named query from there.
-- Atomic work uses transactions through `db.$client.withTransaction`, not D1-style batches.
+- Atomic work pipes through `transaction` from `@amerik/db` (`db.$client.withTransaction` plus `dieOnDatabaseError`), not D1-style batches. Every order write locks the order row first, and stock moves run in product-id order, so concurrent writes serialize instead of deadlocking.
+- Stock changes only through `moveStock` from `@amerik/db`, which writes the stock-log line in the same transaction.
 - Migrations are generated with `drizzle-kit generate` and applied with `vp run migrate`. A hand edit to a generated migration needs a one-line comment saying why.
 
 ## Solid
