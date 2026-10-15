@@ -17,47 +17,51 @@ infra                Alchemy stack `amerik-vitamin`
 
 - **`apps/web` reaches `apps/api` through a service binding,** the same shape as tranzfer2. SSR calls the binding directly. The browser posts to `/rpc` on the web Worker, which forwards it.
 - **Workers Cache purges only hit the Worker that calls them.** So `apps/api` tells `apps/web` to purge, over a binding, and `apps/web` purges itself.
-- **Layout.** The workspace follows tranzfer2 (vp, pnpm catalogs, `apps/*`, `packages/*`, `infra`). The API's inner split (`implementation/`, `infrastructure/`) and everything about Postgres, Hyperdrive and Docker follow executor-v2 (`apps/hosted/cloud`). Details in [STRUCTURE.md](STRUCTURE.md).
+- **Layout.** The workspace follows tranzfer2 (vp, pnpm catalogs, `apps/*`, `packages/*`, `infra`). The API's split into domain code in `src` and Cloudflare resources in `infra`, and everything about Postgres, Hyperdrive and Docker, follow executor (`apps/hosted/cloud`). Details in [STRUCTURE.md](STRUCTURE.md).
 
 ## Database (decided)
 
 - **One database:** the existing PlanetScale Postgres that vit-store uses. v2 tables live in the Postgres schema `shop`, next to `ecom_vit_*` in `public`. The old tables get dropped after cutover. `drizzle.config.ts` sets `schemaFilter: ["shop"]`, so drizzle-kit never diffs them.
 - **No PlanetScale branches.** They cost money. Alchemy never provisions a PlanetScale database or branch. Dev and tests run on local Postgres in Docker, which `vp run dev` starts. Only `main` deploys to prod.
-- **Workers reach it through Hyperdrive.** Production uses the `PLANETSCALE_*` origin with `verify-full` and an uploaded ISRG Root X1 certificate. Dev points Hyperdrive at the Docker Postgres from `DATABASE_URL`. The precedents are `~/dev/tranzfer2-references/apps/executor-v2/apps/hosted/cloud/src/infrastructure/database.ts` and `~/dev/tranzfer2-references/apps/t3code/infra/relay`. tranzfer2 itself runs on D1, so copy its Worker and RPC shape, not its database code.
+- **Workers reach it through Hyperdrive.** Production uses the `PLANETSCALE_*` origin with `verify-full` and an uploaded ISRG Root X1 certificate. Dev points Hyperdrive at the Docker Postgres from `DATABASE_URL`. The precedents are `~/dev/tranzfer2-references/apps/executor/apps/hosted/cloud/src/infrastructure/database.ts` and `~/dev/tranzfer2-references/apps/t3code/infra/relay`. tranzfer2 itself runs on D1, so copy its Worker and RPC shape, not its database code.
 - **Migrations.** `vp run migrate` applies `packages/db/migrations` to `DATABASE_URL`, with the journal in `shop.migrations`. A production deploy runs the same script through a `Command.Exec` resource, and the Hyperdrive connection depends on it.
 - **Transactions** go through `db.$client.withTransaction`. There is no D1-style batch.
 
 ## Now
 
-| Tool                      | Version                                                             | Why                                                                                                                                            |
-| ------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| vite-plus (`vp`)          | 1.1.0, and the `vite` alias to `@voidzero-dev/vite-plus-core` 1.1.0 | One CLI for install, dev, build, lint, format                                                                                                  |
-| pnpm                      | 12, workspace catalogs                                              | Same as tranzfer2                                                                                                                              |
-| typescript                | 7.0.2                                                               | Native compiler, same as tranzfer2                                                                                                             |
-| effect                    | 4.0.1                                                               | RPC contracts with tagged errors, services, config. 4.0.2 is inside the 24h release age                                                        |
-| @effect/sql-pg            | 4.0.1                                                               | Postgres driver under drizzle's `effect-postgres`                                                                                              |
-| drizzle-orm, drizzle-kit  | 1.0.0-rc.5-ab785fc                                                  | Effect-native Drizzle. The rc tag tranzfer2 and the relay use                                                                                  |
-| alchemy                   | 2.0.0-beta.81                                                       | Stages (prod plus local dev), Hyperdrive, Docker, Command                                                                                      |
-| @cloudflare/workers-types | 5.20261007.1                                                        | Newest past the release age                                                                                                                    |
-| solid-js, @solidjs/web    | 2.0.0-rc.13                                                         | API frozen. rc.14 is inside the release age                                                                                                    |
-| @solidjs/vite-plugin      | 3.0.0-next.47                                                       | Start mode: generated entries, SSR, server functions. `renderMode: "async"` needs next.40 or newer, and next.43 passes an option rc.13 rejects |
-| @solidjs/router           | 2.0.0-next.35                                                       | next.36 is inside the release age                                                                                                              |
-| filesystem-routing        | 0.4.0                                                               | File routes, required by the router                                                                                                            |
-| @cloudflare/vite-plugin   | 1.63.0                                                              | Builds the web Worker. Alchemy injects its own copy in dev and deploy                                                                          |
-| vitest, @effect/vitest    | 5.0.3, 4.0.1                                                        | Tests. vitest matches the copy bundled in vite-plus 1.1.0                                                                                      |
-| oxlint, @oxlint/plugins   | 1.87.0                                                              | The oxlint vite-plus 1.1.0 runs. `@oxlint/plugins` must match it exactly for anti-slop                                                         |
-| @effect/tsgo              | 0.50.0                                                              | Effect diagnostics in `vp check`. `prepare` runs `effect-tsgo patch --oxlint` on every install                                                 |
-| eslint-plugin-solid       | 0.18.1                                                              | Solid v2-strict rules on `apps/web`                                                                                                            |
+Exact versions live in the `pnpm-workspace.yaml` catalog. This table says why each tool is here and what to watch when bumping it.
+
+| Tool                                | Why, and what to watch                                                                                                                                                                                                                |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| vite-plus (`vp`)                    | One CLI for install, dev, build, lint, format. The catalog's `vite` alias must match its `vite-plus-core` version                                                                                                                     |
+| pnpm                                | Workspace catalogs, same as tranzfer2                                                                                                                                                                                                 |
+| typescript                          | Native compiler. Stable releases only, never the nightly `-dev` builds                                                                                                                                                                |
+| effect, `@effect/*`                 | RPC contracts with tagged errors, services, config. Bump `effect`, `@effect/sql-pg`, `@effect/platform-node` and `@effect/vitest` together                                                                                            |
+| drizzle-orm, drizzle-kit            | Effect-native Drizzle 1.0 rc. Only commit-tagged builds exist, so pick the newest `1.0.0-rc.*` past the release age                                                                                                                   |
+| alchemy                             | Stages (prod plus local dev), Hyperdrive, Docker, Command                                                                                                                                                                             |
+| solid-js, @solidjs/web              | Solid 2 rc. Bump together                                                                                                                                                                                                             |
+| @solidjs/vite-plugin                | Start mode: generated entries, SSR, server functions. next.48 changed middleware to `(event, next)`, so `apps/web/src/middleware.ts` adapts it for filesystem-routing 0.4.0. Drop the adapter when filesystem-routing takes the event |
+| @solidjs/router, filesystem-routing | Router 2 and its file routes                                                                                                                                                                                                          |
+| @cloudflare/vite-plugin             | Builds the web Worker. Alchemy injects its own copy in dev and deploy. Stay on the 1.x line, not the 2.0 beta snapshots                                                                                                               |
+| vitest, @effect/vitest              | Tests. vitest must equal the copy bundled in vite-plus                                                                                                                                                                                |
+| oxlint, @oxlint/plugins             | Must equal the oxlint vite-plus runs, or anti-slop's plugin API breaks                                                                                                                                                                |
+| @effect/tsgo                        | Effect diagnostics in `vp check`. `prepare` runs `effect-tsgo patch --oxlint` on every install                                                                                                                                        |
+| eslint-plugin-solid                 | Solid v2-strict rules on `apps/web`                                                                                                                                                                                                   |
+
+**After any bump,** run `vp check --quiet`, `vp run test` and `vp run -r build`, then boot `vp run dev` and load the home page. A typecheck and build passed through the next.49 middleware break.
 
 `effect`, `@effect/sql-pg`, `@effect/platform-node`, `@cloudflare/workers-types`, `vitest` and `typescript` are pnpm `overrides` to their catalog version. Without that, peers resolve to stale copies: drizzle-orm installs twice and breaks types between `@amerik/db` and alchemy, and a second vitest splits the test runner.
 
 ## Lint
 
-`lint.config.ts` is the one lint config. It runs oxlint's defaults plus:
+`lint.config.ts` is the one lint config. Every rule is at error and a warning fails `vp check`, so there is no warning baseline. It runs oxlint's defaults plus:
 
 - [anti-slop](https://github.com/dmmulroy/anti-slop), vendored in `tools/oxlint/anti-slop` with its Effect rules. The copy is ours: change rules there and record the change in its `UPSTREAM.md`.
-- effect-tsgo's `antipattern` and `correctness` presets on Effect code.
+- The `amerik` plugin in `tools/oxlint/anti-slop/amerik`, this repo's own rules: `no-sql-template`, `one-clock`, `no-string-id` and `no-silent-ignore`. Each rule has one RuleTester test beside it, run by `vp run test`.
+- effect-tsgo's `antipattern` and `correctness` presets on all code in `apps`, `packages` and `infra`, so Effect 3 names fail wherever they appear.
 - eslint-plugin-solid v2-strict on `apps/web`.
+- `max-lines` 600 per file.
+- Import boundaries: `apps/web` and `packages/contracts` never import the database or Alchemy, and `apps/api/infra` never imports `apps/api/src`.
 
 Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 
@@ -75,7 +79,7 @@ Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 
 ## Messenger is ported as Effect code (decided)
 
-`apps/messenger` is ported fully Effect-ified: services and layers, tagged errors, webhooks decoded with Schema, and Effect `HttpClient` for Zernio, Telegram and OpenAI. It is modeled on executor-v2. vit-store's behavior stays (see [LEGACY.md](LEGACY.md)). The code shape does not.
+`apps/messenger` is ported fully Effect-ified: services and layers, tagged errors, webhooks decoded with Schema, and Effect `HttpClient` for Zernio, Telegram and OpenAI. It is modeled on executor. vit-store's behavior stays (see [LEGACY.md](LEGACY.md)). The code shape does not.
 
 ## Alchemy gate
 

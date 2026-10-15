@@ -2,7 +2,7 @@
 
 `darjss/vit-store` at `~/dev/vit-store` is the old system. It made real money. It's also full of bugs that look like features. Read this before porting anything.
 
-Where these bugs came from, what the owner kept asking agents to do, and the repos before vit-store: [legacy/](legacy/README.md).
+Where these bugs came from, what the owner kept asking agents to do, and the repos before vit-store: [private/legacy/](private/legacy/README.md).
 
 **Rule: recover behavior, write new code.** Before you touch a vit-store file, write down the behavior you want, then build that behavior here against COMMERCE-RULES.
 

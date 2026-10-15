@@ -11,7 +11,7 @@ These are settled. Don't reopen them without the owner.
 - **Catalog.** One flat row per SKU ([ADR 0003](../adr/0003-flat-products-no-variants.md)), rebuilt from mom's collages ([ADR 0002](../adr/0002-rebuild-catalog-not-import.md)). Stock starts unknown (`null`) and gets a number at the first count or receipt. A null-stock product sells freely with no oversold pings.
 - **Collage reading.** An Effect script sends each collage image to gpt-6-luna and gets tiles back: brand, line, potency, count, form, flavor, price. The prices on the image are selling prices ("130k" is 130,000₮). Then dedupe by identity key, search Amazon for the ASIN and images, review on a page, and load. The owner drops the 70+ images in `~/dev/scratchpad/amerik-vitamin/collages`.
 - **Legacy migration.** Customers, orders, lines and payments all migrate. Every order line gets matched to a new product: by script first, then the agent matches the rest by hand. Pending orders become cancelled, and shipped ones become delivered.
-- **Customers.** A TypeID per customer, and phone is the key. Only people who order are stored. People who only chat live in the bot's state.
+- **Customers.** A UUIDv7 id per customer, and phone is the key. Only people who order are stored. People who only chat live in the bot's state.
 - **Order number.** Plain digits, `#10234`, also used as the bank-transfer reference.
 - **Chat orders** ([ADR 0005](../adr/0005-chat-orders-created-automatically.md)). The main page connects to Zernio in watch-only mode. A model creates orders from agreed chats with no confirm step. Each one starts as `new` and COD unless the chat shows a transfer, and Telegram posts it with a 24h [undo].
 - **Telegram** carries the admin AI and the notifications. The AI acts on its own and every write gets an [undo]. It never records a payment or moves money. Its tools are the same API calls the dashboard uses.
@@ -42,7 +42,7 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T3. Bot
 
-- **Bot port.** `apps/messenger` from vit-store, rewritten in Effect on executor-v2's pattern: handoff state machine, one open order per chat, prepay only, pilot page only. Done when the eval set passes at its old rate and a real pilot order completes.
+- **Bot port.** `apps/messenger` from vit-store, rewritten in Effect on executor's pattern: handoff state machine, one open order per chat, prepay only, pilot page only. Done when the eval set passes at its old rate and a real pilot order completes.
 - **Telegram admin AI.** It acts with [undo]. Done when the owner can find an order, change a price and confirm a stock count from Telegram.
 
 ### T4. Delivery and reorder

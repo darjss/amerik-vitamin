@@ -10,8 +10,8 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
 import ApiWorkerLive from "../apps/api/src/index";
-import { deployStage } from "../apps/api/src/infrastructure/stage";
-import { localDatabase } from "../apps/api/src/infrastructure/database";
+import { deployStage } from "../apps/api/infra/stage";
+import { localDatabase } from "../apps/api/infra/database";
 import { ApiWorker } from "../apps/api/src/worker";
 
 const envFile = new URL("../.env", import.meta.url);

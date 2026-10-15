@@ -2,7 +2,7 @@
 
 > To every coding agent, clanker, subagent, sidekick, future model, future hire, and the 2 am version of me that opens this repo half dead after work:
 >
-> Read this before you write a single line. Then read [OPERATING_CONTEXT.md](OPERATING_CONTEXT.md), which is what's true right now. This file is why.
+> Read this before you write a single line. Then read [OPERATING_CONTEXT.md](private/OPERATING_CONTEXT.md), which is what's true right now. This file is why.
 >
 > This is not a PRD. PRDs are where intent goes to die in a table.
 >
@@ -32,7 +32,7 @@ This repo exists to give her the evenings back, and then to make the business so
 
 ## 1. The numbers that should make your weights twitch
 
-I pulled these from prod Postgres, PostHog, and supplier email. The database numbers are measured. The yearly number is inferred from procurement times markup, not audited. [OPERATING_CONTEXT.md](OPERATING_CONTEXT.md) marks which is which, and you should too.
+I pulled these from prod Postgres, PostHog, and supplier email. The database numbers are measured. The yearly number is inferred from procurement times markup, not audited. [OPERATING_CONTEXT.md](private/OPERATING_CONTEXT.md) marks which is which, and you should too.
 
 ```text
 What the database knows:          50,879,100₮    233 orders          (measured)

@@ -7,20 +7,21 @@
     "dev": "vp dev",
     "build": "vp build",
     "start": "vp preview",
-    "preview": "vp preview"
+    "preview": "vp preview",
+    "prepare": "node scripts/file-routes.ts"
   },
   "dependencies": {
     "@amerik/contracts": "workspace:*",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
     "effect": "catalog:",
-    "filesystem-routing": "0.4.0",
+    "filesystem-routing": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "catalog:",
     "@cloudflare/workers-types": "catalog:",
-    "@solidjs/vite-plugin": "3.0.0-next.47",
+    "@solidjs/vite-plugin": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

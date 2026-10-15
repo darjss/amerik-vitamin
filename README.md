@@ -5,8 +5,16 @@ The rewrite of vit-store: storefronts, mom's mobile dashboard, Messenger, supply
 Start here:
 
 1. [docs/MANIFESTO.md](docs/MANIFESTO.md): why this exists.
-2. [docs/OPERATING_CONTEXT.md](docs/OPERATING_CONTEXT.md): what's true right now.
+2. [docs/private/OPERATING_CONTEXT.md](docs/private/OPERATING_CONTEXT.md) (private, see below): what's true right now.
 3. [AGENTS.md](AGENTS.md): how agents work here, and every other doc.
+
+## Private docs
+
+Business numbers, supplier correspondence and the legacy findings, which hold real customer data, live in the private `darjss/amerik-vitamin-private`. With access, clone it into the gitignored `docs/private`:
+
+```bash
+git clone git@github.com:darjss/amerik-vitamin-private.git docs/private
+```
 
 ## Development
 
