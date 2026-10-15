@@ -98,7 +98,8 @@ const readLegacy = Effect.fn("LegacyImport.readLegacy")(function* readLegacy(
   legacy: PgClient.PgClient,
 ) {
   // Since vit-store #115 `created` is unpaid and `pending` is paid, waiting to
-  // ship. Checkout adds a 6,000₮ delivery fee to the total and the admin form
+  // ship. Every `pending` order placed before 2026-10-15 went out (owner,
+  // 2026-10-15), so it imports as delivered; later ones stay open. Checkout adds a 6,000₮ delivery fee to the total and the admin form
   // doesn't, so an order whose priced lines sum to its total was typed in by
   // mom: a chat order on COD. An unknown status or provider maps to NULL and
   // fails the decode.
@@ -123,6 +124,7 @@ const readLegacy = Effect.fn("LegacyImport.readLegacy")(function* readLegacy(
       SELECT id AS legacy_id, customer_legacy_id, status AS legacy_status,
         CASE
           WHEN status = 'created' THEN 'cancelled'
+          WHEN status = 'pending' AND created_at < '2026-10-15' THEN 'delivered'
           WHEN status = 'pending' AND is_paid THEN 'paid'
           WHEN status = 'pending' THEN 'new'
           WHEN status IN ('shipped', 'delivered') THEN 'delivered'
