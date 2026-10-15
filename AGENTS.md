@@ -25,7 +25,7 @@ This file holds only what no tool can check. When you see the same mistake twice
 - vit-store, porting, the bot, the legacy import: [docs/LEGACY.md](docs/LEGACY.md).
 - Posts, reels, Zernio: [docs/CREATIVE.md](docs/CREATIVE.md).
 - SEO and going live: [docs/RELAUNCH.md](docs/RELAUNCH.md).
-- External precedent: `~/dev/tranzfer2-references/README.md` for patterns. `~/dev/tranzfer2-references/apps/executor-v2` is the most concrete reference for Effect on Workers with Postgres and Alchemy, and for `apps/messenger`. `~/dev/tranzfer2` is the shape of this repo. Those checkouts use different prereleases, so verify syntax against installed types.
+- External precedent: `~/dev/tranzfer2-references/README.md` for patterns. `~/dev/tranzfer2-references/apps/executor` is the most concrete reference for Effect on Workers with Postgres and Alchemy, and for `apps/messenger`. `~/dev/tranzfer2` is the shape of this repo. Those checkouts use different prereleases, so verify syntax against installed types.
 
 ## How to work
 

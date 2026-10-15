@@ -10,7 +10,7 @@ import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
 import { pingDatabase } from "./health";
-import { ApiHandlers } from "./rpc";
+import { ApiHandlers, HideDefectsLive } from "./rpc";
 import { ApiWorker } from "./worker";
 
 export default ApiWorker.make(
@@ -38,7 +38,11 @@ export default ApiWorker.make(
         "/rpc",
         Effect.flatten(RpcServer.toHttpEffect(Api)).pipe(
           Effect.provide(
-            Layer.mergeAll(ApiHandlers.pipe(Layer.provide(database)), RpcSerialization.layerJson),
+            Layer.mergeAll(
+              ApiHandlers.pipe(Layer.provide(database)),
+              HideDefectsLive,
+              RpcSerialization.layerJson,
+            ),
           ),
         ),
       ),

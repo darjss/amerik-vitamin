@@ -1,6 +1,6 @@
 # Code conventions
 
-Rules for Effect code, Solid glue and tests. They come from the executor references (`~/dev/tranzfer2-references/apps/executor-v2` and `apps/executor`) and from tranzfer2, adapted to this repo. Lint enforces some; the rest is judgment. Where code goes is in [STRUCTURE.md](STRUCTURE.md).
+Rules for Effect code, Solid glue and tests. They come from executor (`~/dev/tranzfer2-references/apps/executor`) and from tranzfer2, adapted to this repo. Lint enforces some; the rest is judgment. Where code goes is in [STRUCTURE.md](STRUCTURE.md).
 
 ## Failure
 

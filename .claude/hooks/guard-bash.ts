@@ -13,16 +13,28 @@ const command = String(tool_input.command ?? "")
   .replaceAll(/"(?:[^"\\]|\\.)*"|'[^']*'/gu, '""');
 const repo = process.env.CLAUDE_PROJECT_DIR ?? cwd;
 
-const insideRepo = (target: string) => {
-  const path = resolve(cwd, target.replace(/^~(?=\/)/u, process.env.HOME ?? "~"));
+const expandHome = (path: string) => path.replace(/^~(?=\/|$)/u, process.env.HOME ?? "~");
 
-  return path === repo || path.startsWith(`${repo}/`);
-};
+// Walk the command's segments so a relative target resolves against the
+// directory an earlier `cd` moved to, not the hook's cwd.
+let dir: string = cwd;
 
-const writeTargets = [
-  ...command.matchAll(/\bcat\b[^|;&]*?>{1,2}\s*([^\s"';&|]+)/gu),
-  ...command.matchAll(/\|\s*tee\s+(?:-a\s+)?([^\s"';&|]+)/gu),
-].map((match) => match[1]);
+const writeTargets = command.split(/&&|\|\||[;\n]/u).flatMap((segment) => {
+  const cd = /^\s*cd\s+(\S+)\s*$/u.exec(segment);
+
+  if (cd !== null) {
+    dir = resolve(dir, expandHome(cd[1]));
+
+    return [];
+  }
+
+  return [
+    ...segment.matchAll(/\bcat\b[^|]*?>{1,2}\s*([^\s"'|<>]+)/gu),
+    ...segment.matchAll(/(?:^|\|)\s*tee\s+(?:-a\s+)?([^\s"'|<>]+)/gu),
+  ].map((match) => resolve(dir, expandHome(match[1])));
+});
+
+const insideRepo = (path: string) => path === repo || path.startsWith(`${repo}/`);
 
 const block = (reason: string) => {
   process.stderr.write(`Blocked: ${reason}\n`);
@@ -33,7 +45,7 @@ if (/\bpython3?\s+-(?:\s|$)/u.test(command)) {
   block("no `python3 -` scripts. Edit files with the Edit tool or ast-grep.");
 }
 
-if (/\bsed\s+(?:-[a-zA-Z]*i|--in-place)/u.test(command)) {
+if (/\bsed\b[^|;&]*?\s(?:-[a-zA-Z]*i|--in-place)/u.test(command)) {
   block("no `sed -i`. Edit files with the Edit tool or ast-grep.");
 }
 

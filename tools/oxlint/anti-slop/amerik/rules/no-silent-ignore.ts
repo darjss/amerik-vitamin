@@ -4,14 +4,18 @@ import type { ESTree } from "vite-plus/lint/plugins";
 
 const IGNORES = new Set(["ignore", "ignoreCause"]);
 
+const isLogKey = (key: ESTree.Node) =>
+  (key.type === "Identifier" && key.name === "log") ||
+  (key.type === "Literal" && key.value === "log");
+
+const isOff = (value: ESTree.Node) =>
+  (value.type === "Literal" && value.value === false) ||
+  (value.type === "Identifier" && value.name === "undefined");
+
 const logsFailure = (argument: ESTree.Node) =>
   argument.type === "ObjectExpression" &&
   argument.properties.some(
-    (property) =>
-      property.type === "Property" &&
-      property.key.type === "Identifier" &&
-      property.key.name === "log" &&
-      !(property.value.type === "Literal" && property.value.value === false),
+    (property) => property.type === "Property" && isLogKey(property.key) && !isOff(property.value),
   );
 
 /** A swallowed failure nobody can see is a bug report nobody files. */

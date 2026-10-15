@@ -1,4 +1,4 @@
-export { Api, DatabaseUnavailable } from "./api";
+export { Api, DatabaseUnavailable, HideDefects } from "./api";
 
 export {
   BrandId,

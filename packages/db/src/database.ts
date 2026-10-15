@@ -22,9 +22,9 @@ export class Database extends Context.Service<Database, Effect.Success<typeof ma
 }
 
 /**
- * What leaves the API when a query fails: no SQL text, no bound values.
+ * A failed query as a defect with no SQL text and no bound values.
  * drizzle's `EffectDrizzleQueryError.message` carries every bound param
- * (drizzle #6471), and `RpcServer` sends defects to the client.
+ * (drizzle #6471), and the RPC edge logs every defect it hides.
  */
 export class DatabaseFault extends Data.TaggedError("DatabaseFault") {}
 

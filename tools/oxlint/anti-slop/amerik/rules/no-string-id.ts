@@ -10,12 +10,25 @@ const keyName = (key: ESTree.Node) => {
   return key.type === "Literal" ? String(key.value) : undefined;
 };
 
-const isSchemaString = (value: ESTree.Node) =>
-  value.type === "MemberExpression" &&
-  value.object.type === "Identifier" &&
-  value.object.name === "Schema" &&
-  value.property.type === "Identifier" &&
-  value.property.name === "String";
+// `Schema.String.check(...)` is still a plain string; `.pipe(...)` may add a brand, so it passes.
+const isSchemaString = (value: ESTree.Node): boolean => {
+  if (
+    value.type === "CallExpression" &&
+    value.callee.type === "MemberExpression" &&
+    value.callee.property.type === "Identifier" &&
+    value.callee.property.name === "check"
+  ) {
+    return isSchemaString(value.callee.object);
+  }
+
+  return (
+    value.type === "MemberExpression" &&
+    value.object.type === "Identifier" &&
+    value.object.name === "Schema" &&
+    value.property.type === "Identifier" &&
+    value.property.name === "String"
+  );
+};
 
 /** Ids are branded in packages/contracts/src/ids.ts, so a ProductId never passes as an OrderId. */
 export const noStringIdRule = defineRule({

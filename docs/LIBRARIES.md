@@ -36,7 +36,8 @@ Names agents keep guessing from Effect 3. The old form does not exist.
 
 ### RPC
 
-- `RpcServer` sends `Die` defects to the client with their message. drizzle's `EffectDrizzleQueryError.message` carries every bound param (drizzle #6471). Pipe database Effects through `dieOnDatabaseError` from `@amerik/db`, which logs the SQL with placeholders and dies with a messageless `DatabaseFault`.
+- `RpcServer` sends `Die` defects to the client with their message. The `HideDefects` middleware on `Api` replaces them. drizzle's `EffectDrizzleQueryError.message` carries every bound param (drizzle #6471). Pipe database Effects through `dieOnDatabaseError` from `@amerik/db`, which logs the SQL with placeholders and dies with a messageless `DatabaseFault`.
+- `SqlClient.withTransaction` turns a failed `ROLLBACK` or savepoint release into a defect holding the `SqlError` (`effect/src/sql/SqlClient.ts:466`), so `dieOnDatabaseError` never sees it. `HideDefects` does.
 - `RpcClient.layerProtocolHttp({ url: "/rpc" })` posts to `/rpc/`. Set the URL with `transformClient: HttpClient.mapRequest(HttpClientRequest.setUrl("/rpc"))`, as `apps/web/src/api/client.ts` does.
 - An `RpcClientError` from an HTTP failure has the message `"HttpError: "`. Log `reason.kind` and `reason.cause` yourself.
 

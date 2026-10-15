@@ -11,6 +11,7 @@ new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } }).run(
       "const Line = Schema.Struct({ productId: ProductId, name: Schema.String });",
       "const findOrder = (orderId: OrderId) => orderId;",
       "const hidden = (idea: string) => idea;",
+      'const Line = Schema.Struct({ productId: Schema.String.check(isUUID(7)).pipe(Schema.brand("ProductId")) });',
     ],
     invalid: [
       {
@@ -23,6 +24,10 @@ new RuleTester({ languageOptions: { parserOptions: { lang: "ts" } } }).run(
       },
       {
         code: "const Line = Schema.Struct({ productId: Schema.String });",
+        errors: [{ messageId: "stringId", data: { name: "productId" } }],
+      },
+      {
+        code: "const Line = Schema.Struct({ productId: Schema.String.check(isUUID(7)) });",
         errors: [{ messageId: "stringId", data: { name: "productId" } }],
       },
       {

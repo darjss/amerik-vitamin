@@ -8,6 +8,7 @@ new RuleTester().run("no-silent-ignore", noSilentIgnoreRule, {
     'notify.pipe(Effect.ignore({ log: "Warn" }));',
     "Effect.ignore(notify, { log: true });",
     "notify.pipe(Effect.ignoreCause({ log: true }));",
+    'notify.pipe(Effect.ignore({ "log": true }));',
   ],
   invalid: [
     { code: "notify.pipe(Effect.ignore);", errors: [{ messageId: "silentIgnore" }] },
@@ -15,6 +16,10 @@ new RuleTester().run("no-silent-ignore", noSilentIgnoreRule, {
     { code: "Effect.ignore(notify);", errors: [{ messageId: "silentIgnore" }] },
     {
       code: "notify.pipe(Effect.ignore({ log: false }));",
+      errors: [{ messageId: "silentIgnore" }],
+    },
+    {
+      code: "notify.pipe(Effect.ignore({ log: undefined }));",
       errors: [{ messageId: "silentIgnore" }],
     },
     { code: "notify.pipe(Effect.ignoreCause);", errors: [{ messageId: "silentIgnore" }] },

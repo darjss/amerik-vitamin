@@ -1,6 +1,6 @@
 # Code boundaries
 
-Use the directory tree as the file inventory. Add a package only for a real boundary, not as a generic home for helpers. The layout follows tranzfer2 for the workspace and executor-v2 (`apps/hosted/cloud`) for the API's inner split.
+Use the directory tree as the file inventory. Add a package only for a real boundary, not as a generic home for helpers. The layout follows tranzfer2 for the workspace and executor (`apps/hosted/cloud`) for the API's inner split.
 
 ## Packages
 
@@ -21,7 +21,7 @@ Production reaches the one PlanetScale Postgres through a Hyperdrive connection.
 
 Never capture a request, caller or response headers in an isolate-wide singleton.
 
-A failed query never reaches the client. drizzle puts bound params in its error message and `RpcServer` sends defects to the client, so every database Effect pipes through `dieOnDatabaseError` from `@amerik/db`. It logs the error tag and the SQL with placeholders, then dies with a messageless `DatabaseFault`.
+A failed query never reaches the client. `RpcServer` sends defects to the client with their message, so the `HideDefects` middleware on `Api` logs each defect and replaces it with a bare "internal error". drizzle puts bound params in its error message, which would land in that log, so every database Effect pipes through `dieOnDatabaseError` from `@amerik/db`. It logs the error tag and the SQL with placeholders, then dies with a messageless `DatabaseFault`.
 
 Browser RPC posts to exactly `/rpc`, forwarded by the web Worker to the API binding. SSR uses `serverLayer`, which calls the binding directly. See [the bridge contract](SOLID-EFFECT-BINDING.md).
 

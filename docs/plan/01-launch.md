@@ -42,7 +42,7 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T3. Bot
 
-- **Bot port.** `apps/messenger` from vit-store, rewritten in Effect on executor-v2's pattern: handoff state machine, one open order per chat, prepay only, pilot page only. Done when the eval set passes at its old rate and a real pilot order completes.
+- **Bot port.** `apps/messenger` from vit-store, rewritten in Effect on executor's pattern: handoff state machine, one open order per chat, prepay only, pilot page only. Done when the eval set passes at its old rate and a real pilot order completes.
 - **Telegram admin AI.** It acts with [undo]. Done when the owner can find an order, change a price and confirm a stock count from Telegram.
 
 ### T4. Delivery and reorder
