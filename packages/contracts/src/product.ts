@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { ProductId } from "./ids";
+import { ProductId } from "./ids.ts";
 
 /** What the bottle holds, one of the six identity fields on a product. */
 export const ProductForm = Schema.Literals([

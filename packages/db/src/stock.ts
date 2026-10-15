@@ -4,8 +4,8 @@ import { eq, sql } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import { Database } from "./database";
-import { products, stockMoves } from "./schema";
+import { Database } from "./database.ts";
+import { products, stockMoves } from "./schema.ts";
 
 /** A count or a receipt gives an unknown (null) stock its first number. A sale leaves it null. */
 const STARTS_STOCK = new Set<StockMoveReason>(["count", "receipt"]);

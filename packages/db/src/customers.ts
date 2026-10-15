@@ -3,8 +3,8 @@ import { sql } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import { Database } from "./database";
-import { customers } from "./schema";
+import { Database } from "./database.ts";
+import { customers } from "./schema.ts";
 
 /**
  * The customer with this phone, created on first order. A known customer

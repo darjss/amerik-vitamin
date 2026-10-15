@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { OrderId, ProductId } from "./ids";
+import { OrderId, ProductId } from "./ids.ts";
 
 /** docs/COMMERCE-RULES.md: status only moves forward, cancel only from new or paid. */
 export const OrderStatus = Schema.Literals(["new", "paid", "shipped", "delivered", "cancelled"]);

@@ -54,17 +54,25 @@ Where these bugs came from, what the owner kept asking agents to do, and the rep
 
 It's a reconciliation, rehearsed on a local dump first:
 
-| Legacy                           | v2                                        |
-| -------------------------------- | ----------------------------------------- |
-| `pending` orders                 | `cancelled`, because they were never paid |
-| `shipped` or `delivered` orders  | `delivered`                               |
-| `cancelled` or `refunded` orders | `cancelled`                               |
-| `sales.product_cost = 0`         | `null`                                    |
-| successful payments              | payments                                  |
-| customer phone integer           | 8-digit text                              |
-| current slug and `oldSlugs`      | slug history                              |
+| Legacy                                           | v2                                                              |
+| ------------------------------------------------ | --------------------------------------------------------------- |
+| `created` orders                                 | `cancelled`, because they were never paid                       |
+| `pending` orders placed before 2026-10-15        | `delivered` (owner: they all went out)                          |
+| later `pending` orders with a successful payment | `paid`                                                          |
+| later `pending` orders without one               | `new`                                                           |
+| `shipped` or `delivered` orders                  | `delivered`                                                     |
+| `cancelled` or `refunded` orders                 | `cancelled`                                                     |
+| soft-deleted orders and their payments           | skipped                                                         |
+| orders whose priced lines sum exactly to total   | `cod`, `messenger_human`, delivery fee 0                        |
+| every other order                                | `prepay`, `web`, delivery fee 6,000₮ (in total)                 |
+| `sales.product_cost = 0`                         | `null`                                                          |
+| successful payments                              | payments, `provider_ref` = QPay invoice id or Khaan fingerprint |
+| customer phone integer                           | 8-digit text                                                    |
+| current slug and `oldSlugs`                      | slug history                                                    |
 
-Done means counts per table, order totals by status and payment sums match vit-store's own SQL.
+Since vit-store #115 (2026-06-30) `created` means unpaid and `pending` means paid and waiting to ship. vit-store's checkout adds the 6,000₮ fee to the total and its admin form doesn't, which is how hand-entered orders show up. The bot was never live, so every checkout order is `web`.
+
+`vp run import-legacy` in `packages/db` copies customers, orders, payments and order events in one transaction, matched on `legacy_id`, then prints the reconciliation and rolls back on any mismatch. Order lines wait for the new catalog. Done means counts per table, order totals by status and payment sums match vit-store's own SQL.
 
 **vit-store gets no new work.** The one exception is a fix that stops live data corruption while it still runs.
 
