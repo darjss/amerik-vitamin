@@ -135,7 +135,6 @@ export const customers = shop.table(
   {
     id: uuid("id").$type<CustomerId>().primaryKey(),
     phone: text("phone").unique(),
-    psid: text("psid").unique(),
     name: text("name"),
     address: text("address"),
     legacyId: integer("legacy_id").unique(),
@@ -237,7 +236,10 @@ export const orderEvents = shop.table(
   (table) => [index("order_events_order_idx").on(table.orderId, table.createdAt)],
 );
 
-/** One row per change to `products.stock`, written in the same transaction. */
+/**
+ * One row per change to `products.stock`, written in the same transaction.
+ * `change` may be 0: a first count that finds nothing still turns null stock into 0.
+ */
 export const stockMoves = shop.table(
   "stock_moves",
   {
@@ -255,8 +257,5 @@ export const stockMoves = shop.table(
     actor: text("actor").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
-  (table) => [
-    index("stock_moves_product_idx").on(table.productId, table.createdAt),
-    check("stock_moves_change_check", sql`${table.change} <> 0`),
-  ],
+  (table) => [index("stock_moves_product_idx").on(table.productId, table.createdAt)],
 );

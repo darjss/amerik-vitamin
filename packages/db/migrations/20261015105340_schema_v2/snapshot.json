@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "03f88452-2495-4448-8393-39755e5ecd54",
+  "id": "50bde03b-c308-43f9-8f87-aff0d89f06a4",
   "prevIds": [
     "ea7dde10-04b8-4659-add8-0c2ccb1cabfd"
   ],
@@ -319,19 +319,6 @@
       "generated": null,
       "identity": null,
       "name": "phone",
-      "entityType": "columns",
-      "schema": "shop",
-      "table": "customers"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "psid",
       "entityType": "columns",
       "schema": "shop",
       "table": "customers"
@@ -1742,17 +1729,6 @@
     {
       "nameExplicit": false,
       "columns": [
-        "psid"
-      ],
-      "nullsNotDistinct": false,
-      "name": "customers_psid_key",
-      "schema": "shop",
-      "table": "customers",
-      "entityType": "uniques"
-    },
-    {
-      "nameExplicit": false,
-      "columns": [
         "legacy_id"
       ],
       "nullsNotDistinct": false,
@@ -1879,13 +1855,6 @@
       "entityType": "checks",
       "schema": "shop",
       "table": "products"
-    },
-    {
-      "value": "\"change\" <> 0",
-      "name": "stock_moves_change_check",
-      "entityType": "checks",
-      "schema": "shop",
-      "table": "stock_moves"
     }
   ],
   "renames": []

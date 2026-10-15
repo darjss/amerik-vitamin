@@ -25,7 +25,6 @@ CREATE TABLE "shop"."categories" (
 CREATE TABLE "shop"."customers" (
 	"id" uuid PRIMARY KEY,
 	"phone" text UNIQUE,
-	"psid" text UNIQUE,
 	"name" text,
 	"address" text,
 	"legacy_id" integer UNIQUE,
@@ -122,8 +121,7 @@ CREATE TABLE "shop"."stock_moves" (
 	"order_id" uuid,
 	"note" text,
 	"actor" text NOT NULL,
-	"created_at" timestamp with time zone NOT NULL,
-	CONSTRAINT "stock_moves_change_check" CHECK ("change" <> 0)
+	"created_at" timestamp with time zone NOT NULL
 );
 --> statement-breakpoint
 CREATE INDEX "order_events_order_idx" ON "shop"."order_events" ("order_id","created_at");--> statement-breakpoint
