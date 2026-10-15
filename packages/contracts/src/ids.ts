@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Model from "effect/schema/Model";
 
@@ -9,6 +10,17 @@ import * as Model from "effect/schema/Model";
  */
 const uuidV7 = <const Brand extends string>(brand: Parameters<typeof Schema.brand<Brand>>[0]) =>
   Model.UuidV7WithGenerate(Schema.String.check(Schema.isUUID(7)).pipe(Schema.brand<Brand>(brand)));
+
+/** A fresh id of one kind for an insert: `yield* newId(OrderId)`. */
+export const newId = <Brand extends string>(
+  id: Schema.withConstructorDefault<Schema.brand<Schema.String, Brand>>,
+) =>
+  Schema.Struct({ id })
+    .makeEffect({})
+    .pipe(
+      Effect.map((row) => row.id),
+      Effect.orDie,
+    );
 
 export const ProductId = uuidV7("ProductId");
 

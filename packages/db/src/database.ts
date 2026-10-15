@@ -47,6 +47,10 @@ export const dieOnDatabaseError = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
     ),
   );
 
+/** Runs `effect` as one transaction. Database failures inside it die as above. */
+export const transaction = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.flatMap(Database, (db) => db.$client.withTransaction(effect)).pipe(dieOnDatabaseError);
+
 /** One round trip to Postgres. */
 export const ping = Effect.flatMap(Database, (db) => db.execute(sql`SELECT 1`)).pipe(
   dieOnDatabaseError,
