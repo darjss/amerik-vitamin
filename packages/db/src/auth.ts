@@ -45,7 +45,13 @@ export const promiseDatabase = Effect.gen(function* promiseDatabase() {
               ),
             );
 
-      return run(Effect.map(rows, (all) => ({ rows: all })));
+      // The SQL has placeholders only, so a fault's log can name its query.
+      return run(
+        rows.pipe(
+          Effect.map((all) => ({ rows: all })),
+          Effect.annotateLogs("sql", sql),
+        ),
+      );
     },
     { codecs: effectPgCodecs },
   );

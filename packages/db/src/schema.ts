@@ -239,8 +239,8 @@ export const orderEvents = shop.table(
 
 /**
  * better-auth's four tables, for dashboard sign-in. better-auth writes every
- * row, its ids (UUIDv4, `advanced.database.generateId: "uuid"`) and its
- * timestamps. Nothing outside apps/api/src/auth.ts reads them.
+ * row and its timestamps; apps/api/src/auth.ts gives it UUIDv4 ids. Nothing
+ * outside that file reads them.
  */
 export const users = shop.table("users", {
   id: uuid("id").primaryKey(),

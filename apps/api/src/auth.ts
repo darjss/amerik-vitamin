@@ -3,6 +3,7 @@ import { Authenticated, CurrentUser, Unauthorized } from "@amerik/contracts";
 import { authTables, promiseDatabase } from "@amerik/db";
 import { betterAuth } from "better-auth";
 import * as Config from "effect/Config";
+import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
@@ -39,12 +40,34 @@ const isAdmin = (settings: AuthSettings, user: { email: string; emailVerified: b
   user.emailVerified && settings.admins.has(user.email.toLowerCase());
 
 /**
+ * better-auth rejected with something other than an API error: a database
+ * fault or a bug. Only the error's name is kept, because a drizzle error
+ * carries every bound value (session tokens, PKCE verifiers) in its message.
+ */
+class AuthFault extends Data.TaggedError("AuthFault")<{ readonly error: string }> {}
+
+/** The Promise edge into better-auth: a rejection dies as an `AuthFault`. */
+const nativeCall = <A>(call: () => Promise<A>) =>
+  Effect.tryPromise({
+    try: call,
+    catch: (error) => new AuthFault({ error: error instanceof Error ? error.name : "unknown" }),
+  }).pipe(Effect.orDie);
+
+const logAt = {
+  debug: Effect.logDebug,
+  info: Effect.logInfo,
+  warn: Effect.logWarning,
+  error: Effect.logError,
+};
+
+/**
  * One better-auth instance per request, over that request's `Database`:
  * the connection is opened for the request and closes with it (STRUCTURE.md),
  * so nothing request-bound outlives it in an isolate-wide instance.
  */
 const makeAuth = Effect.fn("Auth.make")(function* makeAuth(settings: AuthSettings) {
   const database = yield* promiseDatabase;
+  const runSync = Effect.runSyncWith(yield* Effect.context<never>());
 
   return betterAuth({
     appName: "Amerik Vitamin",
@@ -63,8 +86,21 @@ const makeAuth = Effect.fn("Auth.make")(function* makeAuth(settings: AuthSetting
     // Mom signs in once on her phone. A visit after a day pushes expiry out again.
     session: { expiresIn: 90 * DAY, updateAge: DAY },
     account: { encryptOAuthTokens: true },
-    advanced: { database: { generateId: "uuid" } },
+    // Made here, not by a column default. "uuid" would leave it to Postgres.
+    advanced: { database: { generateId: () => crypto.randomUUID() } },
     telemetry: { enabled: false },
+    // Faults reject instead of being logged with their bound values; see AuthFault.
+    onAPIError: { throw: true },
+    // The message and error names only: better-auth passes errors and
+    // where-clauses, values included, as args.
+    logger: {
+      log: (level, message, ...args) =>
+        runSync(
+          logAt[level](`better-auth: ${message}`, {
+            errors: args.filter((arg) => arg instanceof Error).map((error) => error.name),
+          }),
+        ),
+    },
     // The allowlist gate. A Google account off the list gets no user row and no
     // session; one taken off the list later gets no new session.
     databaseHooks: {
@@ -84,8 +120,8 @@ const makeAuth = Effect.fn("Auth.make")(function* makeAuth(settings: AuthSetting
 
 /**
  * `/api/auth/*`, forwarded by the web Worker so the cookie lands on the web
- * origin. better-auth answers its own errors as responses and rejects only
- * on a fault, so a rejection is a defect.
+ * origin. better-auth answers API errors and redirects as responses and
+ * rejects only on a fault.
  */
 export const authRoute = (settings: AuthSettings) =>
   Effect.gen(function* authRoute() {
@@ -94,7 +130,7 @@ export const authRoute = (settings: AuthSettings) =>
     );
 
     const auth = yield* makeAuth(settings);
-    const response = yield* Effect.promise(() => auth.handler(request));
+    const response = yield* nativeCall(() => auth.handler(request));
     // Buffered: a streamed body's last byte would wait for the request's
     // cleanup, which closes the database connection (executor, auth.ts).
     const body = new Uint8Array(yield* Effect.promise(() => response.arrayBuffer()));
@@ -121,7 +157,7 @@ export const AuthenticatedLive = (settings: AuthSettings) =>
 
       return Authenticated.of(
         Effect.fn("Authenticated")(function* authenticate(effect, { headers }) {
-          const found = yield* Effect.promise(() =>
+          const found = yield* nativeCall(() =>
             auth.api.getSession({
               headers: new Headers(headers),
               query: { disableRefresh: true, disableCookieCache: true },
