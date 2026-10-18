@@ -18,6 +18,7 @@ The site was pulled from Search Console and the Facebook page went quiet while r
 - [ ] Canonicals: brand-site products are canonical on the brand site, and amerikvitamin.mn points to them.
 - [ ] OG images are PNG, not SVG, and cacheable.
 - [ ] `robots.txt` per host points to that host's sitemap.
+- [ ] Remove the `X-Robots-Tag: noindex` middleware in `apps/web/src/middleware.ts`.
 
 ## Search Console
 
