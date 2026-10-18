@@ -14,6 +14,7 @@
     "@amerik/contracts": "workspace:*",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "better-auth": "catalog:",
     "effect": "catalog:",
     "filesystem-routing": "catalog:",
     "solid-js": "catalog:"

@@ -3,6 +3,28 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 
+import { Authenticated } from "./auth.ts";
+import { OrderId, OrderNumber, PaymentId } from "./ids.ts";
+import {
+  Customer,
+  CustomerNotFound,
+  EditOrder,
+  InvalidOrder,
+  ListOrders,
+  ManualPayment,
+  OrderAction,
+  OrderDetail,
+  OrderNotFound,
+  OrderStatus,
+  OrderSummary,
+  PaymentConflict,
+  Phone,
+  PlaceOrder,
+  RefundExceedsPaid,
+  WrongOrderStatus,
+} from "./order.ts";
+import { CountStock, ProductRow, ProductUnavailable } from "./product.ts";
+
 export class DatabaseUnavailable extends Schema.TaggedError<DatabaseUnavailable>()(
   "DatabaseUnavailable",
   {},
@@ -14,9 +36,49 @@ export class DatabaseUnavailable extends Schema.TaggedError<DatabaseUnavailable>
  */
 export class HideDefects extends RpcMiddleware.Service<HideDefects>()("amerik/HideDefects") {}
 
+const OrderWrite = Schema.Union([OrderNotFound, WrongOrderStatus]);
+
+/** Mom's dashboard. Each call needs a session for an allowlisted Google email. */
+const Dashboard = RpcGroup.make(
+  Rpc.make("listOrders", { payload: ListOrders, success: Schema.Array(OrderSummary) }),
+  Rpc.make("getOrder", { payload: OrderAction, success: OrderDetail, error: OrderNotFound }),
+  Rpc.make("findCustomer", {
+    payload: { phone: Phone },
+    success: Customer,
+    error: CustomerNotFound,
+  }),
+  Rpc.make("listProducts", { success: Schema.Array(ProductRow) }),
+  Rpc.make("placeOrder", {
+    payload: PlaceOrder,
+    success: Schema.Struct({ orderId: OrderId, number: OrderNumber, total: Schema.Int }),
+    error: Schema.Union([InvalidOrder, ProductUnavailable]),
+  }),
+  Rpc.make("editOrder", {
+    payload: EditOrder,
+    success: Schema.Struct({ total: Schema.Int, status: OrderStatus }),
+    error: Schema.Union([OrderNotFound, WrongOrderStatus, InvalidOrder, ProductUnavailable]),
+  }),
+  Rpc.make("recordPayment", {
+    payload: ManualPayment,
+    success: Schema.Struct({ paymentId: PaymentId, status: OrderStatus }),
+    // PaymentConflict needs a provider ref, which a manual payment never has.
+    error: Schema.Union([OrderNotFound, RefundExceedsPaid, PaymentConflict]),
+  }),
+  Rpc.make("markShipped", { payload: OrderAction, error: OrderWrite }),
+  Rpc.make("markDelivered", { payload: OrderAction, error: OrderWrite }),
+  Rpc.make("cancelOrder", { payload: OrderAction, error: OrderWrite }),
+  Rpc.make("countStock", {
+    payload: CountStock,
+    success: Schema.Struct({ stock: Schema.Int, change: Schema.Int }),
+    error: ProductUnavailable,
+  }),
+).middleware(Authenticated);
+
 export class Api extends RpcGroup.make(
   Rpc.make("health", {
     error: DatabaseUnavailable,
     success: Schema.Struct({ database: Schema.Literal("ok") }),
   }),
-).middleware(HideDefects) {}
+)
+  .merge(Dashboard)
+  .middleware(HideDefects) {}

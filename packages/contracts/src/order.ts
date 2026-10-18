@@ -1,6 +1,6 @@
 import * as Schema from "effect/Schema";
 
-import { OrderId, ProductId } from "./ids.ts";
+import { CustomerId, OrderEventId, OrderId, OrderNumber, PaymentId, ProductId } from "./ids.ts";
 
 /** docs/COMMERCE-RULES.md: status only moves forward, cancel only from new or paid. */
 export const OrderStatus = Schema.Literals(["new", "paid", "shipped", "delivered", "cancelled"]);
@@ -94,6 +94,113 @@ export const RecordPayment = Schema.Struct({
 });
 
 export type RecordPayment = typeof RecordPayment.Type;
+
+/** What mom records by hand. QPay and Khaan payments come from their own callbacks, never the dashboard. */
+export const ManualPayment = Schema.Struct({
+  orderId: OrderId,
+  amount: RecordPayment.fields.amount,
+  method: Schema.Literals(["cash", "transfer"]),
+});
+
+export type ManualPayment = typeof ManualPayment.Type;
+
+/** Ship, deliver and cancel take only the order. */
+export const OrderAction = Schema.Struct({ orderId: OrderId });
+
+/**
+ * The inbox: every filter given must match. `today` is since midnight in
+ * Ulaanbaatar. Newest first, at most 100 rows.
+ */
+export const ListOrders = Schema.Struct({
+  status: Schema.optional(OrderStatus),
+  today: Schema.optional(Schema.Boolean),
+  phone: Schema.optional(Phone),
+  number: Schema.optional(OrderNumber),
+});
+
+export type ListOrders = typeof ListOrders.Type;
+
+/** Balance is `total - paid`: above 0 the customer owes, below 0 a refund is due. */
+export const OrderSummary = Schema.Struct({
+  id: OrderId,
+  number: OrderNumber,
+  status: OrderStatus,
+  terms: PaymentTerms,
+  source: OrderSource,
+  fulfillment: Fulfillment,
+  total: Schema.Int,
+  paid: Schema.Int,
+  balance: Schema.Int,
+  customerName: Schema.NullOr(Schema.String),
+  customerPhone: Schema.NullOr(Schema.String),
+  createdAt: Schema.Date,
+});
+
+const LineSnapshot = Schema.Struct({
+  productId: ProductId,
+  quantity: Schema.Int,
+  unitPrice: Schema.Int,
+});
+
+const OrderSnapshot = Schema.Struct({
+  lines: Schema.Array(LineSnapshot),
+  deliveryFee: Schema.Int,
+  total: Schema.Int,
+});
+
+/**
+ * `order_events.data`, per event type: a payment, an edit's before and
+ * after, or the vit-store status a legacy order was imported with.
+ */
+export const OrderEventData = Schema.NullOr(
+  Schema.Union([
+    Schema.Struct({ paymentId: PaymentId, amount: Schema.Int, method: PaymentMethod }),
+    Schema.Struct({ before: OrderSnapshot, after: OrderSnapshot }),
+    Schema.Struct({ legacyStatus: Schema.String }),
+  ]),
+);
+
+export type OrderEventData = typeof OrderEventData.Type;
+
+export const OrderDetail = Schema.Struct({
+  ...OrderSummary.fields,
+  customerId: Schema.NullOr(CustomerId),
+  address: Schema.NullOr(Schema.String),
+  notes: Schema.NullOr(Schema.String),
+  deliveryFee: Schema.Int,
+  lines: Schema.Array(Schema.Struct({ ...LineSnapshot.fields, name: Schema.String })),
+  payments: Schema.Array(
+    Schema.Struct({
+      id: PaymentId,
+      amount: Schema.Int,
+      method: PaymentMethod,
+      actor: Schema.String,
+      createdAt: Schema.Date,
+    }),
+  ),
+  events: Schema.Array(
+    Schema.Struct({
+      id: OrderEventId,
+      type: OrderEventType,
+      actor: Schema.String,
+      data: OrderEventData,
+      createdAt: Schema.Date,
+    }),
+  ),
+});
+
+/** A known customer, for the manual-order draft: "existing customer, 3 past orders". */
+export const Customer = Schema.Struct({
+  id: CustomerId,
+  phone: Schema.NullOr(Schema.String),
+  name: Schema.NullOr(Schema.String),
+  address: Schema.NullOr(Schema.String),
+  orders: Schema.Int,
+});
+
+export class CustomerNotFound extends Schema.TaggedError<CustomerNotFound>()("CustomerNotFound", {
+  phone: Phone,
+}) {}
 
 export class OrderNotFound extends Schema.TaggedError<OrderNotFound>()("OrderNotFound", {
   orderId: OrderId,

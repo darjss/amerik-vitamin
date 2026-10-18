@@ -31,3 +31,14 @@ export const deployStage = Effect.serviceOption(Stage).pipe(
     ),
   ),
 );
+
+/** The hostname only production owns. */
+export const productionHost = "v2.amerikvitamin.mn";
+
+/**
+ * Where the browser sees the web Worker, and so where dashboard cookies and
+ * Google's redirect live. Dev is `vp run dev`'s web port.
+ */
+export const webOrigin = Effect.map(deployStage, (stage) =>
+  stage === "production" ? `https://${productionHost}` : "http://localhost:3001",
+);

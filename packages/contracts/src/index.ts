@@ -1,5 +1,7 @@
 export { Api, DatabaseUnavailable, HideDefects } from "./api.ts";
 
+export { Authenticated, CurrentUser, Unauthorized } from "./auth.ts";
+
 export {
   BrandId,
   CategoryId,
@@ -14,14 +16,22 @@ export {
 } from "./ids.ts";
 
 export {
+  Customer,
+  CustomerNotFound,
   EditOrder,
   Fulfillment,
   InvalidOrder,
+  ListOrders,
+  ManualPayment,
+  OrderAction,
+  OrderDetail,
+  OrderEventData,
   OrderEventType,
   OrderLineInput,
   OrderNotFound,
   OrderSource,
   OrderStatus,
+  OrderSummary,
   PaymentConflict,
   PaymentMethod,
   PaymentTerms,
@@ -34,4 +44,4 @@ export {
   WrongOrderStatus,
 } from "./order.ts";
 
-export { CountStock, ProductForm, ProductUnavailable } from "./product.ts";
+export { CountStock, ProductForm, ProductRow, ProductUnavailable } from "./product.ts";

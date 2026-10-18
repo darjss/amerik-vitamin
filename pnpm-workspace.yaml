@@ -6,6 +6,7 @@ packages:
 catalogMode: prefer
 
 catalog:
+  "@better-auth/drizzle-adapter": 1.7.10
   "@cloudflare/vite-plugin": 1.63.1
   "@cloudflare/workers-types": 5.20261012.1
   "@effect/platform-node": 4.0.3
@@ -18,6 +19,7 @@ catalog:
   "@solidjs/web": 2.0.0-rc.14
   "@types/node": 26.6.5
   alchemy: 2.0.0-beta.81
+  better-auth: 1.7.10
   drizzle-kit: 1.0.0-rc.5-5935859
   drizzle-orm: 1.0.0-rc.5-5935859
   effect: 4.0.3

@@ -10,7 +10,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
 import ApiWorkerLive from "../apps/api/src/index";
-import { deployStage } from "../apps/api/infra/stage";
+import { deployStage, productionHost } from "../apps/api/infra/stage";
 import { localDatabase } from "../apps/api/infra/database";
 import { ApiWorker } from "../apps/api/src/worker";
 
@@ -76,7 +76,7 @@ export default Alchemy.Stack(
       },
       dev: { port: 3001 },
       // Only production owns the hostname, so a dev stage can't take it over.
-      domain: stage === "production" ? "v2.amerikvitamin.mn" : undefined,
+      domain: stage === "production" ? productionHost : undefined,
       env: {
         API: api,
       },

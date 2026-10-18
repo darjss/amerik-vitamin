@@ -26,6 +26,15 @@ export const CountStock = Schema.Struct({
 
 export type CountStock = typeof CountStock.Type;
 
+/** A row on the products page. `stock` is null until the first count or receipt. */
+export const ProductRow = Schema.Struct({
+  id: ProductId,
+  name: Schema.String,
+  price: Schema.Int,
+  stock: Schema.NullOr(Schema.Int),
+  archivedAt: Schema.NullOr(Schema.Date),
+});
+
 /** The product doesn't exist, or it's archived and can't be added to an order. */
 export class ProductUnavailable extends Schema.TaggedError<ProductUnavailable>()(
   "ProductUnavailable",

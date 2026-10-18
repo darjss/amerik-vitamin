@@ -1,3 +1,5 @@
+export { authTables, promiseDatabase } from "./auth.ts";
+
 export { customerByPhone } from "./customers.ts";
 
 export {

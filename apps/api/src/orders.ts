@@ -1,6 +1,7 @@
 import {
   InvalidOrder,
   newId,
+  OrderEventData,
   OrderEventId,
   OrderId,
   OrderNotFound,
@@ -12,43 +13,34 @@ import {
 } from "@amerik/contracts";
 import type {
   EditOrder,
+  ListOrders,
   OrderEventType,
   OrderSource,
   OrderStatus,
-  PaymentMethod,
   PlaceOrder,
   ProductId,
   RecordPayment,
 } from "@amerik/contracts";
-import { customerByPhone, Database, moveStock, schema, transaction } from "@amerik/db";
-import { and, eq, inArray, isNull, sum } from "drizzle-orm";
+import {
+  customerByPhone,
+  Database,
+  dieOnDatabaseError,
+  moveStock,
+  schema,
+  transaction,
+} from "@amerik/db";
+import { and, asc, desc, eq, gte, inArray, isNull, sum } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Schema from "effect/Schema";
 
 // The rules behind every function here: docs/COMMERCE-RULES.md.
-const { orderEvents, orderLines, orders, payments, products } = schema;
+const { customers, orderEvents, orderLines, orders, payments, products } = schema;
 
 /** The bot and the websites: prepay only, catalog prices only. */
 const SELF_SERVE = new Set<OrderSource>(["messenger_bot", "web", "brand_site"]);
 
 type Lines = PlaceOrder["lines"];
-
-type PricedLine = {
-  readonly productId: ProductId;
-  readonly quantity: number;
-  readonly unitPrice: number;
-};
-
-type OrderSnapshot = {
-  readonly lines: ReadonlyArray<PricedLine>;
-  readonly deliveryFee: number;
-  readonly total: number;
-};
-
-/** `order_events.data`: what the timeline shows and [undo] restores. */
-type EventData =
-  | { readonly paymentId: PaymentId; readonly amount: number; readonly method: PaymentMethod }
-  | { readonly before: OrderSnapshot; readonly after: OrderSnapshot };
 
 const now = DateTime.now.pipe(Effect.map(DateTime.toDateUtc));
 
@@ -126,7 +118,8 @@ const logEvent = Effect.fn("logEvent")(function* logEvent(
   orderId: OrderId,
   type: OrderEventType,
   actor: string,
-  data?: EventData,
+  // What the timeline shows and [undo] restores.
+  data?: OrderEventData,
 ) {
   const db = yield* Database;
 
@@ -427,3 +420,125 @@ export const cancelOrder = Effect.fn("cancelOrder")(function* cancelOrder(
 
   yield* setStatus(order.id, "cancelled", actor);
 }, transaction);
+
+const summary = {
+  id: orders.id,
+  number: orders.number,
+  status: orders.status,
+  terms: orders.terms,
+  source: orders.source,
+  fulfillment: orders.fulfillment,
+  total: orders.total,
+  createdAt: orders.createdAt,
+  customerName: customers.name,
+  customerPhone: customers.phone,
+  paid: sum(payments.amount),
+};
+
+const withBalance = <Row extends { total: number; paid: string | null }>(row: Row) => {
+  const paid = Number(row.paid ?? 0);
+
+  return { ...row, paid, balance: row.total - paid };
+};
+
+/** Mongolia keeps UTC+8 all year, so "today" starts at midnight there. */
+const startOfToday = DateTime.now.pipe(
+  Effect.map((now) =>
+    DateTime.toDateUtc(
+      DateTime.startOf(DateTime.setZoneNamedUnsafe(now, "Asia/Ulaanbaatar"), "day"),
+    ),
+  ),
+);
+
+export const listOrders = Effect.fn("listOrders")(function* listOrders(input: ListOrders) {
+  const db = yield* Database;
+
+  const rows = yield* db
+    .select(summary)
+    .from(orders)
+    .leftJoin(customers, eq(customers.id, orders.customerId))
+    .leftJoin(payments, eq(payments.orderId, orders.id))
+    .where(
+      and(
+        input.status === undefined ? undefined : eq(orders.status, input.status),
+        input.today === true ? gte(orders.createdAt, yield* startOfToday) : undefined,
+        input.phone === undefined ? undefined : eq(customers.phone, input.phone),
+        input.number === undefined ? undefined : eq(orders.number, input.number),
+      ),
+    )
+    .groupBy(orders.id, customers.id)
+    .orderBy(desc(orders.createdAt))
+    .limit(100)
+    .pipe(dieOnDatabaseError);
+
+  return rows.map(withBalance);
+});
+
+/** One order with its lines, payments and timeline, oldest event first. */
+export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderId) {
+  const db = yield* Database;
+
+  const [[order], lines, paid, events] = yield* Effect.all([
+    db
+      .select({
+        ...summary,
+        customerId: orders.customerId,
+        address: orders.address,
+        notes: orders.notes,
+        deliveryFee: orders.deliveryFee,
+      })
+      .from(orders)
+      .leftJoin(customers, eq(customers.id, orders.customerId))
+      .leftJoin(payments, eq(payments.orderId, orders.id))
+      .where(eq(orders.id, orderId))
+      .groupBy(orders.id, customers.id),
+    db
+      .select({
+        productId: orderLines.productId,
+        name: products.name,
+        quantity: orderLines.quantity,
+        unitPrice: orderLines.unitPrice,
+      })
+      .from(orderLines)
+      .innerJoin(products, eq(products.id, orderLines.productId))
+      .where(eq(orderLines.orderId, orderId))
+      .orderBy(asc(products.name)),
+    db
+      .select({
+        id: payments.id,
+        amount: payments.amount,
+        method: payments.method,
+        actor: payments.actor,
+        createdAt: payments.createdAt,
+      })
+      .from(payments)
+      .where(eq(payments.orderId, orderId))
+      .orderBy(asc(payments.createdAt)),
+    db
+      .select({
+        id: orderEvents.id,
+        type: orderEvents.type,
+        actor: orderEvents.actor,
+        data: orderEvents.data,
+        createdAt: orderEvents.createdAt,
+      })
+      .from(orderEvents)
+      .where(eq(orderEvents.orderId, orderId))
+      .orderBy(asc(orderEvents.createdAt)),
+  ]).pipe(dieOnDatabaseError);
+
+  if (order === undefined) return yield* new OrderNotFound({ orderId });
+
+  return {
+    ...withBalance(order),
+    lines,
+    payments: paid,
+    // The rows are ours, so a shape the schema rejects is a bug, not input.
+    events: yield* Effect.forEach(events, ({ data, ...event }) =>
+      Schema.decodeUnknownEffect(OrderEventData)(data).pipe(
+        Effect.map((decoded) => ({ ...event, data: decoded })),
+        Effect.orDie,
+      ),
+    ),
+  };
+});
