@@ -85,6 +85,10 @@ Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 
 Alchemy stays only if it proves deploy, migrations, secrets and rollback on prod. Any failure means wrangler plus drizzle-kit migrations, and nothing else changes.
 
+Deploy and migrations passed on 2026-10-18: the first production deploy created `shop` on PlanetScale and left the vit-store tables' row counts unchanged. Secrets and rollback are still unproven. Every later plan shows `Migrations`, `Postgres` and `Api` as updates, because `Migrations` runs on every deploy and the plan can't know its hash in advance.
+
+The production web Worker serves `v2.amerikvitamin.mn`. vit-store keeps the apex and its other subdomains until cutover.
+
 ## Gaps on Solid 2
 
 - **TanStack Table and TanStack Form don't work on Solid 2.** They import `mergeProps` and `batch`, which were removed. Wrap `@tanstack/table-core` with a store. Forms are Effect Schema plus `action()`.
@@ -107,6 +111,5 @@ Alchemy stays only if it proves deploy, migrations, secrets and rollback on prod
 
 ## Check before relying on
 
-- `@effect/sql-pg` uses `node:net`. `/health` round-trips through the local Hyperdrive passthrough in `alchemy dev`. It is unproven against deployed Hyperdrive and PlanetScale until the first production deploy.
 - Does Zernio publish Facebook **Reels**, or just Facebook videos? Instagram Reels are confirmed.
 - Amazon's multi-item add-to-cart URL for the prefilled reorder cart.

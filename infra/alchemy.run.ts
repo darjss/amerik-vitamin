@@ -61,7 +61,7 @@ export default Alchemy.Stack(
     ),
   },
   Effect.gen(function* provision() {
-    yield* deployStage;
+    const stage = yield* deployStage;
 
     if ((yield* AlchemyContext).dev) {
       yield* localPostgres;
@@ -75,6 +75,8 @@ export default Alchemy.Stack(
         flags: ["nodejs_compat"],
       },
       dev: { port: 3001 },
+      // Only production owns the hostname, so a dev stage can't take it over.
+      domain: stage === "production" ? "v2.amerikvitamin.mn" : undefined,
       env: {
         API: api,
       },
