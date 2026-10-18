@@ -40,31 +40,31 @@ const make = Effect.fn("Telegram.make")(function* make(
   // The bot token is part of the URL, so the request never reaches a log or a span.
   const url = `https://api.telegram.org/bot${Redacted.value(config.token)}/sendMessage`;
 
-  return {
-    send: (text: string) =>
-      Effect.gen(function* () {
-        const response = yield* http.execute(
-          HttpClientRequest.post(url).pipe(
-            HttpClientRequest.bodyJsonUnsafe({ chat_id: config.chatId, text }),
-          ),
-        );
-
-        if (response.status !== 200) {
-          return yield* new TelegramUnavailable({ status: response.status });
-        }
-
-        yield* Schema.decodeUnknownEffect(Sent)(yield* response.json);
-      }).pipe(
-        Effect.scoped,
-        Effect.timeout("20 seconds"),
-        Effect.catchIf(
-          (error) => !(error instanceof TelegramUnavailable),
-          () => Effect.fail(new TelegramUnavailable({})),
+  const send = Effect.fn("Telegram.send")(
+    function* send(text: string) {
+      const response = yield* http.execute(
+        HttpClientRequest.post(url).pipe(
+          HttpClientRequest.bodyJsonUnsafe({ chat_id: config.chatId, text }),
         ),
-        Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
-        Effect.withSpan("Telegram.send"),
-      ),
-  };
+      );
+
+      if (response.status !== 200) {
+        return yield* new TelegramUnavailable({ status: response.status });
+      }
+
+      yield* Schema.decodeUnknownEffect(Sent)(yield* response.json);
+    },
+    Effect.scoped,
+    Effect.timeout("20 seconds"),
+    // The other failures carry the request, and with it the token.
+    Effect.catchIf(
+      (error) => !(error instanceof TelegramUnavailable),
+      () => Effect.fail(new TelegramUnavailable({})),
+    ),
+    Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
+  );
+
+  return { send };
 });
 
 export class Telegram extends Context.Service<Telegram, Effect.Success<ReturnType<typeof make>>>()(
