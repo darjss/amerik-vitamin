@@ -1,6 +1,7 @@
 export { Api, DatabaseUnavailable, HideDefects } from "./api.ts";
 
 export {
+  BankTransactionId,
   BrandId,
   CategoryId,
   CustomerId,
@@ -8,10 +9,14 @@ export {
   OrderEventId,
   OrderId,
   OrderNumber,
+  OutboxId,
   PaymentId,
   ProductId,
+  QPayInvoiceId,
   StockMoveId,
 } from "./ids.ts";
+
+export { AssignTransfer, NothingOwed, QPayUnavailable, TransferUnavailable } from "./payment.ts";
 
 export {
   EditOrder,

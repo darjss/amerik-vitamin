@@ -13,6 +13,7 @@ import {
 import type {
   EditOrder,
   OrderEventType,
+  OrderNumber,
   OrderSource,
   OrderStatus,
   PaymentMethod,
@@ -20,7 +21,15 @@ import type {
   ProductId,
   RecordPayment,
 } from "@amerik/contracts";
-import { customerByPhone, Database, moveStock, schema, transaction } from "@amerik/db";
+import {
+  customerByPhone,
+  Database,
+  moveStock,
+  notify,
+  schema,
+  transaction,
+  tugrik,
+} from "@amerik/db";
 import { and, eq, inArray, isNull, sum } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -102,7 +111,7 @@ const totalOf = (lines: ReadonlyArray<{ quantity: number; unitPrice: number }>, 
   lines.reduce((total, line) => total + line.quantity * line.unitPrice, fee);
 
 /** Every order write starts here: the row lock serializes edits, payments and status changes. */
-const lockOrder = Effect.fn("lockOrder")(function* lockOrder(orderId: OrderId) {
+export const lockOrder = Effect.fn("lockOrder")(function* lockOrder(orderId: OrderId) {
   const db = yield* Database;
   const [order] = yield* db.select().from(orders).where(eq(orders.id, orderId)).for("update");
 
@@ -111,7 +120,7 @@ const lockOrder = Effect.fn("lockOrder")(function* lockOrder(orderId: OrderId) {
   return order;
 });
 
-const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
+export const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
   const db = yield* Database;
 
   const [row] = yield* db
@@ -199,7 +208,7 @@ const leaveNew = Effect.fn("leaveNew")(function* leaveNew(
 
 /** A `new` order with money on it becomes `paid` once its balance reaches zero or below. */
 const settle = Effect.fn("settle")(function* settle(
-  order: { readonly id: OrderId; readonly status: OrderStatus },
+  order: { readonly id: OrderId; readonly number: OrderNumber; readonly status: OrderStatus },
   total: number,
   paid: number,
   actor: string,
@@ -207,6 +216,7 @@ const settle = Effect.fn("settle")(function* settle(
   if (order.status !== "new" || paid <= 0 || paid < total) return order.status;
 
   yield* leaveNew(order.id, "paid", actor);
+  yield* notify("order_paid", `Төлбөр орлоо #${order.number}: ${tugrik(paid)}`);
 
   return "paid" as const;
 });
@@ -254,6 +264,7 @@ export const placeOrder = Effect.fn("placeOrder")(function* placeOrder(
 
   yield* db.insert(orderLines).values(lines.map((line) => ({ ...line, orderId: id })));
   yield* logEvent(id, "placed", actor);
+  yield* notify("order_placed", `Шинэ захиалга #${order.number}: ${tugrik(total)}`);
 
   return { orderId: id, number: order.number, total };
 }, transaction);

@@ -54,6 +54,19 @@ export const OrderEventId = uuidV7("OrderEventId");
 
 export type OrderEventId = typeof OrderEventId.Type;
 
+export const BankTransactionId = uuidV7("BankTransactionId");
+
+export type BankTransactionId = typeof BankTransactionId.Type;
+
+export const OutboxId = uuidV7("OutboxId");
+
+export type OutboxId = typeof OutboxId.Type;
+
+/** QPay's id for an invoice we created. */
+export const QPayInvoiceId = Schema.NonEmptyString.pipe(Schema.brand("QPayInvoiceId"));
+
+export type QPayInvoiceId = typeof QPayInvoiceId.Type;
+
 /** The digits a person says for an order, `#10234`. Postgres assigns them. */
 export const OrderNumber = Schema.Int.check(Schema.isGreaterThan(0)).pipe(
   Schema.brand("OrderNumber"),

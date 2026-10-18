@@ -5,6 +5,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 import { Database } from "./database.ts";
+import { notify } from "./outbox.ts";
 import { products, stockMoves } from "./schema.ts";
 
 /** A count or a receipt gives an unknown (null) stock its first number. A sale leaves it null. */
@@ -33,17 +34,16 @@ export const moveStock = Effect.fn("moveStock")(function* moveStock(move: {
     .update(products)
     .set({ stock })
     .where(eq(products.id, move.productId))
-    .returning({ stock: products.stock, cost: products.cost });
+    .returning({ stock: products.stock, cost: products.cost, name: products.name });
 
   if (product === undefined) return yield* Effect.die(`moveStock: no product ${move.productId}`);
 
-  // Stock may go negative (COMMERCE-RULES): the order goes through and mom
-  // recounts. The Telegram ping replaces this log when the outbox lands (T2).
-  if (product.stock !== null && product.stock < 0) {
-    yield* Effect.logWarning("oversold, or the count is wrong", {
-      productId: move.productId,
-      stock: product.stock,
-    });
+  // Stock may go negative (COMMERCE-RULES): the order goes through and mom gets a ping to recount.
+  if (move.change < 0 && product.stock !== null && product.stock < 0) {
+    yield* notify(
+      "oversold",
+      `Үлдэгдэл хасах руу орлоо: ${product.name}, ${product.stock} ширхэг. Илүү зарсан эсвэл тоо буруу, тоолж шалгана уу.`,
+    );
   }
 
   yield* db.insert(stockMoves).values({

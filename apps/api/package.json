@@ -11,7 +11,8 @@
     "@amerik/db": "workspace:*",
     "alchemy": "catalog:",
     "drizzle-orm": "catalog:",
-    "effect": "catalog:"
+    "effect": "catalog:",
+    "khaan-client": "catalog:"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "catalog:",
