@@ -77,6 +77,25 @@ Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 | Remotion                                                   | Reels rendered from catalog data on a cron outside Workers. Check the license for small companies |
 | postal-mime                                                | Parse Amazon emails in the `email()` handler                                                      |
 
+## UI (decided 2026-10-18)
+
+Each package is added with the first screen that uses it, and Solid moves to rc.15 in the same PR. solid-toast's peer is `^2.0.0-rc.15`. tranzfer2 runs Panda, Phosphor and solid-toast on Solid 2.
+
+| Package                                     | Use                                                                                                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Panda CSS                                   | Styling: tokens and recipes at build time, no runtime                                                                                                                        |
+| `terracotta` 2.0 next                       | Headless dialog, combobox, select, menu, tabs. Native elements first. No floating positioning, so popups sit in the flow. After a combobox pick, set the input text yourself |
+| `@solid-primitives/form` 1.0 next           | Field, touched and error signals. Validators wrap the Effect Schemas from `@amerik/contracts`, and the submit goes through a Solid `action()`                                |
+| `@iconify-json/ph` through `unplugin-icons` | Phosphor icons                                                                                                                                                               |
+| `@trev.zip/solid-toast`                     | Toasts                                                                                                                                                                       |
+
+A spike on Solid 2.0.0-rc.15 settled it. terracotta 2.0.0-next.10 rendered through Vite SSR. Its dialog trapped focus, closed on Escape and returned focus, and its combobox filtered and picked by keyboard. Rejected:
+
+- **Kobalte 2.0.0-alpha.3:** Escape doesn't close its dialog, it logs `EFFECT_WRITES_OWN_SOURCE`, and its open issue #717 loses button hydration under the Solid 2 RC. Look again at its beta.
+- **Ark UI 6 next and Zag 2 next:** they still import `solid-js/web` and `solid-js/store`.
+- **corvu, solid-headless, Formisch, Modular Forms, Felte:** Solid 1 peers only.
+- **TanStack Form 2 alpha:** calls `mergeProps` and `splitProps`.
+
 ## Messenger is ported as Effect code (decided)
 
 `apps/messenger` is ported fully Effect-ified: services and layers, tagged errors, webhooks decoded with Schema, and Effect `HttpClient` for Zernio, Telegram and OpenAI. It is modeled on executor. vit-store's behavior stays (see [LEGACY.md](LEGACY.md)). The code shape does not.
@@ -91,8 +110,7 @@ The production web Worker serves `v2.amerikvitamin.mn`. vit-store keeps the apex
 
 ## Gaps on Solid 2
 
-- **TanStack Table and TanStack Form don't work on Solid 2.** They import `mergeProps` and `batch`, which were removed. Wrap `@tanstack/table-core` with a store. Forms are Effect Schema plus `action()`.
-- **Kobalte is alpha** with an exact peer pin. Reach for native elements first.
+- **TanStack Table and TanStack Form don't work on Solid 2.** They import `mergeProps` and `batch`, which were removed. Wrap `@tanstack/table-core` with a store. Forms are under [UI](#ui-decided-2026-10-18).
 - **Chart wrappers are Solid 1 only.** Use uplot or echarts directly through a ref.
 - **`@astrojs/solid-js` doesn't support Solid 2,** so there's no Astro.
 
