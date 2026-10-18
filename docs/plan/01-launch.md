@@ -27,10 +27,10 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 
 ### T1. Data in
 
-- **Schema v2.** Brands, categories (one per product), products (flat, identity key, unique ASIN, nullable stock), slug history, customers, orders, order lines, payments, `order_events` and stock moves. Bank transactions, outbox, supplier orders, product aliases, Messenger identities (customer, page, PSID) (T2) and delivery zones (T4) ship with the feature that uses them. Legacy orders get new order numbers from 10000 and keep `legacy_id`; legacy Facebook and Instagram usernames are dropped. Commerce functions follow COMMERCE-RULES; they stay off the RPC until dashboard login exists. Done when prod runs the migration.
+- **Schema v2.** Brands, categories (one per product), products (flat, identity key, unique ASIN, nullable stock), slug history, customers, orders, order lines, payments, `order_events` and stock moves. Bank transactions, outbox, supplier orders, product aliases, Messenger identities (customer, page, PSID) (T2) and delivery zones (T4) ship with the feature that uses them. Legacy orders get new order numbers from 10000 and keep `legacy_id`; legacy Facebook and Instagram usernames are dropped. Commerce functions follow COMMERCE-RULES; they stay off the RPC until dashboard login exists. Shipped 2026-10-18: prod ran the migration.
 - **Catalog from collages.** Done when every product in the latest collage set has one row, there are no identity duplicates, each has an ASIN and images on R2, and the owner has reviewed it.
 - **Legacy migration.** Done when the reconciliation report matches vit-store's own SQL counts and totals, and every old order line points at a product.
-- **First prod deploy** of API and web.
+- **First prod deploy** of API and web. Shipped 2026-10-18: prod `/health` round-trips through Hyperdrive to PlanetScale.
 
 ### T2. Orders flow in
 
