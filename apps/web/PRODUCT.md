@@ -53,13 +53,39 @@ Palette "espresso and clay". Color means a status or what's selected, never deco
 | owes        | `#9c2348` on `#f9e0e6` | Money to collect, QPay waiting                              |
 | not shipped | `#6b5210` on `#f4e9cc` | Not handed to TU yet                                        |
 
-Type is the system font, which is SF Pro on her iPhone and covers Cyrillic. Numbers use tabular figures. Icons are Phosphor only.
+Type is Onest. It was drawn for Cyrillic screens and has Mongolian's Ө and Ү. Bold is for the phone, money and ×N only. Numbers use tabular figures. Icons are Phosphor only.
+
+Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Each screen has at most one dark button. Every other button is the soft chip color.
 
 Screens:
 
-- **Orders** (Захиалга) opens on the to-ship filter (Илгээх). Three or four orders fit on one iPhone screen. Each row shows product photos with the piece count, phone, order number, items, address, a collect or paid label and a not-shipped label. Customers are known by phone, so no screen shows a customer's name. A search field for phone or order number sits above the filter chips.
-- **Home** (Нүүр) shows money in today next to COD left to collect. Below that is Хийх зүйлс, a to-do list with one button per row, such as Савлах, Холбох, Буцаах or Захиалах. Then come the shelf to pull from today, with ×N on each photo, and stock running low.
-- **Order** shows where it stands in one line, then a four-step tracker (Захиалсан, Төлсөн, Илгээсэн, Хүргэсэн). Below are the customer with call and copy-address buttons, items with photos, and payment. One "TU-д өгөх" button stays docked at the bottom.
+- **Orders** (Захиалга). A search field and a + for a new order sit at the top, with no page title. Search takes an order number, or any 3 to 8 digits of a phone. The filter chips show counts: Илгээх 4, Төлбөр хүлээж 1, Замд 3. On Илгээх, a bar above the rows says how many parcels and pieces there are and has Савлах.
+  Each row has:
+  - the phone, with the money pill on the right ("Авах 286,000₮" or "Төлсөн")
+  - the address on one line
+  - the note in full
+  - one 56px photo per product, each with its own ×N
+  - the next-step button
+  - a "2 хоног" pill when a ready order has waited two days or more
+
+  Customers are known by phone, so no screen shows a customer's name.
+
+- **Home** (Нүүр) opens with the date. Then comes the morning's packing: how many parcels, Савлах, and every bottle to pull off the shelf with ×N, all visible at once. Хийх зүйлс holds only rows with a button. Мөнгө is two plain rows: COD left to collect, and money in today. Stock running low comes last.
+- **Order** reads top to bottom:
+  - the status in one line
+  - a muted line with payment, time and source
+  - a thin four-step tracker
+  - the items with 72px photos
+  - the phone, with how many orders it has placed and a call button
+  - the address, with a copy button
+  - the note
+  - the payment
+  - "Мөнгө авсан", which records cash or a transfer she took by hand
+
+  The ⋯ menu edits the address and note, or cancels the order. One "TU-д өгөх" button stays docked at the bottom.
+
+- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр) and enters the phone; a known phone fills in the last address. Then the address, the note, prepay or COD, and products found by search, each with photo, price and stock and +/- for the count. A walk-in order has no delivery fee.
+- **Бараа**. A search field, and a list with photo, price and stock. A tap on the stock opens a counter that saves the count.
 
 Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button.
 
