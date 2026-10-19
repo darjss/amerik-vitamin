@@ -73,7 +73,7 @@ Alchemy ships `src` and `lib` but no docs. Read `apps/api/node_modules/alchemy/s
 - `WorkerBridge.ts` installs `Logger.layer([Logger.consolePretty()])` without `mergeWithExisting`, which drops Effect's `tracerLogger`, so `Effect.log` never reaches spans. When telemetry lands, add `Logger.tracerLogger` back with `mergeWithExisting: true`. Alchemy's `layerOtlp` takes no `service.version`.
 - `Axiom.providers()` reads credentials when the stack builds and fails every `alchemy plan` that has no Axiom profile. Add it only for the stages that ship telemetry.
 - A failed Vite build under Alchemy beta.81 ends as `BundleError: Vite build child exited with code 1:` with no cause. Reproduce with `vp run --filter @amerik/web build` and read its output.
-- A `Config` read during a Worker's init becomes a secret binding at deploy (`Platform.ts`, the config interceptor), and the same read returns the bound value at runtime. A read inside a request handler or a per-request layer is not bound, so read every secret in init and pass it to the layer. Plain values like `QPAY_URL` are bound as secrets too. (PR #PAYMENTS)
+- A `Config` read during a Worker's init becomes a secret binding at deploy (`Platform.ts`, the config interceptor), and the same read returns the bound value at runtime. A read inside a request handler or a per-request layer is not bound, so read every secret in init and pass it to the layer. Plain values like `QPAY_URL` are bound as secrets too. (PR #8)
 - Worker props may be an Effect: `ApiWorker.make(apiDomain.pipe(Effect.map(...)), impl)` sets `domain` per stage.
 - `Cloudflare.Workers.cron(expression, handler)` in init attaches the Cron Trigger and listens for it; provide `Cloudflare.Workers.CronEventSourceLive` on the init. The event source swallows a failing handler, so Cloudflare never retries it. Log failures inside the handler.
 - A handler's request `Scope` closes through `ctx.waitUntil` after the response is sent, so `Effect.addFinalizer` is the way to run work after the response (`/qpay/callback` dispatches the outbox this way). The Drizzle handle from `Drizzle.Postgres` is memoized on the current scope and closes with it; wrap after-response work in `Effect.scoped` so it opens its own connection.
@@ -89,7 +89,7 @@ Source is in `~/dev/khaan-client` and `apps/api/node_modules/khaan-client/dist`.
 
 ## QPay and Telegram
 
-- QPay v2 `payment/check` returns `payment_amount` as a decimal string. The callback is a GET or POST to our `callback_url` with QPay's own query params appended; we read only our `order` param. (PR #PAYMENTS)
+- QPay v2 `payment/check` returns `payment_amount` as a decimal string. The callback is a GET or POST to our `callback_url` with QPay's own query params appended; we read only our `order` param. (PR #8)
 - Telegram's bot token is part of the request URL. Never log an `HttpClientError` from it, and turn off the HTTP span with `HttpClient.TracerDisabledWhen`.
 
 ## drizzle
