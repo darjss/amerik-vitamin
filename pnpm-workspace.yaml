@@ -13,10 +13,12 @@ catalog:
   "@effect/sql-pg": 4.0.3
   "@effect/tsgo": 0.51.1
   "@effect/vitest": 4.0.3
+  "@iconify-json/ph": 1.2.2
   "@oxlint/plugins": 1.87.0
+  "@pandacss/dev": 2.2.0
   "@solidjs/router": 2.0.0-next.38
   "@solidjs/vite-plugin": 3.0.0-next.49
-  "@solidjs/web": 2.0.0-rc.14
+  "@solidjs/web": 2.0.0-rc.15
   "@types/node": 26.6.5
   alchemy: 2.0.0-beta.81
   better-auth: 1.7.10
@@ -26,8 +28,9 @@ catalog:
   eslint-plugin-solid: 0.18.1
   filesystem-routing: 0.4.0
   oxlint: 1.87.0
-  solid-js: 2.0.0-rc.14
+  solid-js: 2.0.0-rc.15
   typescript: 7.0.2
+  unplugin-icons: 24.0.0
   vite: npm:@voidzero-dev/vite-plus-core@1.1.0
   vite-plus: 1.1.0
   vitest: 5.0.3
@@ -47,4 +50,6 @@ peerDependencyRules:
     vite: "*"
 allowBuilds:
   esbuild: true
+  # Panda's watch mode only; codegen and the PostCSS plugin don't need its native build.
+  "@parcel/watcher": false
   workerd: true

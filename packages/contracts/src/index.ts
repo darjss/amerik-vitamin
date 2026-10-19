@@ -28,7 +28,9 @@ export {
   OrderEventData,
   OrderEventType,
   OrderLineInput,
+  OrderLineView,
   OrderNotFound,
+  OrderQueue,
   OrderSource,
   OrderStatus,
   OrderSummary,
@@ -43,5 +45,7 @@ export {
   Tugrik,
   WrongOrderStatus,
 } from "./order.ts";
+
+export { Home } from "./home.ts";
 
 export { CountStock, ProductForm, ProductRow, ProductUnavailable } from "./product.ts";

@@ -107,11 +107,17 @@ export type ManualPayment = typeof ManualPayment.Type;
 /** Ship, deliver and cancel take only the order. */
 export const OrderAction = Schema.Struct({ orderId: OrderId });
 
+/** `to_ship`: paid, or new on COD. `awaiting_payment`: new on prepay. */
+export const OrderQueue = Schema.Literals(["to_ship", "awaiting_payment"]);
+
+export type OrderQueue = typeof OrderQueue.Type;
+
 /**
  * The inbox: every filter given must match. `today` is since midnight in
  * Ulaanbaatar. Newest first, at most 100 rows.
  */
 export const ListOrders = Schema.Struct({
+  queue: Schema.optional(OrderQueue),
   status: Schema.optional(OrderStatus),
   today: Schema.optional(Schema.Boolean),
   phone: Schema.optional(Phone),
@@ -119,6 +125,17 @@ export const ListOrders = Schema.Struct({
 });
 
 export type ListOrders = typeof ListOrders.Type;
+
+/** A line as the dashboard shows it. The photo tells look-alike products apart. */
+export const OrderLineView = Schema.Struct({
+  productId: ProductId,
+  name: Schema.String,
+  brand: Schema.String,
+  count: Schema.Int,
+  image: Schema.NullOr(Schema.String),
+  quantity: Schema.Int,
+  unitPrice: Schema.Int,
+});
 
 /** Balance is `total - paid`: above 0 the customer owes, below 0 a refund is due. */
 export const OrderSummary = Schema.Struct({
@@ -133,6 +150,8 @@ export const OrderSummary = Schema.Struct({
   balance: Schema.Int,
   customerName: Schema.NullOr(Schema.String),
   customerPhone: Schema.NullOr(Schema.String),
+  address: Schema.NullOr(Schema.String),
+  lines: Schema.Array(OrderLineView),
   createdAt: Schema.Date,
 });
 
@@ -165,10 +184,8 @@ export type OrderEventData = typeof OrderEventData.Type;
 export const OrderDetail = Schema.Struct({
   ...OrderSummary.fields,
   customerId: Schema.NullOr(CustomerId),
-  address: Schema.NullOr(Schema.String),
   notes: Schema.NullOr(Schema.String),
   deliveryFee: Schema.Int,
-  lines: Schema.Array(Schema.Struct({ ...LineSnapshot.fields, name: Schema.String })),
   payments: Schema.Array(
     Schema.Struct({
       id: PaymentId,
