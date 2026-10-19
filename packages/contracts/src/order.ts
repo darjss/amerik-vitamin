@@ -113,14 +113,15 @@ export const OrderQueue = Schema.Literals(["to_ship", "awaiting_payment"]);
 export type OrderQueue = typeof OrderQueue.Type;
 
 /**
- * The inbox: every filter given must match. `today` is since midnight in
+ * The inbox: every filter given must match. `phone` matches anywhere in the number. `today` is since midnight in
  * Ulaanbaatar. Newest first, at most 100 rows.
  */
 export const ListOrders = Schema.Struct({
   queue: Schema.optional(OrderQueue),
   status: Schema.optional(OrderStatus),
   today: Schema.optional(Schema.Boolean),
-  phone: Schema.optional(Phone),
+  // Any 3 to 8 digits of the phone: she often remembers only the last four.
+  phone: Schema.optional(Schema.String.check(Schema.isPattern(/^[0-9]{3,8}$/u))),
   number: Schema.optional(OrderNumber),
 });
 

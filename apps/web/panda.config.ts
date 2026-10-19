@@ -32,8 +32,8 @@ export default defineConfig({
           shipBg: { value: "#f4e9cc" },
         },
         fonts: {
-          // SF Pro on her iPhone, which covers Cyrillic.
-          sans: { value: "-apple-system, system-ui, 'Segoe UI', Roboto, sans-serif" },
+          // Onest was drawn for Cyrillic screens and has Mongolian's Ө and Ү.
+          sans: { value: "'Onest Variable', -apple-system, system-ui, sans-serif" },
         },
         shadows: {
           card: { value: "0 0 0 1px #ece2d7, 0 2px 8px -4px rgba(80, 50, 30, 0.12)" },

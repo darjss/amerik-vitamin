@@ -1,9 +1,6 @@
-import type { JSX } from "@solidjs/web";
 import * as DateTime from "effect/DateTime";
 import { createMemo, Errored, For, Loading, Show } from "solid-js";
-
 import { css } from "styled-system/css";
-import CaretIcon from "~icons/ph/caret-right";
 import ClockIcon from "~icons/ph/clock";
 import PackageIcon from "~icons/ph/package";
 
@@ -11,16 +8,16 @@ import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
 import { longDate, money } from "../format";
 import {
+  block,
+  blockTitle,
   button,
-  card,
-  cardTitle,
   countBadge,
   darkButton,
-  Header,
   muted,
   Photo,
   Problem,
   TabBar,
+  top,
 } from "../ui";
 
 const row = css.raw({
@@ -28,225 +25,169 @@ const row = css.raw({
   alignItems: "center",
   gap: "12px",
   px: "16px",
-  py: "10px",
+  py: "12px",
   "& + &": { borderTop: "1px solid {colors.line}" },
 });
 
 const circle = css.raw({
-  width: "40px",
-  height: "40px",
+  width: "44px",
+  height: "44px",
   borderRadius: "50%",
   bg: "chip",
   display: "grid",
   placeItems: "center",
-  fontSize: "20px",
   flex: "none",
-  overflow: "hidden",
+  "& svg": { fontSize: "22px" },
 });
 
-function Todo(props: {
-  href: string;
-  icon: JSX.Element;
-  title: JSX.Element;
-  sub: string;
-  action?: string;
-}) {
-  return (
-    <a href={props.href} class={css(row)}>
-      <span class={css(circle)}>{props.icon}</span>
-      <div class={css({ flex: 1, minWidth: 0 })}>
-        {props.title}
-        <small class={css(muted, { display: "block", fontSize: "13px", lineHeight: "17px" })}>
-          {props.sub}
-        </small>
-      </div>
-      <Show when={props.action} fallback={<CaretIcon class={css(muted)} />}>
-        {(label) => <span class={css(button, darkButton)}>{label()}</span>}
-      </Show>
-    </a>
-  );
-}
+const small = css.raw({ display: "block", fontSize: "14px", lineHeight: "18px" });
 
 export default function Home() {
   const home = createMemo(() => runEffect(ApiClient.use((api) => api.home())));
   const now = createMemo(() => runEffect(DateTime.nowAsDate));
 
   return (
-    <main class={css({ pb: "100px" })}>
+    <main class={css(top, { pb: "100px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(card, { height: "320px", mt: "120px" })} />}>
-          <Header above={longDate(now())} title="Америк Хүнс Бараа" />
-          <div class={css(card, { display: "grid", gridTemplateColumns: "1fr 1fr" })}>
-            <Money label="Өнөөдөр орсон" amount={home().paidToday} sub="QPay, шилжүүлэг" />
-            <Money
-              label="Хүргэлтээр авах"
-              amount={home().codToCollect}
-              sub={`${home().codOrders} захиалга`}
-              owes
-            />
-          </div>
+        <Loading fallback={<div class={css(block, { height: "320px", mt: "40px" })} />}>
+          <p class={css(muted, { px: "16px", pb: "10px", fontSize: "15px" })}>{longDate(now())}</p>
 
-          <div class={css(card)}>
-            <h2 class={css(cardTitle)}>Хийх зүйлс</h2>
+          <section class={css(block)}>
             <Show
-              when={home().toShip > 0 || home().awaitingPayment > 0}
-              fallback={<p class={css(row, muted)}>Одоохондоо юу ч алга</p>}
+              when={home().toShip > 0}
+              fallback={
+                <div class={css(row)}>
+                  <span class={css(circle)}>
+                    <PackageIcon />
+                  </span>
+                  <span class={css(muted, { fontSize: "16px" })}>
+                    Илгээх захиалга одоохондоо алга
+                  </span>
+                </div>
+              }
             >
-              <Show when={home().toShip > 0}>
-                <Todo
-                  href="/pack"
-                  icon={<PackageIcon />}
-                  title={<b>{home().toShip} захиалга илгээх</b>}
-                  sub={`${home().toShipPieces} ширхэг`}
-                  action="Савлах"
-                />
-              </Show>
-              <Show when={home().awaitingPayment > 0}>
-                <Todo
-                  href="/orders?view=awaiting"
-                  icon={<ClockIcon />}
-                  title={
-                    <>
-                      <b>{home().awaitingPayment} захиалга</b> төлбөр хүлээж байна
-                    </>
-                  }
-                  sub="Төлөгдмөгц илгээх жагсаалтад орно"
-                />
-              </Show>
-            </Show>
-          </div>
-
-          <Show when={home().shelf.length > 0}>
-            <div class={css(card)}>
-              <h2 class={css(cardTitle)}>Тавиураас авах</h2>
+              <div class={css(row)}>
+                <span class={css(circle)}>
+                  <PackageIcon />
+                </span>
+                <div class={css({ flex: 1 })}>
+                  <b class={css({ fontSize: "18px", fontWeight: "600" })}>
+                    {home().toShip} илгээмж савлах
+                  </b>
+                  <small class={css(small, muted)}>Тавиураас {home().toShipPieces} ширхэг</small>
+                </div>
+                <a href="/pack" class={css(button, darkButton)}>
+                  Савлах
+                </a>
+              </div>
               <div
                 class={css({
-                  display: "flex",
-                  gap: "10px",
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: "14px 12px",
                   px: "16px",
                   pt: "4px",
                   pb: "16px",
-                  overflowX: "auto",
                 })}
               >
                 <For each={home().shelf} keyed={(product) => product.productId}>
                   {(product) => (
-                    <div class={css({ width: "104px", flex: "none" })}>
-                      <div
-                        class={css({
-                          position: "relative",
-                          height: "104px",
-                          borderRadius: "12px",
-                          boxShadow: "hairline",
-                          overflow: "hidden",
-                        })}
-                      >
-                        <Photo product={product()} styles={{ p: "8px" }} />
-                        <span
-                          class={css(countBadge, {
-                            left: "6px",
-                            top: "6px",
-                            bottom: "auto",
-                            fontSize: "13px",
-                            lineHeight: "20px",
-                            borderRadius: "8px",
-                            px: "7px",
-                            border: "none",
-                          })}
-                        >
+                    <div>
+                      <span class={css({ position: "relative", display: "inline-block" })}>
+                        <Photo product={product()} size={104} />
+                        <span class={css(countBadge, { fontSize: "15px", lineHeight: "22px" })}>
                           ×{product().quantity}
                         </span>
-                      </div>
-                      <div
+                      </span>
+                      <span
                         class={css({
-                          fontSize: "13px",
-                          lineHeight: "16px",
-                          mt: "6px",
-                          fontWeight: "550",
+                          lineClamp: 2,
+                          fontSize: "14px",
+                          lineHeight: "18px",
+                          fontWeight: "600",
+                          mt: "8px",
                         })}
                       >
                         {product().name}
-                      </div>
-                      <small
-                        class={css(muted, {
-                          display: "block",
-                          fontSize: "12px",
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        })}
-                      >
+                      </span>
+                      <small class={css(small, muted, { fontSize: "13px" })}>
                         {product().brand} · {product().count} ш
                       </small>
                     </div>
                   )}
                 </For>
               </div>
-            </div>
+            </Show>
+          </section>
+
+          <Show when={home().awaitingPayment > 0}>
+            <section class={css(block)}>
+              <h2 class={css(blockTitle)}>Хийх зүйлс</h2>
+              <div class={css(row)}>
+                <span class={css(circle)}>
+                  <ClockIcon />
+                </span>
+                <div class={css({ flex: 1 })}>
+                  <b class={css({ fontSize: "16px", fontWeight: "600" })}>
+                    {home().awaitingPayment} захиалга төлбөр хүлээж байна
+                  </b>
+                  <small class={css(small, muted)}>Шилжүүлэг ирсэн бол бүртгэнэ</small>
+                </div>
+                <a href="/orders?view=awaiting" class={css(button)}>
+                  Шалгах
+                </a>
+              </div>
+            </section>
           </Show>
 
+          <section class={css(block, { fontVariantNumeric: "tabular-nums" })}>
+            <h2 class={css(blockTitle)}>Мөнгө</h2>
+            <div class={css(row)}>
+              <span class={css({ flex: 1, fontSize: "16px" })}>
+                Хүргэлтээр авах
+                <span class={css(muted)}> · {home().codOrders} илгээмж</span>
+              </span>
+              <b class={css({ fontSize: "18px", fontWeight: "700", color: "owes" })}>
+                {money(home().codToCollect)}
+              </b>
+            </div>
+            <div class={css(row)}>
+              <span class={css({ flex: 1, fontSize: "16px" })}>Өнөөдөр орсон</span>
+              <b class={css({ fontSize: "18px", fontWeight: "700" })}>{money(home().paidToday)}</b>
+            </div>
+          </section>
+
           <Show when={home().lowStock.length > 0}>
-            <div class={css(card)}>
-              <h2 class={css(cardTitle)}>Удахгүй дуусна</h2>
+            <section class={css(block)}>
+              <h2 class={css(blockTitle)}>Удахгүй дуусна</h2>
               <For each={home().lowStock} keyed={(product) => product.productId}>
                 {(product) => (
                   <div class={css(row)}>
-                    <span class={css(circle)}>
-                      <Photo product={product()} />
-                    </span>
+                    <Photo product={product()} size={48} />
                     <div class={css({ flex: 1, minWidth: 0 })}>
-                      <b>{product().name}</b>
-                      <small class={css(muted, { display: "block", fontSize: "13px" })}>
+                      <div class={css({ fontSize: "16px", fontWeight: "600" })}>
+                        {product().name}
+                      </div>
+                      <small class={css(small, muted)}>
                         {product().brand} · {product().count} ш
                       </small>
                     </div>
                     <b
-                      class={css({
-                        color: product().stock === 0 ? "owes" : "ink",
-                        whiteSpace: "nowrap",
-                      })}
+                      class={css(
+                        { fontSize: "16px", fontWeight: "600", whiteSpace: "nowrap" },
+                        product().stock === 0 && { color: "owes" },
+                      )}
                     >
                       {product().stock === 0 ? "Дууссан" : `${product().stock} үлдсэн`}
                     </b>
                   </div>
                 )}
               </For>
-              <div class={css({ height: "6px" })} />
-            </div>
+            </section>
           </Show>
         </Loading>
       </Errored>
       <TabBar />
     </main>
-  );
-}
-
-function Money(props: { label: string; amount: number; sub: string; owes?: boolean }) {
-  return (
-    <div
-      class={css({
-        px: "16px",
-        py: "14px",
-        "& + &": { borderLeft: "1px solid {colors.line}" },
-      })}
-    >
-      <small class={css(muted, { display: "block", fontSize: "13px" })}>{props.label}</small>
-      <b
-        class={css(
-          {
-            display: "block",
-            fontSize: "22px",
-            lineHeight: "28px",
-            fontWeight: "700",
-            letterSpacing: "-0.3px",
-            fontVariantNumeric: "tabular-nums",
-          },
-          props.owes && { color: "owes" },
-        )}
-      >
-        {money(props.amount)}
-      </b>
-      <small class={css(muted, { display: "block", fontSize: "13px" })}>{props.sub}</small>
-    </div>
   );
 }

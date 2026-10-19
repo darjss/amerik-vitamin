@@ -12,6 +12,7 @@ import {
   inArray,
   isNotNull,
   isNull,
+  like,
   lte,
   or,
   sum,
@@ -108,7 +109,7 @@ export const listOrders = Effect.fn("listOrders")(function* listOrders(input: Li
         input.queue === undefined ? undefined : inQueue(input.queue),
         input.status === undefined ? undefined : eq(orders.status, input.status),
         input.today === true ? gte(orders.createdAt, yield* startOfToday) : undefined,
-        input.phone === undefined ? undefined : eq(customers.phone, input.phone),
+        input.phone === undefined ? undefined : like(customers.phone, `%${input.phone}%`),
         input.number === undefined ? undefined : eq(orders.number, input.number),
       ),
     )
@@ -247,5 +248,22 @@ export const home = Effect.fn("home")(function* home() {
     lowStock: low.flatMap(({ images, stock, ...product }) =>
       stock === null ? [] : [{ ...product, image: firstImage(images), stock }],
     ),
+  };
+});
+
+/** How many orders sit behind each filter chip on the orders list. */
+export const orderCounts = Effect.fn("orderCounts")(function* orderCounts() {
+  const db = yield* Database;
+
+  const [[toShip], [awaitingPayment], [shipped]] = yield* Effect.all([
+    db.select({ orders: count() }).from(orders).where(inQueue("to_ship")),
+    db.select({ orders: count() }).from(orders).where(inQueue("awaiting_payment")),
+    db.select({ orders: count() }).from(orders).where(eq(orders.status, "shipped")),
+  ]).pipe(dieOnDatabaseError);
+
+  return {
+    toShip: toShip?.orders ?? 0,
+    awaitingPayment: awaitingPayment?.orders ?? 0,
+    shipped: shipped?.orders ?? 0,
   };
 });

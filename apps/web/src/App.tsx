@@ -10,6 +10,7 @@ import { createRuntime, RuntimeContext } from "./api/solid-effect";
 import { createHeldSteps, HeldSteps } from "./steps";
 import { ZoomProvider } from "./zoom";
 
+import "@fontsource-variable/onest/wght.css";
 import "./app.css";
 
 const Router = createRouter({ routes: fileRoutes(pageRoutes) });

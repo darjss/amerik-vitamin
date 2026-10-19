@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 
 import { findCustomer } from "./customers";
 import { pingDatabase } from "./health";
-import { getOrder, home, listOrders } from "./inbox";
+import { getOrder, home, listOrders, orderCounts } from "./inbox";
 import {
   cancelOrder,
   editOrder,
@@ -25,6 +25,7 @@ export const ApiHandlers = Api.toLayer({
   getOrder: ({ orderId }) => getOrder(orderId),
   findCustomer: ({ phone }) => findCustomer(phone),
   home: () => home(),
+  orderCounts: () => orderCounts(),
   listProducts: () => listProducts(),
   placeOrder: (input) => Effect.flatMap(actor, (email) => placeOrder(input, email)),
   editOrder: (input) => Effect.flatMap(actor, (email) => editOrder(input, email)),
