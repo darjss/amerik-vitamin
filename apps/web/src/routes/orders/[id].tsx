@@ -23,6 +23,8 @@ import PhoneIcon from "~icons/ph/phone";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { clock, money, phone } from "../../format";
+import { advance, nextStep } from "../../steps";
+import type { Step } from "../../steps";
 import { button, card, cardTitle, darkButton, muted, Photo, Problem } from "../../ui";
 
 type Order = typeof OrderDetail.Type;
@@ -80,17 +82,13 @@ export default function OrderPage() {
   const [copied, setCopied] = createSignal(false);
 
   // The write runs to completion even if she leaves the page.
-  const advance = action(function* advance(next: "ship" | "deliver") {
+  const take = action(function* take(step: Step) {
     const id = orderId();
     setBusy(true);
     setFailed(false);
 
     try {
-      yield runtime.runPromise(
-        ApiClient.use((api) =>
-          next === "ship" ? api.markShipped({ orderId: id }) : api.markDelivered({ orderId: id }),
-        ),
-      );
+      yield runtime.runPromise(advance(id, step));
     } catch {
       setFailed(true);
     }
@@ -213,8 +211,7 @@ export default function OrderPage() {
                   })}
                 >
                   <Photo
-                    src={line().image}
-                    alt={`${line().brand} ${line().name}`}
+                    product={line()}
                     styles={{
                       width: "60px",
                       height: "60px",
@@ -283,7 +280,7 @@ export default function OrderPage() {
             </div>
           </div>
 
-          <Show when={next(order())}>
+          <Show when={nextStep(order())}>
             {(step) => (
               <div
                 class={css({
@@ -306,7 +303,7 @@ export default function OrderPage() {
                 <button
                   type="button"
                   disabled={busy()}
-                  onClick={() => advance(step().action)}
+                  onClick={() => take(step().step)}
                   class={css(button, darkButton, {
                     width: "100%",
                     height: "50px",
@@ -324,17 +321,6 @@ export default function OrderPage() {
     </main>
   );
 }
-
-/** The one thing to do next: hand it to TU, or confirm it arrived. */
-const next = (order: Order) => {
-  if (order.status === "paid" || (order.status === "new" && order.terms === "cod")) {
-    return { action: "ship" as const, label: "TU-д өгөх" };
-  }
-
-  if (order.status === "shipped") return { action: "deliver" as const, label: "Хүргэгдсэн" };
-
-  return undefined;
-};
 
 function Steps(props: { steps: ReadonlyArray<{ label: string; done: boolean }> }) {
   const reached = () => props.steps.findIndex((step) => !step.done);

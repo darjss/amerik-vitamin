@@ -34,6 +34,7 @@ const summary = {
   createdAt: orders.createdAt,
   customerPhone: customers.phone,
   address: orders.address,
+  notes: orders.notes,
   paid: sum(payments.amount),
 };
 
@@ -130,7 +131,6 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
       .select({
         ...summary,
         customerId: orders.customerId,
-        notes: orders.notes,
         deliveryFee: orders.deliveryFee,
       })
       .from(orders)

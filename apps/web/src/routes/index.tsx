@@ -94,7 +94,7 @@ export default function Home() {
             >
               <Show when={home().toShip > 0}>
                 <Todo
-                  href="/orders"
+                  href="/pack"
                   icon={<PackageIcon />}
                   title={<b>{home().toShip} захиалга илгээх</b>}
                   sub={`${home().toShipPieces} ширхэг`}
@@ -141,11 +141,7 @@ export default function Home() {
                           overflow: "hidden",
                         })}
                       >
-                        <Photo
-                          src={product().image}
-                          alt={`${product().brand} ${product().name}`}
-                          styles={{ p: "8px" }}
-                        />
+                        <Photo product={product()} styles={{ p: "8px" }} />
                         <span
                           class={css(countBadge, {
                             left: "6px",
@@ -196,7 +192,7 @@ export default function Home() {
                 {(product) => (
                   <div class={css(row)}>
                     <span class={css(circle)}>
-                      <Photo src={product().image} alt={`${product().brand} ${product().name}`} />
+                      <Photo product={product()} />
                     </span>
                     <div class={css({ flex: 1, minWidth: 0 })}>
                       <b>{product().name}</b>

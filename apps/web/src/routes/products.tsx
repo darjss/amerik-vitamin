@@ -38,8 +38,7 @@ export default function Products() {
                   })}
                 >
                   <Photo
-                    src={product().image}
-                    alt={`${product().brand} ${product().name}`}
+                    product={product()}
                     styles={{
                       width: "56px",
                       height: "56px",

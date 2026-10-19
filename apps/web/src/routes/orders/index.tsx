@@ -4,7 +4,7 @@ import { useSearchParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { createMemo, Errored, For, Loading, Show } from "solid-js";
+import { createMemo, Errored, For, Loading, refresh, Show } from "solid-js";
 import { css } from "styled-system/css";
 import ChatIcon from "~icons/ph/chat-circle";
 import SearchIcon from "~icons/ph/magnifying-glass";
@@ -21,6 +21,7 @@ import {
   Photos,
   Problem,
   ShipLabel,
+  StepButton,
   TabBar,
 } from "../../ui";
 
@@ -126,15 +127,21 @@ export default function Orders() {
             <div class={css(card)}>
               <For each={orders()} keyed={(order) => order.id}>
                 {(order) => (
-                  <a
-                    href={`/orders/${order().id}`}
+                  <div
                     class={css({
+                      position: "relative",
                       display: "flex",
                       gap: "12px",
                       p: "12px",
                       "& + &": { borderTop: "1px solid {colors.line}" },
                     })}
                   >
+                    {/* The whole row opens the order; photos and the step button sit above it. */}
+                    <a
+                      href={`/orders/${order().id}`}
+                      aria-label={`#${order().number}`}
+                      class={css({ position: "absolute", inset: 0 })}
+                    />
                     <Photos lines={order().lines} />
                     <div class={css({ flex: 1, minWidth: 0 })}>
                       <div class={css({ display: "flex", gap: "6px", alignItems: "baseline" })}>
@@ -184,12 +191,13 @@ export default function Orders() {
                       <div class={css(ellipsis, muted, { fontSize: "14px" })}>
                         {order().address}
                       </div>
-                      <div class={css(labels)}>
+                      <div class={css(labels, { alignItems: "center" })}>
                         <PayLabel order={order()} />
                         <ShipLabel status={order().status} />
+                        <StepButton order={order()} onDone={() => refresh(orders)} />
                       </div>
                     </div>
-                  </a>
+                  </div>
                 )}
               </For>
             </div>

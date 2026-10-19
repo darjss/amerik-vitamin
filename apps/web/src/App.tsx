@@ -7,6 +7,8 @@ import { Loading } from "solid-js";
 import { serverLayer } from "./api/binding";
 import { WebLayer } from "./api/client";
 import { createRuntime, RuntimeContext } from "./api/solid-effect";
+import { createHeldSteps, HeldSteps } from "./steps";
+import { ZoomProvider } from "./zoom";
 
 import "./app.css";
 
@@ -15,7 +17,11 @@ const Router = createRouter({ routes: fileRoutes(pageRoutes) });
 export default function App() {
   return (
     <RuntimeContext value={createRuntime(isServer ? serverLayer : WebLayer)}>
-      <Router>{(props) => <Loading fallback={<main />}>{props.children}</Loading>}</Router>
+      <HeldSteps value={createHeldSteps()}>
+        <ZoomProvider>
+          <Router>{(props) => <Loading fallback={<main />}>{props.children}</Loading>}</Router>
+        </ZoomProvider>
+      </HeldSteps>
     </RuntimeContext>
   );
 }

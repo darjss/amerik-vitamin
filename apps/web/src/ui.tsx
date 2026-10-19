@@ -2,7 +2,7 @@ import { Unauthorized } from "@amerik/contracts";
 import type { OrderSummary } from "@amerik/contracts";
 import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { For, Show } from "solid-js";
+import { For, Show, useContext } from "solid-js";
 
 import { css, cx } from "styled-system/css";
 import type { SystemStyleObject } from "styled-system/types";
@@ -14,7 +14,12 @@ import PackageIcon from "~icons/ph/package";
 import PillFillIcon from "~icons/ph/pill-fill";
 import PillIcon from "~icons/ph/pill";
 
+import { RuntimeContext } from "./api/solid-effect";
 import { money } from "./format";
+import { advance, HeldSteps, nextStep } from "./steps";
+import type { Step } from "./steps";
+import { Zoom } from "./zoom";
+import type { Product } from "./zoom";
 
 type Order = typeof OrderSummary.Type;
 
@@ -100,7 +105,7 @@ const pieces = (lines: ReadonlyArray<Line>) =>
 const grids = [
   css({ gridTemplateColumns: "1fr" }),
   css({ gridTemplateColumns: "1fr 1fr" }),
-  css({ gridTemplateColumns: "1fr 1fr", "& > img:first-child": { gridRow: "span 2" } }),
+  css({ gridTemplateColumns: "1fr 1fr", "& > :first-child": { gridRow: "span 2" } }),
 ];
 
 /** Up to three product photos, with the piece count she has to pack. */
@@ -124,9 +129,7 @@ export function Photos(props: { lines: ReadonlyArray<Line> }) {
           grids[shown().length - 1],
         )}
       >
-        <For each={shown()}>
-          {(line) => <Photo src={line.image} alt={`${line.brand} ${line.name}`} />}
-        </For>
+        <For each={shown()}>{(line) => <Photo product={line} />}</For>
       </div>
       <Show when={pieces(props.lines) > 1}>
         <span class={css(countBadge)}>×{pieces(props.lines)}</span>
@@ -158,10 +161,34 @@ const photo = css.raw({
   p: "3px",
 });
 
-export function Photo(props: { src: string | null; alt: string; styles?: SystemStyleObject }) {
+/** A product photo. A tap shows it full size and never follows a link around it. */
+export function Photo(props: { product: Product; styles?: SystemStyleObject }) {
+  const zoom = useContext(Zoom);
+
   return (
-    <Show when={props.src} fallback={<span class={css(photo, props.styles)} />}>
-      {(src) => <img class={css(photo, props.styles)} src={src()} alt={props.alt} loading="lazy" />}
+    <Show
+      when={props.product.image}
+      fallback={<span class={css(photo, { display: "block" }, props.styles)} />}
+    >
+      {(src) => (
+        <button
+          type="button"
+          aria-label={`${props.product.name} томоор харах`}
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            zoom(props.product);
+          }}
+          class={css(photo, { position: "relative", zIndex: 1, cursor: "zoom-in" }, props.styles)}
+        >
+          <img
+            src={src()}
+            alt={`${props.product.brand} ${props.product.name}`}
+            loading="lazy"
+            class={css({ width: "100%", height: "100%", objectFit: "contain" })}
+          />
+        </button>
+      )}
     </Show>
   );
 }
@@ -220,6 +247,63 @@ const shipText = {
   delivered: "Хүргэсэн",
   cancelled: "Цуцалсан",
 };
+
+/**
+ * A row's next step. A tap holds it for 5 seconds as [Болих N], then writes;
+ * `onDone` reloads the list either way.
+ */
+export function StepButton(props: {
+  order: Pick<Order, "id" | "status" | "terms">;
+  onDone: () => void;
+}) {
+  const runtime = useContext(RuntimeContext);
+  const { hold, release, secondsLeft } = useContext(HeldSteps);
+
+  const start = (orderId: Order["id"], step: Step) =>
+    hold(orderId, () =>
+      runtime.runPromise(advance(orderId, step)).then(
+        () => props.onDone(),
+        () => props.onDone(),
+      ),
+    );
+
+  return (
+    <Show when={nextStep(props.order)}>
+      {(next) => (
+        <Show
+          when={secondsLeft(props.order.id)}
+          fallback={
+            <button
+              type="button"
+              class={css(button, darkButton, stepButton)}
+              onClick={() => start(props.order.id, next().step)}
+            >
+              {next().label}
+            </button>
+          }
+        >
+          {(left) => (
+            <button
+              type="button"
+              class={css(button, stepButton)}
+              onClick={() => release(props.order.id)}
+            >
+              Болих {left()}
+            </button>
+          )}
+        </Show>
+      )}
+    </Show>
+  );
+}
+
+const stepButton = css.raw({
+  ml: "auto",
+  position: "relative",
+  zIndex: 1,
+  py: "6px",
+  fontVariantNumeric: "tabular-nums",
+});
 
 export function ShipLabel(props: { status: Order["status"] }) {
   return (

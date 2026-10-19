@@ -150,6 +150,7 @@ export const OrderSummary = Schema.Struct({
   balance: Schema.Int,
   customerPhone: Schema.NullOr(Schema.String),
   address: Schema.NullOr(Schema.String),
+  notes: Schema.NullOr(Schema.String),
   lines: Schema.Array(OrderLineView),
   createdAt: Schema.Date,
 });
@@ -183,7 +184,6 @@ export type OrderEventData = typeof OrderEventData.Type;
 export const OrderDetail = Schema.Struct({
   ...OrderSummary.fields,
   customerId: Schema.NullOr(CustomerId),
-  notes: Schema.NullOr(Schema.String),
   deliveryFee: Schema.Int,
   payments: Schema.Array(
     Schema.Struct({
