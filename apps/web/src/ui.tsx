@@ -315,7 +315,10 @@ export function Sheet(props: {
       ref={(element) => {
         dialog = element;
       }}
-      onClose={() => props.onClose()}
+      // Only her own close counts: a sheet closed because another opened says nothing.
+      onClose={() => {
+        if (props.open) props.onClose();
+      }}
       onClick={(event) => {
         if (event.target === dialog) dialog.close();
       }}
