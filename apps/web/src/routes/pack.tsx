@@ -109,7 +109,10 @@ export default function Pack() {
             </For>
           </div>
 
-          <Show when={current()} fallback={<Hand packed={packed()} />}>
+          <Show
+            when={current()}
+            fallback={<Hand packed={packed()} skipped={orders().length - packed().length} />}
+          >
             {(order) => (
               <>
                 <section class={css({ px: "16px", pb: "14px" })}>
@@ -153,24 +156,19 @@ export default function Pack() {
                 <div class={css(card)}>
                   <For each={order().lines} keyed={(line) => line.productId}>
                     {(line) => (
-                      <button
-                        type="button"
-                        onClick={() => tick(order(), line().productId)}
+                      <div
                         class={css(
                           {
-                            width: "100%",
                             display: "flex",
                             gap: "12px",
                             alignItems: "center",
-                            px: "12px",
-                            py: "10px",
-                            textAlign: "left",
-                            cursor: "pointer",
+                            pl: "12px",
                             "& + &": { borderTop: "1px solid {colors.line}" },
                           },
                           isTicked(order(), line().productId) && { bg: "paidBg" },
                         )}
                       >
+                        {/* Siblings, not nested: the photo zooms, the rest of the row ticks. */}
                         <Photo
                           product={line()}
                           styles={{
@@ -181,24 +179,41 @@ export default function Pack() {
                             flex: "none",
                           }}
                         />
-                        <span class={css({ flex: 1, minWidth: 0 })}>
-                          <b class={css({ display: "block", fontSize: "16px" })}>{line().name}</b>
-                          <small class={css(muted, { display: "block", fontSize: "14px" })}>
-                            {line().brand} · {line().count} ш
-                          </small>
-                        </span>
-                        <b class={css({ fontSize: "24px", fontVariantNumeric: "tabular-nums" })}>
-                          ×{line().quantity}
-                        </b>
-                        <span class={css({ fontSize: "28px", color: "paid", display: "flex" })}>
-                          <Show
-                            when={isTicked(order(), line().productId)}
-                            fallback={<CircleIcon class={css({ color: "line" })} />}
-                          >
-                            <CheckIcon />
-                          </Show>
-                        </span>
-                      </button>
+                        <button
+                          type="button"
+                          aria-pressed={isTicked(order(), line().productId) ? "true" : "false"}
+                          onClick={() => tick(order(), line().productId)}
+                          class={css({
+                            flex: 1,
+                            minWidth: 0,
+                            display: "flex",
+                            gap: "12px",
+                            alignItems: "center",
+                            pr: "12px",
+                            py: "18px",
+                            textAlign: "left",
+                            cursor: "pointer",
+                          })}
+                        >
+                          <span class={css({ flex: 1, minWidth: 0 })}>
+                            <b class={css({ display: "block", fontSize: "16px" })}>{line().name}</b>
+                            <small class={css(muted, { display: "block", fontSize: "14px" })}>
+                              {line().brand} · {line().count} ш
+                            </small>
+                          </span>
+                          <b class={css({ fontSize: "24px", fontVariantNumeric: "tabular-nums" })}>
+                            ×{line().quantity}
+                          </b>
+                          <span class={css({ fontSize: "28px", color: "paid", display: "flex" })}>
+                            <Show
+                              when={isTicked(order(), line().productId)}
+                              fallback={<CircleIcon class={css({ color: "line" })} />}
+                            >
+                              <CheckIcon />
+                            </Show>
+                          </span>
+                        </button>
+                      </div>
                     )}
                   </For>
                 </div>
@@ -230,7 +245,7 @@ export default function Pack() {
 }
 
 /** The end of the pass: every packed parcel goes to TU in one tap. */
-function Hand(props: { packed: ReadonlyArray<OrderId> }) {
+function Hand(props: { packed: ReadonlyArray<OrderId>; skipped: number }) {
   const runtime = useContext(RuntimeContext);
   const [busy, setBusy] = createOptimistic(false);
   const [result, setResult] = createSignal<{ sent: number; failed: number }>();
@@ -261,6 +276,11 @@ function Hand(props: { packed: ReadonlyArray<OrderId> }) {
             <h1 class={css({ fontSize: "24px", lineHeight: "30px", fontWeight: "700" })}>
               {props.packed.length} илгээмж савласан
             </h1>
+            <Show when={props.skipped > 0}>
+              <p class={css(muted, { mt: "8px" })}>
+                {props.skipped} алгассан. Илгээх жагсаалтад үлдэнэ.
+              </p>
+            </Show>
             <Show when={props.packed.length > 0}>
               <div class={css(dock)}>
                 <button

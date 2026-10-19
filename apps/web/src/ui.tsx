@@ -140,6 +140,7 @@ export function Photos(props: { lines: ReadonlyArray<Line> }) {
 
 export const countBadge = css.raw({
   position: "absolute",
+  zIndex: 2,
   left: "-5px",
   bottom: "-5px",
   bg: "clay",

@@ -12,6 +12,7 @@ import SearchIcon from "~icons/ph/magnifying-glass";
 import { ApiClient } from "../../api/client";
 import { runEffect } from "../../api/solid-effect";
 import { phone, when } from "../../format";
+import { nextStep } from "../../steps";
 import {
   card,
   Header,
@@ -193,7 +194,10 @@ export default function Orders() {
                       </div>
                       <div class={css(labels, { alignItems: "center" })}>
                         <PayLabel order={order()} />
-                        <ShipLabel status={order().status} />
+                        {/* The step button already says what is left to do. */}
+                        <Show when={nextStep(order()) === undefined}>
+                          <ShipLabel status={order().status} />
+                        </Show>
                         <StepButton order={order()} onDone={() => refresh(orders)} />
                       </div>
                     </div>
