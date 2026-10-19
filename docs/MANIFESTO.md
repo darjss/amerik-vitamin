@@ -164,7 +164,7 @@ Orders ready to go become tu-delivery dispatches, batched. The customer gets "on
 
 Two surfaces. Different jobs. Don't blur them.
 
-**The dashboard is home.** A mobile-first web app built for one thumb on a cheap Android in bad light. It's where she actually works:
+**The dashboard is home.** A mobile-first web app built for one thumb on her iPhone. It's where she actually works:
 
 ```text
 TODAY
