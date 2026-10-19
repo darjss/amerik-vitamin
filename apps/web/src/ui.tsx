@@ -5,6 +5,7 @@ import type { JSX } from "@solidjs/web";
 import { For, Show } from "solid-js";
 
 import { css, cx } from "styled-system/css";
+import type { SystemStyleObject } from "styled-system/types";
 import CheckIcon from "~icons/ph/check-circle-fill";
 import HouseFillIcon from "~icons/ph/house-fill";
 import HouseIcon from "~icons/ph/house";
@@ -19,7 +20,7 @@ type Order = typeof OrderSummary.Type;
 
 type Line = Order["lines"][number];
 
-export const card = css({
+export const card = css.raw({
   bg: "surface",
   mx: "12px",
   mb: "12px",
@@ -28,7 +29,7 @@ export const card = css({
   overflow: "hidden",
 });
 
-export const cardTitle = css({
+export const cardTitle = css.raw({
   fontSize: "17px",
   fontWeight: "700",
   px: "16px",
@@ -39,9 +40,9 @@ export const cardTitle = css({
   alignItems: "baseline",
 });
 
-export const muted = css({ color: "inkMuted" });
+export const muted = css.raw({ color: "inkMuted" });
 
-export const button = css({
+export const button = css.raw({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -58,7 +59,7 @@ export const button = css({
   _disabled: { opacity: 0.5 },
 });
 
-export const darkButton = css({ bg: "espresso", color: "white" });
+export const darkButton = css.raw({ bg: "espresso", color: "white" });
 
 /** The big page title and its round add button. */
 export function Header(props: { title: string; above?: string; children?: JSX.Element }) {
@@ -75,7 +76,7 @@ export function Header(props: { title: string; above?: string; children?: JSX.El
     >
       <div class={css({ flex: 1, minWidth: 0 })}>
         <Show when={props.above}>
-          {(above) => <small class={cx(muted, css({ fontSize: "13px" }))}>{above()}</small>}
+          {(above) => <small class={css(muted, { fontSize: "13px" })}>{above()}</small>}
         </Show>
         <h1
           class={css({
@@ -128,20 +129,19 @@ export function Photos(props: { lines: ReadonlyArray<Line> }) {
         </For>
       </div>
       <Show when={pieces(props.lines) > 1}>
-        <span class={countBadge}>×{pieces(props.lines)}</span>
+        <span class={css(countBadge)}>×{pieces(props.lines)}</span>
       </Show>
     </div>
   );
 }
 
-export const countBadge = css({
+export const countBadge = css.raw({
   position: "absolute",
   left: "-5px",
   bottom: "-5px",
   bg: "clay",
   color: "white",
-  border: "2px solid",
-  borderColor: "surface",
+  border: "2px solid {colors.surface}",
   borderRadius: "10px",
   fontSize: "11px",
   fontWeight: "700",
@@ -149,7 +149,7 @@ export const countBadge = css({
   lineHeight: "16px",
 });
 
-const photo = css({
+const photo = css.raw({
   width: "100%",
   height: "100%",
   minHeight: 0,
@@ -158,15 +158,15 @@ const photo = css({
   p: "3px",
 });
 
-export function Photo(props: { src: string | null; alt: string; class?: string }) {
+export function Photo(props: { src: string | null; alt: string; styles?: SystemStyleObject }) {
   return (
-    <Show when={props.src} fallback={<span class={cx(photo, props.class)} />}>
-      {(src) => <img class={cx(photo, props.class)} src={src()} alt={props.alt} loading="lazy" />}
+    <Show when={props.src} fallback={<span class={css(photo, props.styles)} />}>
+      {(src) => <img class={css(photo, props.styles)} src={src()} alt={props.alt} loading="lazy" />}
     </Show>
   );
 }
 
-const label = css({
+const label = css.raw({
   display: "inline-flex",
   alignItems: "center",
   gap: "3px",
@@ -180,14 +180,14 @@ const label = css({
 });
 
 const tones = {
-  paid: css({ bg: "paidBg", color: "paid" }),
-  owes: css({ bg: "owesBg", color: "owes" }),
-  ship: css({ bg: "shipBg", color: "ship" }),
-  neutral: css({ bg: "chip", color: "inkMuted" }),
+  paid: css.raw({ bg: "paidBg", color: "paid" }),
+  owes: css.raw({ bg: "owesBg", color: "owes" }),
+  ship: css.raw({ bg: "shipBg", color: "ship" }),
+  neutral: css.raw({ bg: "chip", color: "inkMuted" }),
 };
 
 function Label(props: { tone: keyof typeof tones; children: JSX.Element }) {
-  return <span class={cx(label, tones[props.tone])}>{props.children}</span>;
+  return <span class={css(label, tones[props.tone])}>{props.children}</span>;
 }
 
 /** Paid, or what is still owed and how. */
@@ -229,9 +229,9 @@ export function ShipLabel(props: { status: Order["status"] }) {
   );
 }
 
-export const labels = css({ display: "flex", gap: "5px", mt: "6px", flexWrap: "wrap" });
+export const labels = css.raw({ display: "flex", gap: "5px", mt: "6px", flexWrap: "wrap" });
 
-const tab = css({
+const tab = css.raw({
   flex: 1,
   textAlign: "center",
   fontSize: "11px",
@@ -240,7 +240,7 @@ const tab = css({
   "& svg": { display: "block", fontSize: "25px", mx: "auto", mb: "2px" },
 });
 
-const activeTab = css({ color: "clay", fontWeight: "650" });
+const activeTab = css.raw({ color: "clay", fontWeight: "650" });
 
 export function TabBar() {
   const location = useLocation();
@@ -257,25 +257,24 @@ export function TabBar() {
         bottom: 0,
         height: "84px",
         bg: "surface",
-        borderTop: "1px solid",
-        borderColor: "line",
+        borderTop: "1px solid {colors.line}",
         display: "flex",
         pt: "8px",
       })}
     >
-      <a href="/" class={cx(tab, at("/") && activeTab)}>
+      <a href="/" class={css(tab, at("/") && activeTab)}>
         <Show when={at("/")} fallback={<HouseIcon />}>
           <HouseFillIcon />
         </Show>
         Нүүр
       </a>
-      <a href="/orders" class={cx(tab, at("/orders") && activeTab)}>
+      <a href="/orders" class={css(tab, at("/orders") && activeTab)}>
         <Show when={at("/orders")} fallback={<PackageIcon />}>
           <PackageFillIcon />
         </Show>
         Захиалга
       </a>
-      <a href="/products" class={cx(tab, at("/products") && activeTab)}>
+      <a href="/products" class={css(tab, at("/products") && activeTab)}>
         <Show when={at("/products")} fallback={<PillIcon />}>
           <PillFillIcon />
         </Show>
@@ -290,9 +289,9 @@ export function Problem(props: { error: unknown }) {
   const unauthorized = () => props.error instanceof Unauthorized;
 
   return (
-    <div class={cx(card, css({ p: "16px" }))}>
+    <div class={css(card, { p: "16px" })}>
       <Show when={unauthorized()} fallback={<p>Ачаалж чадсангүй. Дахин оролдоно уу.</p>}>
-        <a href="/login" class={cx(button, darkButton)}>
+        <a href="/login" class={css(button, darkButton)}>
           Дахин нэвтрэх
         </a>
       </Show>

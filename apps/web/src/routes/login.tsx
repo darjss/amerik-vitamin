@@ -1,6 +1,6 @@
 import { createAuthClient } from "better-auth/client";
 import { createSignal, Show } from "solid-js";
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 
 import { button, darkButton, muted } from "../ui";
 
@@ -41,15 +41,16 @@ export default function Login() {
       <button
         type="button"
         onClick={signIn}
-        class={cx(
-          button,
-          darkButton,
-          css({ height: "50px", borderRadius: "14px", fontSize: "16px", px: "28px" }),
-        )}
+        class={css(button, darkButton, {
+          height: "50px",
+          borderRadius: "14px",
+          fontSize: "16px",
+          px: "28px",
+        })}
       >
         Google-ээр нэвтрэх
       </button>
-      <Show when={failure()}>{(message) => <p class={muted}>{message()}</p>}</Show>
+      <Show when={failure()}>{(message) => <p class={css(muted)}>{message()}</p>}</Show>
     </main>
   );
 }

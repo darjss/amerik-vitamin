@@ -1,5 +1,5 @@
 import { createMemo, Errored, For, Loading } from "solid-js";
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 
 import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
@@ -20,8 +20,8 @@ export default function Products() {
     <main class={css({ pb: "100px" })}>
       <Header title="Бараа" />
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={cx(card, css({ height: "320px" }))} />}>
-          <div class={card}>
+        <Loading fallback={<div class={css(card, { height: "320px" })} />}>
+          <div class={css(card)}>
             <For
               each={products().filter((product) => product.archivedAt === null)}
               keyed={(product) => product.id}
@@ -34,23 +34,23 @@ export default function Products() {
                     alignItems: "center",
                     px: "12px",
                     py: "10px",
-                    "& + &": { borderTop: "1px solid", borderColor: "line" },
+                    "& + &": { borderTop: "1px solid {colors.line}" },
                   })}
                 >
                   <Photo
                     src={product().image}
                     alt={`${product().brand} ${product().name}`}
-                    class={css({
+                    styles={{
                       width: "56px",
                       height: "56px",
                       borderRadius: "12px",
                       boxShadow: "hairline",
                       flex: "none",
-                    })}
+                    }}
                   />
                   <div class={css({ flex: 1, minWidth: 0 })}>
                     <div class={css({ fontWeight: "600" })}>{product().name}</div>
-                    <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>
+                    <small class={css(muted, { display: "block", fontSize: "13px" })}>
                       {product().brand} · {product().count} ш · {money(product().price)}
                     </small>
                   </div>

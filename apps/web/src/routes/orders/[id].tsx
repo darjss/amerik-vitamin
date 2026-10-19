@@ -14,7 +14,7 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 import BackIcon from "~icons/ph/caret-left";
 import CopyIcon from "~icons/ph/copy";
 import KeyIcon from "~icons/ph/key";
@@ -57,7 +57,12 @@ const steps = (order: Order) => {
 
 const methodText = { qpay: "QPay", transfer: "Шилжүүлэг", cash: "Бэлэн" };
 
-const kv = css({ display: "flex", justifyContent: "space-between", py: "3px", fontSize: "14px" });
+const kv = css.raw({
+  display: "flex",
+  justifyContent: "space-between",
+  py: "3px",
+  fontSize: "14px",
+});
 
 export default function OrderPage() {
   const params = useParams<{ id: OrderId }>();
@@ -101,7 +106,7 @@ export default function OrderPage() {
   return (
     <main class={css({ pb: "110px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={cx(card, css({ height: "300px", mt: "100px" }))} />}>
+        <Loading fallback={<div class={css(card, { height: "300px", mt: "100px" })} />}>
           <div
             class={css({
               display: "flex",
@@ -134,13 +139,13 @@ export default function OrderPage() {
             <Steps steps={steps(order())} />
           </section>
 
-          <div class={card}>
+          <div class={css(card)}>
             <div class={css({ p: "16px" })}>
               <div class={css({ fontSize: "17px", fontWeight: "650" })}>
                 {order().customerName ?? "Нэргүй"}{" "}
                 <Show when={order().customerPhone}>
                   {(digits) => (
-                    <span class={cx(muted, css({ fontWeight: "400" }))}>{phone(digits())}</span>
+                    <span class={css(muted, { fontWeight: "400" })}>{phone(digits())}</span>
                   )}
                 </Show>
               </div>
@@ -177,7 +182,7 @@ export default function OrderPage() {
               >
                 <Show when={order().customerPhone}>
                   {(digits) => (
-                    <a href={`tel:${digits()}`} class={button}>
+                    <a href={`tel:${digits()}`} class={css(button)}>
                       <PhoneIcon />
                       Залгах
                     </a>
@@ -185,7 +190,7 @@ export default function OrderPage() {
                 </Show>
                 <Show when={order().address}>
                   {(address) => (
-                    <button type="button" class={button} onClick={() => copy(address())}>
+                    <button type="button" class={css(button)} onClick={() => copy(address())}>
                       <CopyIcon />
                       {copied() ? "Хуулсан" : "Хаяг хуулах"}
                     </button>
@@ -195,8 +200,8 @@ export default function OrderPage() {
             </div>
           </div>
 
-          <div class={card}>
-            <h2 class={cardTitle}>
+          <div class={css(card)}>
+            <h2 class={css(cardTitle)}>
               {order().lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
             </h2>
             <For each={order().lines} keyed={(line) => line.productId}>
@@ -213,23 +218,23 @@ export default function OrderPage() {
                   <Photo
                     src={line().image}
                     alt={`${line().brand} ${line().name}`}
-                    class={css({
+                    styles={{
                       width: "60px",
                       height: "60px",
                       borderRadius: "12px",
                       boxShadow: "hairline",
                       flex: "none",
-                    })}
+                    }}
                   />
                   <div class={css({ flex: 1, minWidth: 0, fontSize: "14px" })}>
                     {line().name}
-                    <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>
+                    <small class={css(muted, { display: "block", fontSize: "13px" })}>
                       {line().brand} · {line().count} ш
                     </small>
                   </div>
                   <div class={css({ textAlign: "right" })}>
                     <b class={css({ fontSize: "16px" })}>×{line().quantity}</b>
-                    <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>
+                    <small class={css(muted, { display: "block", fontSize: "13px" })}>
                       {money(line().unitPrice * line().quantity)}
                     </small>
                   </div>
@@ -239,36 +244,32 @@ export default function OrderPage() {
             <div class={css({ height: "8px" })} />
           </div>
 
-          <div class={card}>
-            <h2 class={cardTitle}>Төлбөр</h2>
+          <div class={css(card)}>
+            <h2 class={css(cardTitle)}>Төлбөр</h2>
             <div class={css({ px: "16px", pb: "16px", fontVariantNumeric: "tabular-nums" })}>
-              <div class={kv}>
-                <span class={muted}>Бараа</span>
+              <div class={css(kv)}>
+                <span class={css(muted)}>Бараа</span>
                 <span>{money(order().total - order().deliveryFee)}</span>
               </div>
-              <div class={kv}>
-                <span class={muted}>Хүргэлт</span>
+              <div class={css(kv)}>
+                <span class={css(muted)}>Хүргэлт</span>
                 <span>{money(order().deliveryFee)}</span>
               </div>
               <div
-                class={cx(
-                  kv,
-                  css({
-                    fontSize: "16px",
-                    fontWeight: "700",
-                    borderTop: "1px solid",
-                    borderColor: "line",
-                    mt: "6px",
-                    pt: "9px",
-                  }),
-                )}
+                class={css(kv, {
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  borderTop: "1px solid {colors.line}",
+                  mt: "6px",
+                  pt: "9px",
+                })}
               >
                 <span>Нийт</span>
                 <span>{money(order().total)}</span>
               </div>
               <For each={order().payments} keyed={(payment) => payment.id}>
                 {(payment) => (
-                  <div class={cx(kv, css({ color: "paid" }))}>
+                  <div class={css(kv, { color: "paid" })}>
                     <span>
                       {methodText[payment().method]} · {clock(payment().createdAt)}
                     </span>
@@ -277,7 +278,7 @@ export default function OrderPage() {
                 )}
               </For>
               <Show when={order().balance > 0}>
-                <div class={cx(kv, css({ color: "owes", fontWeight: "700" }))}>
+                <div class={css(kv, { color: "owes", fontWeight: "700" })}>
                   <span>{order().terms === "cod" ? "Хүргэлтээр авах" : "Үлдэгдэл"}</span>
                   <span>{money(order().balance)}</span>
                 </div>
@@ -294,8 +295,7 @@ export default function OrderPage() {
                   right: 0,
                   bottom: 0,
                   bg: "surface",
-                  borderTop: "1px solid",
-                  borderColor: "line",
+                  borderTop: "1px solid {colors.line}",
                   px: "16px",
                   pt: "10px",
                   pb: "34px",
@@ -310,11 +310,12 @@ export default function OrderPage() {
                   type="button"
                   disabled={busy()}
                   onClick={() => advance(step().action)}
-                  class={cx(
-                    button,
-                    darkButton,
-                    css({ width: "100%", height: "50px", borderRadius: "14px", fontSize: "16px" }),
-                  )}
+                  class={css(button, darkButton, {
+                    width: "100%",
+                    height: "50px",
+                    borderRadius: "14px",
+                    fontSize: "16px",
+                  })}
                 >
                   {step().label}
                 </button>
@@ -376,8 +377,8 @@ function Steps(props: { steps: ReadonlyArray<{ label: string; done: boolean }> }
       <For each={props.steps}>
         {(step) => (
           <span
-            class={cx(
-              css({
+            class={css(
+              {
                 position: "relative",
                 textAlign: "center",
                 fontSize: "12px",
@@ -393,16 +394,14 @@ function Steps(props: { steps: ReadonlyArray<{ label: string; done: boolean }> }
                   height: "18px",
                   borderRadius: "50%",
                   bg: "page",
-                  border: "3px solid",
-                  borderColor: "line",
+                  border: "3px solid {colors.line}",
                 },
-              }),
-              step.done &&
-                css({
-                  color: "ink",
-                  fontWeight: "600",
-                  _before: { bg: "clay", borderColor: "clay" },
-                }),
+              },
+              step.done && {
+                color: "ink",
+                fontWeight: "600",
+                _before: { bg: "clay", border: "3px solid {colors.clay}" },
+              },
             )}
           >
             {step.label}

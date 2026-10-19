@@ -2,7 +2,7 @@ import type { JSX } from "@solidjs/web";
 import * as DateTime from "effect/DateTime";
 import { createMemo, Errored, For, Loading, Show } from "solid-js";
 
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 import CaretIcon from "~icons/ph/caret-right";
 import ClockIcon from "~icons/ph/clock";
 import PackageIcon from "~icons/ph/package";
@@ -23,16 +23,16 @@ import {
   TabBar,
 } from "../ui";
 
-const row = css({
+const row = css.raw({
   display: "flex",
   alignItems: "center",
   gap: "12px",
   px: "16px",
   py: "10px",
-  "& + &": { borderTop: "1px solid", borderColor: "line" },
+  "& + &": { borderTop: "1px solid {colors.line}" },
 });
 
-const circle = css({
+const circle = css.raw({
   width: "40px",
   height: "40px",
   borderRadius: "50%",
@@ -52,16 +52,16 @@ function Todo(props: {
   action?: string;
 }) {
   return (
-    <a href={props.href} class={row}>
-      <span class={circle}>{props.icon}</span>
+    <a href={props.href} class={css(row)}>
+      <span class={css(circle)}>{props.icon}</span>
       <div class={css({ flex: 1, minWidth: 0 })}>
         {props.title}
-        <small class={cx(muted, css({ display: "block", fontSize: "13px", lineHeight: "17px" }))}>
+        <small class={css(muted, { display: "block", fontSize: "13px", lineHeight: "17px" })}>
           {props.sub}
         </small>
       </div>
-      <Show when={props.action} fallback={<CaretIcon class={muted} />}>
-        {(label) => <span class={cx(button, darkButton)}>{label()}</span>}
+      <Show when={props.action} fallback={<CaretIcon class={css(muted)} />}>
+        {(label) => <span class={css(button, darkButton)}>{label()}</span>}
       </Show>
     </a>
   );
@@ -74,10 +74,10 @@ export default function Home() {
   return (
     <main class={css({ pb: "100px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={cx(card, css({ height: "320px", mt: "120px" }))} />}>
+        <Loading fallback={<div class={css(card, { height: "320px", mt: "120px" })} />}>
           <Header above={longDate(now())} title="Америк Хүнс Бараа" />
-          <div class={cx(card, css({ display: "grid", gridTemplateColumns: "1fr 1fr" }))}>
-            <Money label="Өнөөдөр орсон" amount={home().paidToday} sub="QPay, шилжүүлэг, бэлэн" />
+          <div class={css(card, { display: "grid", gridTemplateColumns: "1fr 1fr" })}>
+            <Money label="Өнөөдөр орсон" amount={home().paidToday} sub="QPay, шилжүүлэг" />
             <Money
               label="Хүргэлтээр авах"
               amount={home().codToCollect}
@@ -86,11 +86,11 @@ export default function Home() {
             />
           </div>
 
-          <div class={card}>
-            <h2 class={cardTitle}>Хийх зүйлс</h2>
+          <div class={css(card)}>
+            <h2 class={css(cardTitle)}>Хийх зүйлс</h2>
             <Show
               when={home().toShip > 0 || home().awaitingPayment > 0}
-              fallback={<p class={cx(row, muted)}>Одоохондоо юу ч алга</p>}
+              fallback={<p class={css(row, muted)}>Одоохондоо юу ч алга</p>}
             >
               <Show when={home().toShip > 0}>
                 <Todo
@@ -117,8 +117,8 @@ export default function Home() {
           </div>
 
           <Show when={home().shelf.length > 0}>
-            <div class={card}>
-              <h2 class={cardTitle}>Тавиураас авах</h2>
+            <div class={css(card)}>
+              <h2 class={css(cardTitle)}>Тавиураас авах</h2>
               <div
                 class={css({
                   display: "flex",
@@ -144,22 +144,19 @@ export default function Home() {
                         <Photo
                           src={product().image}
                           alt={`${product().brand} ${product().name}`}
-                          class={css({ p: "8px" })}
+                          styles={{ p: "8px" }}
                         />
                         <span
-                          class={cx(
-                            countBadge,
-                            css({
-                              left: "6px",
-                              top: "6px",
-                              bottom: "auto",
-                              fontSize: "13px",
-                              lineHeight: "20px",
-                              borderRadius: "8px",
-                              px: "7px",
-                              border: "none",
-                            }),
-                          )}
+                          class={css(countBadge, {
+                            left: "6px",
+                            top: "6px",
+                            bottom: "auto",
+                            fontSize: "13px",
+                            lineHeight: "20px",
+                            borderRadius: "8px",
+                            px: "7px",
+                            border: "none",
+                          })}
                         >
                           ×{product().quantity}
                         </span>
@@ -175,16 +172,13 @@ export default function Home() {
                         {product().name}
                       </div>
                       <small
-                        class={cx(
-                          muted,
-                          css({
-                            display: "block",
-                            fontSize: "12px",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }),
-                        )}
+                        class={css(muted, {
+                          display: "block",
+                          fontSize: "12px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        })}
                       >
                         {product().brand} · {product().count} ш
                       </small>
@@ -196,17 +190,17 @@ export default function Home() {
           </Show>
 
           <Show when={home().lowStock.length > 0}>
-            <div class={card}>
-              <h2 class={cardTitle}>Удахгүй дуусна</h2>
+            <div class={css(card)}>
+              <h2 class={css(cardTitle)}>Удахгүй дуусна</h2>
               <For each={home().lowStock} keyed={(product) => product.productId}>
                 {(product) => (
-                  <div class={row}>
-                    <span class={circle}>
+                  <div class={css(row)}>
+                    <span class={css(circle)}>
                       <Photo src={product().image} alt={`${product().brand} ${product().name}`} />
                     </span>
                     <div class={css({ flex: 1, minWidth: 0 })}>
                       <b>{product().name}</b>
-                      <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>
+                      <small class={css(muted, { display: "block", fontSize: "13px" })}>
                         {product().brand} · {product().count} ш
                       </small>
                     </div>
@@ -237,26 +231,26 @@ function Money(props: { label: string; amount: number; sub: string; owes?: boole
       class={css({
         px: "16px",
         py: "14px",
-        "& + &": { borderLeft: "1px solid", borderColor: "line" },
+        "& + &": { borderLeft: "1px solid {colors.line}" },
       })}
     >
-      <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>{props.label}</small>
+      <small class={css(muted, { display: "block", fontSize: "13px" })}>{props.label}</small>
       <b
-        class={cx(
-          css({
+        class={css(
+          {
             display: "block",
             fontSize: "22px",
             lineHeight: "28px",
             fontWeight: "700",
             letterSpacing: "-0.3px",
             fontVariantNumeric: "tabular-nums",
-          }),
-          props.owes && css({ color: "owes" }),
+          },
+          props.owes && { color: "owes" },
         )}
       >
         {money(props.amount)}
       </b>
-      <small class={cx(muted, css({ display: "block", fontSize: "13px" }))}>{props.sub}</small>
+      <small class={css(muted, { display: "block", fontSize: "13px" })}>{props.sub}</small>
     </div>
   );
 }

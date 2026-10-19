@@ -5,7 +5,7 @@ import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { createMemo, Errored, For, Loading, Show } from "solid-js";
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 import ChatIcon from "~icons/ph/chat-circle";
 import SearchIcon from "~icons/ph/magnifying-glass";
 
@@ -44,7 +44,7 @@ const searchOf = (query: string): ListOrders | undefined => {
   );
 };
 
-const chip = css({
+const chip = css.raw({
   borderRadius: "18px",
   px: "12px",
   py: "6px",
@@ -55,9 +55,9 @@ const chip = css({
   color: "inkMuted",
 });
 
-const chipOn = css({ bg: "clay", color: "white" });
+const chipOn = css.raw({ bg: "clay", color: "white" });
 
-const ellipsis = css({ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" });
+const ellipsis = css.raw({ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" });
 
 export default function Orders() {
   const [params, setParams] = useSearchParams<{ view?: string; q?: string }>();
@@ -106,7 +106,7 @@ export default function Orders() {
           {(candidate) => (
             <a
               href={candidate.key === "to_ship" ? "/orders" : `/orders?view=${candidate.key}`}
-              class={cx(chip, view().key === candidate.key && chipOn)}
+              class={css(chip, view().key === candidate.key && chipOn)}
             >
               {candidate.label}
             </a>
@@ -114,16 +114,16 @@ export default function Orders() {
         </For>
       </nav>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={cx(card, css({ height: "240px" }))} />}>
+        <Loading fallback={<div class={css(card, { height: "240px" })} />}>
           <Show
             when={orders().length > 0}
             fallback={
-              <p class={cx(muted, css({ px: "16px", py: "24px", textAlign: "center" }))}>
+              <p class={css(muted, { px: "16px", py: "24px", textAlign: "center" })}>
                 Захиалга алга
               </p>
             }
           >
-            <div class={card}>
+            <div class={css(card)}>
               <For each={orders()} keyed={(order) => order.id}>
                 {(order) => (
                   <a
@@ -132,7 +132,7 @@ export default function Orders() {
                       display: "flex",
                       gap: "12px",
                       p: "12px",
-                      "& + &": { borderTop: "1px solid", borderColor: "line" },
+                      "& + &": { borderTop: "1px solid {colors.line}" },
                     })}
                   >
                     <Photos lines={order().lines} />
@@ -143,23 +143,20 @@ export default function Orders() {
                         </b>
                         <Show when={order().customerPhone}>
                           {(digits) => (
-                            <span class={cx(muted, css({ fontVariantNumeric: "tabular-nums" }))}>
+                            <span class={css(muted, { fontVariantNumeric: "tabular-nums" })}>
                               {phone(digits())}
                             </span>
                           )}
                         </Show>
                         <span
-                          class={cx(
-                            muted,
-                            css({
-                              ml: "auto",
-                              fontSize: "13px",
-                              whiteSpace: "nowrap",
-                              display: "flex",
-                              gap: "4px",
-                              alignItems: "center",
-                            }),
-                          )}
+                          class={css(muted, {
+                            ml: "auto",
+                            fontSize: "13px",
+                            whiteSpace: "nowrap",
+                            display: "flex",
+                            gap: "4px",
+                            alignItems: "center",
+                          })}
                         >
                           <Show
                             when={
@@ -172,7 +169,7 @@ export default function Orders() {
                           {when(order().createdAt, now())}
                         </span>
                       </div>
-                      <div class={cx(ellipsis, css({ fontSize: "14px" }))}>
+                      <div class={css(ellipsis, { fontSize: "14px" })}>
                         {order()
                           .lines.map(
                             (line) =>
@@ -180,10 +177,10 @@ export default function Orders() {
                           )
                           .join(", ")}
                       </div>
-                      <div class={cx(ellipsis, muted, css({ fontSize: "14px" }))}>
+                      <div class={css(ellipsis, muted, { fontSize: "14px" })}>
                         {order().address}
                       </div>
-                      <div class={labels}>
+                      <div class={css(labels)}>
                         <PayLabel order={order()} />
                         <ShipLabel status={order().status} />
                       </div>
