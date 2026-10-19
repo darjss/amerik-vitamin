@@ -148,7 +148,6 @@ export const OrderSummary = Schema.Struct({
   total: Schema.Int,
   paid: Schema.Int,
   balance: Schema.Int,
-  customerName: Schema.NullOr(Schema.String),
   customerPhone: Schema.NullOr(Schema.String),
   address: Schema.NullOr(Schema.String),
   lines: Schema.Array(OrderLineView),

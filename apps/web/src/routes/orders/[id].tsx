@@ -142,11 +142,8 @@ export default function OrderPage() {
           <div class={css(card)}>
             <div class={css({ p: "16px" })}>
               <div class={css({ fontSize: "17px", fontWeight: "650" })}>
-                {order().customerName ?? "Нэргүй"}{" "}
-                <Show when={order().customerPhone}>
-                  {(digits) => (
-                    <span class={css(muted, { fontWeight: "400" })}>{phone(digits())}</span>
-                  )}
+                <Show when={order().customerPhone} fallback="Утасгүй">
+                  {(digits) => phone(digits())}
                 </Show>
               </div>
               <Show when={order().address}>

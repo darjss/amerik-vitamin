@@ -138,16 +138,20 @@ export default function Orders() {
                     <Photos lines={order().lines} />
                     <div class={css({ flex: 1, minWidth: 0 })}>
                       <div class={css({ display: "flex", gap: "6px", alignItems: "baseline" })}>
-                        <b class={css({ fontSize: "16px", fontWeight: "650" })}>
-                          {order().customerName ?? `#${order().number}`}
+                        <b
+                          class={css({
+                            fontSize: "16px",
+                            fontWeight: "650",
+                            fontVariantNumeric: "tabular-nums",
+                          })}
+                        >
+                          <Show when={order().customerPhone} fallback="Утасгүй">
+                            {(digits) => phone(digits())}
+                          </Show>
                         </b>
-                        <Show when={order().customerPhone}>
-                          {(digits) => (
-                            <span class={css(muted, { fontVariantNumeric: "tabular-nums" })}>
-                              {phone(digits())}
-                            </span>
-                          )}
-                        </Show>
+                        <span class={css(muted, { fontVariantNumeric: "tabular-nums" })}>
+                          #{order().number}
+                        </span>
                         <span
                           class={css(muted, {
                             ml: "auto",

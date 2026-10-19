@@ -32,7 +32,6 @@ const summary = {
   fulfillment: orders.fulfillment,
   total: orders.total,
   createdAt: orders.createdAt,
-  customerName: customers.name,
   customerPhone: customers.phone,
   address: orders.address,
   paid: sum(payments.amount),
