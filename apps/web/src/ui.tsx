@@ -337,6 +337,8 @@ export function TabBar() {
     <nav
       class={css({
         position: "fixed",
+        // Above photo buttons, which sit at zIndex 1 over their row link.
+        zIndex: 10,
         left: 0,
         right: 0,
         bottom: 0,

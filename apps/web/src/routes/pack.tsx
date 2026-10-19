@@ -27,6 +27,7 @@ type Order = typeof OrderSummary.Type;
 
 const dock = css.raw({
   position: "fixed",
+  zIndex: 10,
   left: 0,
   right: 0,
   bottom: 0,
