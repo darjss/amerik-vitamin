@@ -8,6 +8,8 @@ import { serverLayer } from "./api/binding";
 import { WebLayer } from "./api/client";
 import { createRuntime, RuntimeContext } from "./api/solid-effect";
 
+import "./app.css";
+
 const Router = createRouter({ routes: fileRoutes(pageRoutes) });
 
 export default function App() {

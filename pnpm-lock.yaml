@@ -185,6 +185,12 @@ catalogs:
     '@pandacss/dev':
       specifier: 2.2.0
       version: 2.2.0
+    '@pandacss/preset-base':
+      specifier: 2.2.0
+      version: 2.2.0
+    '@pandacss/preset-panda':
+      specifier: 2.2.0
+      version: 2.2.0
     '@solidjs/router':
       specifier: 2.0.0-next.38
       version: 2.0.0-next.38
@@ -339,6 +345,12 @@ importers:
       '@pandacss/dev':
         specifier: 'catalog:'
         version: 2.2.0(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(postcss@8.5.29)
+      '@pandacss/preset-base':
+        specifier: 'catalog:'
+        version: 2.2.0
+      '@pandacss/preset-panda':
+        specifier: 'catalog:'
+        version: 2.2.0
       '@solidjs/vite-plugin':
         specifier: 'catalog:'
         version: 3.0.0-next.49(@solidjs/web@2.0.0-rc.15(solid-js@2.0.0-rc.15))(@voidzero-dev/vite-plus-core@1.1.0(@types/node@26.6.5)(esbuild@0.28.1)(jiti@2.7.0)(typescript@7.0.2)(yaml@2.9.1))(solid-js@2.0.0-rc.15)(supports-color@10.2.2)
@@ -2333,6 +2345,14 @@ packages:
     engines: {node: '>=22'}
     peerDependencies:
       postcss: '>=8'
+
+  '@pandacss/preset-base@2.2.0':
+    resolution: {integrity: sha512-Cu3A/5ElXI3o5CuVLn/Y9/+CppaMzE/2pXCS5z2bb3k09Ucq3QVA7CQN4VoizIH1Fw8ibc99jOwqR8qZRRkqbQ==}
+    engines: {node: '>=22'}
+
+  '@pandacss/preset-panda@2.2.0':
+    resolution: {integrity: sha512-gk0hVKGATcoJ5eCNxTSUBF5bDqkjF7XdnJSXFWPHICgDF20VO0z3iO3E3AijynEXyx/5JM7dQly/fM3z7QYu0g==}
+    engines: {node: '>=22'}
 
   '@pandacss/types@2.2.0':
     resolution: {integrity: sha512-XeUt/mWUkghn4oyKqcFMz6whTr4SHxmiKksNVNX3EAB1ceyrvQ68tHrYWNK59NtBrRPeJxSOibHhZWVRqHcuvQ==}
@@ -6300,6 +6320,14 @@ snapshots:
     transitivePeerDependencies:
       - '@emnapi/core'
       - '@emnapi/runtime'
+
+  '@pandacss/preset-base@2.2.0':
+    dependencies:
+      '@pandacss/types': 2.2.0
+
+  '@pandacss/preset-panda@2.2.0':
+    dependencies:
+      '@pandacss/types': 2.2.0
 
   '@pandacss/types@2.2.0': {}
 

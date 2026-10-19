@@ -8,7 +8,7 @@
     "build": "vp build",
     "start": "vp preview",
     "preview": "vp preview",
-    "prepare": "node scripts/file-routes.ts"
+    "prepare": "panda codegen && node scripts/file-routes.ts"
   },
   "dependencies": {
     "@amerik/contracts": "workspace:*",
@@ -24,6 +24,8 @@
     "@cloudflare/workers-types": "catalog:",
     "@iconify-json/ph": "catalog:",
     "@pandacss/dev": "catalog:",
+    "@pandacss/preset-base": "catalog:",
+    "@pandacss/preset-panda": "catalog:",
     "@solidjs/vite-plugin": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",

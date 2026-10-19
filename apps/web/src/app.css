@@ -1,0 +1,22 @@
+@layer reset, base, tokens, recipes, utilities;
+
+@layer base {
+  body {
+    background-color: var(--colors-page);
+    color: var(--colors-ink);
+    font-family: var(--fonts-sans);
+    font-size: 15px;
+    line-height: 20px;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  img {
+    display: block;
+  }
+}

@@ -16,6 +16,8 @@ catalog:
   "@iconify-json/ph": 1.2.2
   "@oxlint/plugins": 1.87.0
   "@pandacss/dev": 2.2.0
+  "@pandacss/preset-base": 2.2.0
+  "@pandacss/preset-panda": 2.2.0
   "@solidjs/router": 2.0.0-next.38
   "@solidjs/vite-plugin": 3.0.0-next.49
   "@solidjs/web": 2.0.0-rc.15

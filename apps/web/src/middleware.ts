@@ -18,9 +18,27 @@ const noindex = async (_event: RequestEvent, next: () => Promise<Response>) => {
   });
 };
 
+const dashboardPages = /^\/(?:orders(?:\/.*)?|products)?$/u;
+
+const sessionCookie = /(?:^|;\s*)(?:__Secure-)?better-auth\.session_token=/u;
+
+// Dashboard pages without a session cookie go to sign-in. The API checks the
+// session itself on every rpc, so this only spares her an error screen.
+const signedIn = async (event: RequestEvent, next: () => Promise<Response>) => {
+  const { pathname } = new URL(event.request.url);
+  const cookie = event.request.headers.get("cookie") ?? "";
+
+  if (dashboardPages.test(pathname) && !sessionCookie.test(cookie)) {
+    return Response.redirect(new URL("/login", event.request.url), 302);
+  }
+
+  return await next();
+};
+
 // @solidjs/vite-plugin next.48+ calls middleware as (event, next), while
 // filesystem-routing 0.4.0 still takes the bare request.
 export default [
   noindex,
+  signedIn,
   (event: RequestEvent, next: () => Promise<Response>) => api(event.request, next),
 ];
