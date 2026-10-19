@@ -82,7 +82,16 @@ Source is in `apps/api/node_modules/better-auth/dist`. Docs are at https://www.b
 - `advanced.database.generateId: "uuid"` leaves the id to a Postgres column default. Pass `() => crypto.randomUUID()`.
 - `auth.handler` returns a streamed body. Buffer it before responding, or its last byte waits for the request's cleanup, which closes the database connection.
 - `getSession` from an RPC can't set a refreshed cookie on the response, so call it with `disableRefresh` and let the browser's own `/api/auth/get-session` refresh the session.
-- Server rendering calls the API without the browser's cookie, so a dashboard RPC made during SSR comes back `Unauthorized`. Load dashboard data in the browser, or forward the cookie.
+- Server rendering calls the API over the service binding, which carries no cookie of its own. `apps/web/src/api/binding.ts` copies the page request's cookie onto every SSR call, so dashboard reads render on the server as the signed-in admin. (PR #11)
+
+## Panda CSS
+
+Source is in `apps/web/node_modules/@pandacss/dev`. Docs are at https://panda-css.com/llms.txt. `apps/web/panda.config.ts` holds the PRODUCT.md tokens, and `vp run prepare` writes `styled-system`. (PR #11)
+
+- Panda 2 adds no presets on its own. Without `presets: [presetBase, pandaPreset]`, shorthands like `bg` and `px` fail to typecheck.
+- Every value is its own atomic class, so `cx(a, b)` with the same property in both lets stylesheet order pick the winner. Share styles as `css.raw` and compose with `css(a, b)`, which merges the objects so the later one wins.
+- A `border` or `borderTop` shorthand resets the color, and `borderColor` beside it can lose. Put the token in the shorthand: `"1px solid {colors.line}"`.
+- unplugin-icons' bundled Solid types predate Solid 2 and type every icon's props as `never`. `apps/web/src/icons.d.ts` declares `~icons/*` instead.
 
 ## drizzle
 
