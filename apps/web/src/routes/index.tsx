@@ -110,7 +110,14 @@ export default function Home() {
                       >
                         {product().name}
                       </span>
-                      <small class={css(small, muted, { fontSize: "13px" })}>
+                      <small
+                        class={css(small, muted, {
+                          fontSize: "13px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        })}
+                      >
                         {product().brand} · {product().count} ш
                       </small>
                     </div>
@@ -129,9 +136,9 @@ export default function Home() {
                 </span>
                 <div class={css({ flex: 1 })}>
                   <b class={css({ fontSize: "16px", fontWeight: "600" })}>
-                    {home().awaitingPayment} захиалга төлбөр хүлээж байна
+                    {home().awaitingPayment} төлбөр хүлээж байна
                   </b>
-                  <small class={css(small, muted)}>Шилжүүлэг ирсэн бол бүртгэнэ</small>
+                  <small class={css(small, muted)}>Шилжүүлэг ирсэн эсэхийг шалгах</small>
                 </div>
                 <a href="/orders?view=awaiting" class={css(button)}>
                   Шалгах
