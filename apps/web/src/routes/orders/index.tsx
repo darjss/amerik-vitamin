@@ -71,12 +71,13 @@ const chip = css.raw({
   fontWeight: "600",
   fontSize: "15px",
   whiteSpace: "nowrap",
-  bg: "chip",
+  bg: "surface",
+  border: "1px solid {colors.line}",
   color: "ink",
   "& span": { color: "inkMuted", fontVariantNumeric: "tabular-nums" },
 });
 
-const chipOn = css.raw({ bg: "clay", color: "white", "& span": { color: "white" } });
+const chipOn = css.raw({ bg: "marigold", borderColor: "marigold", "& span": { color: "ink" } });
 
 const ellipsis = css.raw({ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" });
 
@@ -121,7 +122,8 @@ export default function Orders() {
             flex: 1,
             height: "44px",
             borderRadius: "12px",
-            bg: "chip",
+            bg: "surface",
+            border: "1px solid {colors.line}",
             display: "flex",
             alignItems: "center",
             gap: "8px",
@@ -224,7 +226,7 @@ export default function Orders() {
                         "& + &": { borderTop: "1px solid {colors.line}" },
                       },
                       secondsLeft(order().id) !== undefined && {
-                        boxShadow: "inset 3px 0 0 {colors.clay}",
+                        boxShadow: "inset 4px 0 0 {colors.marigold}",
                       },
                     )}
                   >

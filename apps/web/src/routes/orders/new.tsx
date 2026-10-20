@@ -228,7 +228,17 @@ export default function NewOrder() {
               class={css({ fontWeight: "600", fontVariantNumeric: "tabular-nums" })}
             />
             <Show when={history().length > 0}>
-              <small class={css({ fontSize: "14px", color: "clay", fontWeight: "600" })}>
+              <small
+                class={css({
+                  justifySelf: "start",
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  bg: "marigold",
+                  borderRadius: "6px",
+                  px: "6px",
+                  lineHeight: "20px",
+                })}
+              >
                 {history().length + 1} дахь захиалга
               </small>
             </Show>
@@ -366,7 +376,8 @@ export default function NewOrder() {
                 class={css({
                   height: "44px",
                   borderRadius: "12px",
-                  bg: "chip",
+                  bg: "surface",
+                  border: "1px solid {colors.line}",
                   display: "flex",
                   alignItems: "center",
                   gap: "8px",
@@ -491,7 +502,7 @@ function Tile(props: { product: Product; quantity: number; onAdd: () => void }) 
             boxShadow: "hairline",
             p: "6px",
           },
-          props.quantity > 0 && { boxShadow: "0 0 0 2px {colors.clay}" },
+          props.quantity > 0 && { boxShadow: "0 0 0 3px {colors.marigold}" },
         )}
       >
         <Show when={props.product.image}>

@@ -33,7 +33,7 @@ const circle = css.raw({
   width: "44px",
   height: "44px",
   borderRadius: "50%",
-  bg: "chip",
+  border: "1px solid {colors.line}",
   display: "grid",
   placeItems: "center",
   flex: "none",

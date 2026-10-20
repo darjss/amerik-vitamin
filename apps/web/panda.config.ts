@@ -2,8 +2,8 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import pandaPreset from "@pandacss/preset-panda";
 
-// The dashboard's look is decided in PRODUCT.md: espresso and clay. Color means
-// a status or what's selected, never decoration.
+// The dashboard's look is decided in PRODUCT.md: cream, ink and marigold. Color
+// means a status or what's selected, never decoration.
 export default defineConfig({
   include: ["./src/**/*.{ts,tsx}"],
   jsxFramework: "solid",
@@ -16,28 +16,29 @@ export default defineConfig({
     extend: {
       tokens: {
         colors: {
-          page: { value: "#faf5ef" },
-          surface: { value: "#fffdfa" },
-          ink: { value: "#2a1d16" },
-          inkMuted: { value: "#786a60" },
-          line: { value: "#ece2d7" },
-          chip: { value: "#f2eeea" },
-          espresso: { value: "#33241d" },
-          clay: { value: "#bf4f2c" },
-          paid: { value: "#3b6338" },
-          paidBg: { value: "#e4eedf" },
-          owes: { value: "#9c2348" },
-          owesBg: { value: "#f9e0e6" },
-          ship: { value: "#6b5210" },
-          shipBg: { value: "#f4e9cc" },
+          page: { value: "#f6efdf" },
+          surface: { value: "#fffbf3" },
+          ink: { value: "#17150f" },
+          inkMuted: { value: "#6a6253" },
+          line: { value: "#e7ddc9" },
+          chip: { value: "#efe7d5" },
+          // A highlighter, always with ink on it: selected, ×N, done.
+          marigold: { value: "#ffbe1a" },
+          paid: { value: "#2f6b3a" },
+          paidBg: { value: "#e3eedd" },
+          owes: { value: "#b4233c" },
+          owesBg: { value: "#fbe3e6" },
+          // Blue, so "not shipped" never reads as marigold.
+          ship: { value: "#2d4c78" },
+          shipBg: { value: "#e2e9f4" },
         },
         fonts: {
           // Onest was drawn for Cyrillic screens and has Mongolian's Ө and Ү.
           sans: { value: "'Onest Variable', -apple-system, system-ui, sans-serif" },
         },
         shadows: {
-          card: { value: "0 0 0 1px #ece2d7, 0 2px 8px -4px rgba(80, 50, 30, 0.12)" },
-          hairline: { value: "0 0 0 1px #ece2d7" },
+          card: { value: "0 0 0 1px #e7ddc9, 0 2px 8px -4px rgba(60, 45, 10, 0.12)" },
+          hairline: { value: "0 0 0 1px #e7ddc9" },
         },
       },
     },

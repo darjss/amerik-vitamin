@@ -68,10 +68,10 @@ export const button = css.raw({
 
 /** The one main action on a screen. */
 export const darkButton = css.raw({
-  bg: "espresso",
-  borderColor: "espresso",
-  color: "white",
-  // Not ready yet reads as a quiet hint, not a grayed-out espresso.
+  bg: "ink",
+  borderColor: "ink",
+  color: "surface",
+  // Not ready yet reads as a quiet hint, not a grayed-out ink.
   _disabled: { opacity: 1, bg: "chip", borderColor: "chip", color: "inkMuted" },
 });
 
@@ -81,7 +81,7 @@ export const circle = css.raw({
   height: "44px",
   borderRadius: "50%",
   border: "1px solid {colors.line}",
-  color: "clay",
+  color: "ink",
   display: "grid",
   placeItems: "center",
   flex: "none",
@@ -140,7 +140,7 @@ export const field = css.raw({
   fontSize: "16px",
   color: "ink",
   outline: "none",
-  _focus: { borderColor: "clay" },
+  _focus: { borderColor: "ink" },
 });
 
 const photoFrame = css.raw({
@@ -194,8 +194,8 @@ export const countBadge = css.raw({
   zIndex: 2,
   right: "-6px",
   bottom: "-6px",
-  bg: "clay",
-  color: "white",
+  bg: "marigold",
+  color: "ink",
   border: "2px solid {colors.surface}",
   borderRadius: "10px",
   fontSize: "13px",
@@ -340,7 +340,7 @@ export function StepButton(props: {
                   left: 0,
                   bottom: 0,
                   height: "4px",
-                  bg: "clay",
+                  bg: "marigold",
                   transition: "width 1s linear",
                 })}
                 style={{ width: `${((left() - 1) / 5) * 100}%` }}
@@ -420,7 +420,19 @@ const tab = css.raw({
   "& svg": { display: "block", fontSize: "25px", mx: "auto", mb: "2px" },
 });
 
-const activeTab = css.raw({ color: "clay", fontWeight: "600" });
+// The active tab's icon sits on a marigold pill.
+const activeTab = css.raw({
+  color: "ink",
+  fontWeight: "600",
+  "& svg": {
+    width: "56px",
+    height: "30px",
+    px: "15px",
+    py: "3px",
+    borderRadius: "15px",
+    bg: "marigold",
+  },
+});
 
 export function TabBar() {
   const location = useLocation();

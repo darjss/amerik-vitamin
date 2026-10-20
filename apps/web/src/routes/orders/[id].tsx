@@ -245,7 +245,7 @@ export default function OrderPage() {
                     <span
                       class={css(
                         { display: "block", height: "4px", borderRadius: "2px", bg: "line" },
-                        step.done && { bg: "clay" },
+                        step.done && { bg: "marigold" },
                       )}
                     />
                     <span
@@ -277,7 +277,15 @@ export default function OrderPage() {
                     </div>
                   </div>
                   <div class={css({ textAlign: "right", fontVariantNumeric: "tabular-nums" })}>
-                    <b class={css({ fontSize: "22px", fontWeight: "700", color: "clay" })}>
+                    <b
+                      class={css({
+                        fontSize: "20px",
+                        fontWeight: "700",
+                        bg: "marigold",
+                        borderRadius: "8px",
+                        px: "7px",
+                      })}
+                    >
                       ×{line().quantity}
                     </b>
                     <div class={css(muted, { fontSize: "14px" })}>
@@ -523,7 +531,15 @@ function History(props: { phone: string }) {
     <Show when={orders() > 1}>
       <a
         href={`/orders?view=all&q=${props.phone}`}
-        class={css({ position: "relative", fontSize: "14px", color: "clay", fontWeight: "600" })}
+        class={css({
+          position: "relative",
+          fontSize: "14px",
+          fontWeight: "600",
+          textDecoration: "underline",
+          textDecorationColor: "marigold",
+          textDecorationThickness: "3px",
+          textUnderlineOffset: "3px",
+        })}
       >
         Нийт {orders()} захиалга
       </a>
