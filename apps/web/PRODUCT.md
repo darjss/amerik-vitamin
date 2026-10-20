@@ -37,20 +37,21 @@ None for the dashboard. It's internal, and vit-store's look does not carry over.
 
 The owner picked this on 2026-10-19 after two rounds of phone prototypes. Her most-used apps set the feel: Facebook, Messenger, Instagram, Meta Business Suite and Amazon. The dashboard borrows their habits: photo-first rows, filter chips, a to-do list with a button on each row and a step tracker on the order. It copies none of their screens, so there are no stories, no chat bubbles, and no borrowed headers or brand colors.
 
-Palette "cream, ink and lilac", chosen 2026-10-20 over espresso and clay, which tinted every surface brown. Cream is only the page. Everything she taps is surface white or ink. The highlight is a highlighter and always has ink on it. It is lilac because no status is purple: marigold sat next to the amber pill, lime next to paid, coral next to owes and sky next to blue labels. Color means a status or what's selected, never decoration.
+Palette "cream and navy", chosen 2026-10-20 over espresso and clay, which tinted every surface brown. Cream is only the page. Everything she taps is surface white or navy. Navy is the one strong color: no status and almost no bottle in the catalog is navy, so it never gets mixed up with paid, owed or a product photo. Solid navy marks the main button, the active filter, ×N on photos and done steps. Soft navy marks quieter things next to a navy button: the active tab, ×N on the order page, "3 дахь захиалга". Color means a status or what's selected, never decoration.
 
-| Token       | Value                  | Use                                                                  |
-| ----------- | ---------------------- | -------------------------------------------------------------------- |
-| page        | `#f6efdf`              | Background                                                           |
-| surface     | `#fffbf3`              | Blocks, buttons, chips, search fields, tab bar, bottom dock          |
-| ink         | `#17150f`              | Text, the one dark button                                            |
-| ink-muted   | `#6a6253`              | Secondary text                                                       |
-| line        | `#e7ddc9`              | Dividers, button and photo outlines                                  |
-| chip        | `#efe7d5`              | Segmented control track, a dark button that isn't ready              |
-| highlight   | `#b9a6ff`              | Active filter, active tab, ×N, done steps, a held row, a picked tile |
-| paid        | `#2f6b3a` on `#e3eedd` | QPay or Khaan paid                                                   |
-| owes        | `#b4233c` on `#fbe3e6` | Money to collect, QPay waiting                                       |
-| not shipped | `#8a5a00` on `#f8ecce` | Not handed to TU yet                                                 |
+| Token       | Value                  | Use                                                                       |
+| ----------- | ---------------------- | ------------------------------------------------------------------------- |
+| page        | `#f8f4ec`              | Background                                                                |
+| surface     | `#fffdf9`              | Blocks, buttons, chips, search fields, tab bar, bottom dock               |
+| ink         | `#151a28`              | Text, a navy-black                                                        |
+| ink-muted   | `#6b6862`              | Secondary text                                                            |
+| line        | `#e9e3d8`              | Dividers, button and photo outlines                                       |
+| chip        | `#efeae0`              | Segmented control track, a main button that isn't ready                   |
+| navy        | `#1d2d50`              | Main button, active filter, ×N on photos, done steps, held row, call icon |
+| navy-soft   | `#e2e7f3`              | Active tab pill, ×N on the order page, repeat-customer tag                |
+| paid        | `#2f6b3a` on `#e5efe2` | QPay or Khaan paid                                                        |
+| owes        | `#b4233c` on `#fbe6e8` | Money to collect, QPay waiting                                            |
+| not shipped | `#8a5a00` on `#f8ecce` | Not handed to TU yet                                                      |
 
 Type is Onest. It was drawn for Cyrillic screens and has Mongolian's Ө and Ү. Bold is for the phone, money and ×N only. Numbers use tabular figures. Icons are Phosphor only.
 
@@ -83,7 +84,7 @@ Screens:
 
   The ⋯ menu edits the address and note, or cancels the order. One "TU-д өгөх" button stays docked at the bottom.
 
-- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр), then fills phone, address and note in one grouped block with an icon on each row. A known phone fills in the last address, says which order this is ("3 дахь захиалга") and shows "Өмнө авсан", the products it bought before, one tap to add again. Every product sits in a three-column photo grid with name, count, brand and price; a tap adds one, the tile gets a lilac ring and ×N, and sold-out ones fade to the end. The search field narrows the grid. Chosen items collect in Сагс with +/- steppers. Prepay or COD and "Захиалга үүсгэх · total" stay docked at the bottom. A walk-in order has no delivery fee and needs no phone.
+- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр), then fills phone, address and note in one grouped block with an icon on each row. A known phone fills in the last address, says which order this is ("3 дахь захиалга") and shows "Өмнө авсан", the products it bought before, one tap to add again. Every product sits in a three-column photo grid with name, count, brand and price; a tap adds one, the tile gets a navy ring and ×N, and sold-out ones fade to the end. The search field narrows the grid. Chosen items collect in Сагс with +/- steppers. Prepay or COD and "Захиалга үүсгэх · total" stay docked at the bottom. A walk-in order has no delivery fee and needs no phone.
 - **Бараа**. A search field, and a list with photo, price and stock. A tap on the stock opens a counter that saves the count.
 
 Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button.
