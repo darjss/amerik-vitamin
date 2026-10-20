@@ -55,17 +55,19 @@ Palette "cream and navy", chosen 2026-10-20 over espresso and clay, which tinted
 
 Type is Onest. It was drawn for Cyrillic screens and has Mongolian's Ө and Ү. Bold is for the phone, money and ×N only. Numbers use tabular figures. Icons are Phosphor only.
 
-Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Each screen has at most one dark button. Every other button, the call and copy circles included, is surface color with a hairline outline; a tan fill read as dirty on her screen. A choice between two or three options is an iOS segmented control: a chip track with a white thumb, not filled color buttons. A dark button that isn't ready yet turns chip with muted text that says what's missing.
+Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Sections carry a bold heading with a navy Phosphor icon (Бараа, Хүргэх, Төлбөр, Мөнгө) so the page has landmarks.
+
+An action looks like an action. The next step on every order row is a solid navy button, as vit-store's yellow "Хүргэсэн" was; on a to-do list each row's step is that row's main action. An outlined step read as a label, and the screens felt dead. Buttons press down a little when tapped. COD money is the heaviest text on a row: "Хүргэлтээр авах" over a bold red amount. A note (door code, "call first") sits in a pale yellow box. There is no loud banner at the top; the number to act on rides in a pinned bar above the tab bar. Every other button, the call and copy circles included, is surface color with a hairline outline; a tan fill read as dirty on her screen. A choice between two or three options is an iOS segmented control: a chip track with a white thumb, not filled color buttons. A dark button that isn't ready yet turns chip with muted text that says what's missing.
 
 Screens:
 
-- **Orders** (Захиалга). A search field and a + for a new order sit at the top, with no page title. Search takes an order number, or any 3 to 8 digits of a phone. The filter chips show counts: Илгээх 4, Төлбөр хүлээж 1, Замд 3. On Илгээх, a bar above the rows says how many parcels and pieces there are and has Савлах.
+- **Orders** (Захиалга). A large "Захиалга" title with a round + for a new order, then the search field. Search takes an order number, or any 3 to 8 digits of a phone. The filter chips show counts: Илгээх 4, Төлбөр хүлээж 1, Замд 3. On Илгээх, a navy bar pinned above the tab bar says "4 илгээмж · 9 ширхэг" and opens Савлах; it stays under her thumb while she scrolls.
   Each row has:
-  - the phone, with the money pill on the right ("Авах 286,000₮" or "Төлсөн")
+  - the phone, with the money on the right (bold red "Хүргэлтээр авах 286,000₮", or a "Төлсөн" pill)
   - the address on one line
-  - the note in full
-  - one 56px photo per product, each with its own ×N
-  - the next-step button
+  - the note in full, in a note box
+  - one 64px photo per product, each with its own ×N
+  - the solid next-step button
   - a "2 хоног" pill when a ready order has waited two days or more
 
   Customers are known by phone, so no screen shows a customer's name.
@@ -75,11 +77,9 @@ Screens:
   - the status in one line
   - a muted line with payment, time and source
   - a thin four-step tracker
-  - the items with 72px photos
-  - the phone, with how many orders it has placed and a call button
-  - the address, with a copy button
-  - the note
-  - the payment
+  - Бараа: the items with 72px photos
+  - Хүргэх: the phone, with how many orders it has placed and a call button; the address, with a copy button; the note in a note box
+  - Төлбөр: the lines and the total
   - "Мөнгө авсан", which records cash or a transfer she took by hand
 
   The ⋯ menu edits the address and note, or cancels the order. One "TU-д өгөх" button stays docked at the bottom.
