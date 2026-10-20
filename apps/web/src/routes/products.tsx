@@ -12,24 +12,28 @@ import {
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
+import SearchIcon from "~icons/ph/magnifying-glass";
 import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
-import SearchIcon from "~icons/ph/magnifying-glass";
 
 import { ApiClient } from "../api/client";
 import { runEffect, RuntimeContext } from "../api/solid-effect";
+import { Sheet, TabBar } from "../chrome";
 import { money } from "../format";
 import {
-  bigButton,
-  block,
+  act,
   button,
-  darkButton,
   field,
-  muted,
-  Photo,
+  headline,
+  large,
+  largeTitle,
+  panel,
   Problem,
-  Sheet,
-  TabBar,
+  round,
+  searchBox,
+  small,
+  sub,
+  Tile,
   top,
 } from "../ui";
 
@@ -72,31 +76,9 @@ export default function Products() {
   });
 
   return (
-    <main class={css(top, { pb: "100px" })}>
-      <label
-        class={css({
-          mx: "16px",
-          mb: "10px",
-          height: "44px",
-          borderRadius: "12px",
-          bg: "surface",
-          border: "1px solid {colors.line}",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          px: "12px",
-          color: "inkMuted",
-          "& svg": { fontSize: "18px" },
-          "& input": {
-            flex: 1,
-            minWidth: 0,
-            bg: "transparent",
-            outline: "none",
-            color: "ink",
-            fontSize: "16px",
-          },
-        })}
-      >
+    <main class={css(top, { pb: "120px" })}>
+      <h1 class={css(largeTitle, { px: "20px", pt: "52px" })}>Бараа</h1>
+      <label class={css(searchBox, { mx: "16px", mt: "16px" })}>
         <SearchIcon />
         <input
           type="search"
@@ -106,26 +88,27 @@ export default function Products() {
         />
       </label>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(block, { height: "320px" })} />}>
-          <div class={css(block)}>
+        <Loading fallback={<div class={css(panel, { m: "20px 16px", height: "320px" })} />}>
+          <div class={css({ display: "grid", gap: "8px", px: "16px", pt: "18px" })}>
             <For each={shown()} keyed={(product) => product.id}>
               {(product) => (
-                <div
-                  class={css({
-                    display: "flex",
-                    gap: "12px",
-                    alignItems: "center",
-                    px: "16px",
-                    py: "10px",
-                    "& + &": { borderTop: "1px solid {colors.line}" },
-                  })}
-                >
-                  <Photo product={product()} size={56} />
+                <div class={css({ display: "flex", gap: "14px", alignItems: "center", py: "6px" })}>
+                  <Tile product={product()} size={64} />
                   <div class={css({ flex: 1, minWidth: 0 })}>
-                    <div class={css({ fontSize: "16px", fontWeight: "600" })}>{product().name}</div>
-                    <small class={css(muted, { display: "block", fontSize: "14px" })}>
-                      {product().brand} · {product().count} ш · {money(product().price)}
-                    </small>
+                    <div class={css(headline)}>{product().name}</div>
+                    <div class={css(sub)}>
+                      {product().brand} · {product().count} ш
+                    </div>
+                    <div
+                      class={css({
+                        fontSize: "15px",
+                        fontWeight: "650",
+                        mt: "2px",
+                        fontVariantNumeric: "tabular-nums",
+                      })}
+                    >
+                      {money(product().price)}
+                    </div>
                   </div>
                   <button
                     type="button"
@@ -133,8 +116,9 @@ export default function Products() {
                     onClick={() => open(product())}
                     class={css(
                       button,
-                      { minWidth: "56px", px: "10px", fontVariantNumeric: "tabular-nums" },
-                      product().stock === 0 && { color: "owes" },
+                      small,
+                      { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
+                      product().stock === 0 && { bg: "owesBg", color: "owes", boxShadow: "none" },
                     )}
                   >
                     {stockText(product().stock)}
@@ -154,24 +138,16 @@ export default function Products() {
         <Show when={counting()}>
           {(product) => (
             <>
-              <p class={css(muted, { fontSize: "15px", pb: "16px" })}>
+              <p class={css(sub, { pb: "18px", mt: "-10px" })}>
                 {product().brand} · {product().count} ш. Тавиур дээр хэд байна?
               </p>
-              <div
-                class={css({
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  pb: "20px",
-                  "& > button": { width: "56px", height: "56px", px: 0, borderRadius: "50%" },
-                })}
-              >
+              <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
                 <button
                   type="button"
                   aria-label="Хасах"
                   disabled={counted() <= 0}
                   onClick={() => setCounted((value) => Math.max(0, value - 1))}
-                  class={css(button)}
+                  class={css(round, { width: "56px", height: "56px", fontSize: "22px" })}
                 >
                   <MinusIcon />
                 </button>
@@ -184,15 +160,16 @@ export default function Products() {
                   class={css(field, {
                     flex: 1,
                     textAlign: "center",
-                    fontSize: "28px",
+                    fontSize: "30px",
                     fontWeight: "700",
+                    fontVariantNumeric: "tabular-nums",
                   })}
                 />
                 <button
                   type="button"
                   aria-label="Нэмэх"
                   onClick={() => setCounted((value) => value + 1)}
-                  class={css(button)}
+                  class={css(round, { width: "56px", height: "56px", fontSize: "22px" })}
                 >
                   <PlusIcon />
                 </button>
@@ -201,7 +178,7 @@ export default function Products() {
                 type="button"
                 disabled={busy()}
                 onClick={() => save(product(), counted())}
-                class={css(button, darkButton, bigButton, { width: "100%" })}
+                class={css(button, act, large, { width: "100%" })}
               >
                 Хадгалах
               </button>

@@ -14,66 +14,72 @@ import {
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
+import BankIcon from "~icons/ph/bank";
+import ChatIcon from "~icons/ph/chat-circle";
+import CoinsIcon from "~icons/ph/hand-coins";
+import SearchIcon from "~icons/ph/magnifying-glass";
 import MapPinIcon from "~icons/ph/map-pin";
 import MinusIcon from "~icons/ph/minus-bold";
 import NoteIcon from "~icons/ph/note-pencil";
 import PhoneIcon from "~icons/ph/phone";
 import PlusIcon from "~icons/ph/plus-bold";
-import SearchIcon from "~icons/ph/magnifying-glass";
-import CloseIcon from "~icons/ph/x";
+import StoreIcon from "~icons/ph/storefront";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
+import { Dock } from "../../chrome";
 import { money } from "../../format";
 import {
-  bigButton,
-  block,
-  blockTitle,
+  act,
   button,
-  countBadge,
-  darkButton,
-  muted,
-  Photo,
+  headline,
+  large,
+  panel,
+  Pill,
+  press,
   Problem,
+  searchBox,
+  section,
+  sectionHead,
   Segmented,
-  top,
+  sub,
+  Tile,
+  title3,
 } from "../../ui";
+import type { Icon } from "../../ui";
 
 type Product = typeof ProductRow.Type;
 
 const FEE = 6000;
 
 const sources = [
-  ["messenger_human", "Чат"],
-  ["phone", "Утас"],
-  ["walk_in", "Дэлгүүр"],
-] satisfies ReadonlyArray<readonly [OrderSource, string]>;
+  ["messenger_human", "Чат", ChatIcon],
+  ["phone", "Утас", PhoneIcon],
+  ["walk_in", "Дэлгүүр", StoreIcon],
+] satisfies ReadonlyArray<readonly [OrderSource, string, Icon]>;
 
-/** One line of the contact group: an icon, then the input. */
-const contactRow = css.raw({
+/** One line of the grouped contact fields: an icon, then the input. */
+const fieldRow = css.raw({
   display: "flex",
-  alignItems: "flex-start",
+  alignItems: "center",
   gap: "12px",
+  minHeight: "56px",
   px: "16px",
-  py: "12px",
-  "& + &": { borderTop: "1px solid {colors.line}" },
-  "& > svg": { flex: "none", fontSize: "22px", color: "inkMuted", mt: "1px" },
+  "& + &": { boxShadow: "inset 50px 0 0 {colors.surface}, inset 0 .5px 0 {colors.line}" },
+  "& > svg": { fontSize: "21px", color: "inkMuted", flex: "none", width: "22px" },
   "& input, & textarea": {
     flex: 1,
     minWidth: 0,
+    py: "16px",
     bg: "transparent",
     outline: "none",
     fontSize: "17px",
-    lineHeight: "24px",
+    lineHeight: "22px",
     color: "ink",
     resize: "none",
-    _placeholder: { color: "inkMuted" },
+    _placeholder: { color: "#8a8277" },
   },
 });
-
-const stepper = css.raw({ width: "36px", height: "36px", px: 0, borderRadius: "50%" });
-
-const kv = css.raw({ display: "flex", justifyContent: "space-between", py: "3px" });
 
 /**
  * An order she writes by hand from a chat, a call or the counter (PRODUCT.md,
@@ -189,31 +195,45 @@ export default function NewOrder() {
   });
 
   return (
-    <main class={css(top, { pb: "170px" })}>
-      <div
+    <main class={css({ pb: "140px" })}>
+      <header
         class={css({
-          display: "flex",
+          position: "sticky",
+          top: 0,
+          zIndex: 5,
+          display: "grid",
+          gridTemplateColumns: "1fr auto 1fr",
           alignItems: "center",
-          gap: "8px",
-          px: "8px",
+          px: "14px",
+          pt: "calc(env(safe-area-inset-top) + 8px)",
           pb: "8px",
-          "& svg": { fontSize: "24px" },
+          bg: "rgba(248,244,236,.9)",
+          backdropFilter: "blur(22px) saturate(180%)",
         })}
       >
-        <a href="/orders" aria-label="Хаах" class={css({ p: "8px" })}>
-          <CloseIcon />
+        <a
+          href="/orders"
+          class={css(press, {
+            justifySelf: "start",
+            height: "44px",
+            px: "6px",
+            display: "grid",
+            placeItems: "center",
+            fontSize: "17px",
+            fontWeight: "600",
+          })}
+        >
+          Болих
         </a>
-        <b class={css({ fontSize: "18px", fontWeight: "600" })}>Шинэ захиалга</b>
-      </div>
+        <b class={css(headline)}>Шинэ захиалга</b>
+      </header>
 
-      <div class={css({ px: "16px", pb: "12px" })}>
+      <div class={css({ px: "20px", pt: "12px" })}>
         <Segmented options={sources} value={source()} onChange={setSource} />
-      </div>
 
-      <section class={css(block)}>
-        <label class={css(contactRow)}>
-          <PhoneIcon />
-          <span class={css({ flex: 1, minWidth: 0, display: "grid", gap: "2px" })}>
+        <div class={css(panel, { mt: "16px", borderRadius: "20px", overflow: "hidden" })}>
+          <label class={css(fieldRow)}>
+            <PhoneIcon />
             <input
               inputmode="numeric"
               autocomplete="off"
@@ -225,337 +245,322 @@ export default function NewOrder() {
                 setPhone(digits);
                 lookUp(digits);
               }}
-              class={css({ fontWeight: "600", fontVariantNumeric: "tabular-nums" })}
+              class={css({
+                fontWeight: "650",
+                letterSpacing: "0.01em",
+                fontVariantNumeric: "tabular-nums",
+              })}
             />
             <Show when={history().length > 0}>
-              <small
-                class={css({
-                  justifySelf: "start",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  bg: "navySoft",
-                  color: "navy",
-                  borderRadius: "6px",
-                  px: "6px",
-                  lineHeight: "20px",
-                })}
-              >
-                {history().length + 1} дахь захиалга
-              </small>
+              <Pill tone="soft">{history().length + 1} дахь захиалга</Pill>
             </Show>
-          </span>
-        </label>
-        <Show when={!walkIn()}>
-          <label class={css(contactRow)}>
-            <MapPinIcon />
-            <textarea
-              rows={2}
-              aria-label="Хаяг"
-              placeholder="Хаяг"
-              value={address()}
-              onInput={(event) => setAddress(event.currentTarget.value)}
+          </label>
+          <Show when={!walkIn()}>
+            <label class={css(fieldRow)}>
+              <MapPinIcon />
+              <textarea
+                rows={2}
+                aria-label="Хаяг"
+                placeholder="Хаяг"
+                value={address()}
+                onInput={(event) => setAddress(event.currentTarget.value)}
+              />
+            </label>
+          </Show>
+          <label class={css(fieldRow)}>
+            <NoteIcon />
+            <input
+              aria-label="Тэмдэглэл"
+              placeholder="Тэмдэглэл: орцны код, залгах"
+              value={notes()}
+              onInput={(event) => setNotes(event.currentTarget.value)}
             />
           </label>
-        </Show>
-        <label class={css(contactRow)}>
-          <NoteIcon />
-          <input
-            aria-label="Тэмдэглэл"
-            placeholder="Тэмдэглэл: орцны код, хэзээ хүргэх"
-            value={notes()}
-            onInput={(event) => setNotes(event.currentTarget.value)}
-          />
-        </label>
-      </section>
+        </div>
+      </div>
 
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(block, { height: "320px" })} />}>
-          <Show when={picked().length > 0}>
-            <section class={css(block, { pb: "12px" })}>
-              <h2 class={css(blockTitle)}>Сагс</h2>
-              <For each={picked()} keyed={(line) => line.product.id}>
-                {(line) => (
-                  <div
-                    class={css({
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      px: "16px",
-                      py: "8px",
-                    })}
-                  >
-                    <Photo product={line().product} size={52} />
-                    <div class={css({ flex: 1, minWidth: 0 })}>
-                      <div class={css({ fontSize: "16px", fontWeight: "600" })}>
-                        {line().product.name}
-                      </div>
-                      <div class={css(muted, { fontSize: "14px" })}>
-                        {line().product.brand} · {money(line().product.price * line().quantity)}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label="Хасах"
-                      onClick={() => add(line().product, -1)}
-                      class={css(button, stepper)}
-                    >
-                      <MinusIcon />
-                    </button>
-                    <b
-                      class={css({
-                        minWidth: "20px",
-                        textAlign: "center",
-                        fontSize: "18px",
-                        fontVariantNumeric: "tabular-nums",
-                      })}
-                    >
-                      {line().quantity}
-                    </b>
-                    <button
-                      type="button"
-                      aria-label="Нэмэх"
-                      onClick={() => add(line().product, 1)}
-                      class={css(button, stepper)}
-                    >
-                      <PlusIcon />
-                    </button>
-                  </div>
-                )}
-              </For>
-              <div
-                class={css({
-                  mx: "16px",
-                  mt: "8px",
-                  pt: "10px",
-                  borderTop: "1px solid {colors.line}",
-                  fontSize: "15px",
-                  fontVariantNumeric: "tabular-nums",
-                })}
-              >
-                <div class={css(kv)}>
-                  <span class={css(muted)}>Бараа</span>
-                  <span>{money(subtotal())}</span>
-                </div>
-                <div class={css(kv)}>
-                  <span class={css(muted)}>{walkIn() ? "Хүргэлтгүй" : "Хүргэлт"}</span>
-                  <span>{money(fee())}</span>
-                </div>
-              </div>
-            </section>
-          </Show>
-
+        <Loading fallback={<div class={css(panel, { m: "28px 16px", height: "320px" })} />}>
           <Show when={before().length > 0}>
-            <section class={css(block, { pb: "14px" })}>
-              <h2 class={css(blockTitle)}>Өмнө авсан</h2>
+            <section class={css(section, { mt: "28px" })}>
+              <h2 class={css(title3, { mb: "10px" })}>Өмнө авсан</h2>
               <div
                 class={css({
-                  display: "grid",
-                  gridAutoFlow: "column",
-                  gridAutoColumns: "112px",
-                  gap: "12px",
-                  px: "16px",
+                  display: "flex",
+                  gap: "10px",
                   overflowX: "auto",
+                  scrollbarWidth: "none",
+                  mx: "-20px",
+                  px: "20px",
+                  pt: "4px",
+                  pb: "8px",
                 })}
               >
                 <For each={before()} keyed={(product) => product.id}>
                   {(product) => (
-                    <Tile
-                      product={product()}
-                      quantity={cart[product().id] ?? 0}
-                      onAdd={() => add(product(), 1)}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => add(product(), 1)}
+                      class={css(press, panel, {
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        flex: "none",
+                        p: "8px 10px 8px 8px",
+                        borderRadius: "20px",
+                        textAlign: "left",
+                      })}
+                    >
+                      <Tile
+                        product={product()}
+                        size={48}
+                        quantity={cart[product().id] || undefined}
+                        ring="surface"
+                        still
+                      />
+                      <span>
+                        <span
+                          class={css({
+                            display: "block",
+                            fontSize: "15px",
+                            lineHeight: "19px",
+                            fontWeight: "600",
+                          })}
+                        >
+                          {product().name}
+                        </span>
+                        <span class={css(sub, { fontSize: "13px" })}>{money(product().price)}</span>
+                      </span>
+                      <span
+                        class={css({
+                          width: "36px",
+                          height: "36px",
+                          borderRadius: "50%",
+                          display: "grid",
+                          placeItems: "center",
+                          bg: "chip",
+                          fontSize: "17px",
+                        })}
+                      >
+                        <PlusIcon />
+                      </span>
+                    </button>
                   )}
                 </For>
               </div>
             </section>
           </Show>
 
-          <section class={css(block, { pb: "16px" })}>
-            <h2 class={css(blockTitle)}>Бараа</h2>
-            <div class={css({ px: "16px", pb: "14px" })}>
-              <label
-                class={css({
-                  height: "44px",
-                  borderRadius: "12px",
-                  bg: "surface",
-                  border: "1px solid {colors.line}",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  px: "12px",
-                  color: "inkMuted",
-                  "& svg": { fontSize: "18px" },
-                  "& input": {
-                    flex: 1,
-                    minWidth: 0,
-                    bg: "transparent",
-                    outline: "none",
-                    color: "ink",
-                    fontSize: "16px",
-                  },
-                })}
-              >
-                <SearchIcon />
-                <input
-                  type="search"
-                  placeholder="D3, омега, магни…"
-                  value={query()}
-                  onInput={(event) => setQuery(event.currentTarget.value)}
-                />
-              </label>
-            </div>
+          <section class={css(section, { mt: "22px" })}>
+            <h2 class={css(title3)}>Бараа</h2>
+            <label class={css(searchBox, { mt: "12px" })}>
+              <SearchIcon />
+              <input
+                type="search"
+                placeholder="Бараа хайх"
+                value={query()}
+                onInput={(event) => setQuery(event.currentTarget.value)}
+              />
+            </label>
             <div
               class={css({
                 display: "grid",
                 gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: "18px 12px",
-                px: "16px",
+                gap: "20px 12px",
+                mt: "14px",
               })}
             >
               <For each={shown()} keyed={(product) => product.id}>
                 {(product) => (
-                  <Tile
-                    product={product()}
-                    quantity={cart[product().id] ?? 0}
-                    onAdd={() => add(product(), 1)}
-                  />
+                  <button
+                    type="button"
+                    onClick={() => add(product(), 1)}
+                    class={css(
+                      {
+                        display: "block",
+                        minWidth: 0,
+                        textAlign: "left",
+                        cursor: "pointer",
+                        transition: "transform .5s {easings.spring}",
+                        _active: { transform: "scale(.95)", transition: "transform .1s ease-out" },
+                      },
+                      product().stock === 0 && { opacity: 0.42 },
+                    )}
+                  >
+                    <span
+                      class={css(
+                        {
+                          display: "block",
+                          borderRadius: "20px",
+                          transition: "box-shadow .2s ease",
+                        },
+                        (cart[product().id] ?? 0) > 0 && {
+                          boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px rgba(15,76,92,.5)",
+                        },
+                      )}
+                    >
+                      <Tile product={product()} quantity={cart[product().id] || undefined} still />
+                    </span>
+                    <span
+                      class={css({
+                        display: "block",
+                        mt: "9px",
+                        minHeight: "38px",
+                        fontSize: "15px",
+                        lineHeight: "19px",
+                        fontWeight: "600",
+                        letterSpacing: "-0.01em",
+                        lineClamp: 3,
+                      })}
+                    >
+                      {product().name}
+                    </span>
+                    <span
+                      class={css(sub, {
+                        display: "block",
+                        mt: "2px",
+                        fontSize: "13px",
+                        lineHeight: "17px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      })}
+                    >
+                      {product().count} ш · {product().brand}
+                    </span>
+                    <span
+                      class={css({
+                        display: "block",
+                        mt: "3px",
+                        fontSize: "15px",
+                        fontWeight: "650",
+                        fontVariantNumeric: "tabular-nums",
+                      })}
+                    >
+                      {product().stock === 0 ? "Дууссан" : money(product().price)}
+                    </span>
+                  </button>
                 )}
               </For>
             </div>
             <Show when={shown().length === 0}>
-              <p class={css(muted, { px: "16px", py: "16px", textAlign: "center" })}>
-                Ийм бараа алга
-              </p>
+              <p class={css(sub, { py: "20px", textAlign: "center" })}>Ийм бараа алга</p>
             </Show>
           </section>
 
-          <div
-            class={css({
-              position: "fixed",
-              zIndex: 10,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              bg: "surface",
-              borderTop: "1px solid {colors.line}",
-              px: "16px",
-              pt: "10px",
-              pb: "calc(env(safe-area-inset-bottom) + 14px)",
-              display: "grid",
-              gap: "10px",
-            })}
-          >
-            <Show when={failed()}>
-              <p class={css({ color: "owes", fontSize: "14px" })}>
-                Хадгалж чадсангүй. Дахин оролдоно уу.
-              </p>
+          <section class={css(section)}>
+            <div class={css(sectionHead)}>
+              <h2 class={css(title3)}>Сагс</h2>
+            </div>
+            <Show
+              when={picked().length > 0}
+              fallback={<p class={css(sub)}>Дээрээс бараа сонгоно уу</p>}
+            >
+              <div class={css({ display: "grid", gap: "14px" })}>
+                <For each={picked()} keyed={(line) => line.product.id}>
+                  {(line) => (
+                    <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
+                      <Tile product={line().product} size={52} />
+                      <div class={css({ flex: 1, minWidth: 0 })}>
+                        <div class={css(headline, { fontSize: "16px" })}>{line().product.name}</div>
+                        <div class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
+                          {money(line().product.price * line().quantity)}
+                        </div>
+                      </div>
+                      <div
+                        class={css({
+                          display: "flex",
+                          alignItems: "center",
+                          flex: "none",
+                          height: "44px",
+                          borderRadius: "22px",
+                          bg: "surface",
+                          boxShadow: "raiseSm",
+                          "& button": {
+                            width: "44px",
+                            height: "44px",
+                            display: "grid",
+                            placeItems: "center",
+                            fontSize: "18px",
+                            cursor: "pointer",
+                          },
+                        })}
+                      >
+                        <button
+                          type="button"
+                          aria-label="Хасах"
+                          onClick={() => add(line().product, -1)}
+                        >
+                          <MinusIcon />
+                        </button>
+                        <b
+                          class={css({
+                            minWidth: "18px",
+                            textAlign: "center",
+                            fontWeight: "700",
+                            fontVariantNumeric: "tabular-nums",
+                          })}
+                        >
+                          {line().quantity}
+                        </b>
+                        <button
+                          type="button"
+                          aria-label="Нэмэх"
+                          onClick={() => add(line().product, 1)}
+                        >
+                          <PlusIcon />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+              <div
+                class={css({ mt: "18px", color: "inkMuted", fontVariantNumeric: "tabular-nums" })}
+              >
+                <div class={css({ display: "flex", justifyContent: "space-between", py: "5px" })}>
+                  <span>Бараа</span>
+                  <span class={css({ color: "ink", fontWeight: "600" })}>{money(subtotal())}</span>
+                </div>
+                <div class={css({ display: "flex", justifyContent: "space-between", py: "5px" })}>
+                  <span>{walkIn() ? "Хүргэлтгүй" : "Хүргэлт"}</span>
+                  <span class={css({ color: "ink", fontWeight: "600" })}>{money(fee())}</span>
+                </div>
+              </div>
             </Show>
+          </section>
+
+          <section class={css(section, { mt: "26px" })}>
+            <h2 class={css(title3, { mb: "10px" })}>Төлбөр</h2>
             <Segmented
               options={[
-                ["prepay", "Урьдчилж төлнө"],
-                ["cod", "Хүргэлтээр төлнө"],
+                ["prepay", "Урьдчилсан", BankIcon],
+                ["cod", "Хүргэлтээр", CoinsIcon],
               ]}
               value={terms()}
               onChange={setTerms}
             />
+          </section>
+
+          <Dock>
+            <Show when={failed()}>
+              <p class={css({ color: "owes", fontSize: "15px", textAlign: "center" })}>
+                Хадгалж чадсангүй. Дахин оролдоно уу.
+              </p>
+            </Show>
             <button
               type="button"
               disabled={missing() !== undefined || busy()}
               onClick={() => place()}
-              class={css(button, darkButton, bigButton, { width: "100%" })}
+              class={css(button, act, large, { width: "100%" })}
             >
               <Show when={missing()} fallback={`Захиалга үүсгэх · ${money(subtotal() + fee())}`}>
                 {(why) => why()}
               </Show>
             </button>
-          </div>
+          </Dock>
         </Loading>
       </Errored>
     </main>
-  );
-}
-
-/** A product to tap into the cart, with how many are in it already. */
-function Tile(props: { product: Product; quantity: number; onAdd: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={() => props.onAdd()}
-      class={css({
-        width: "100%",
-        minWidth: 0,
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1fr)",
-        gap: "6px",
-        alignContent: "start",
-        textAlign: "left",
-        cursor: "pointer",
-      })}
-    >
-      <span
-        class={css(
-          {
-            position: "relative",
-            display: "block",
-            aspectRatio: "1",
-            bg: "white",
-            borderRadius: "14px",
-            boxShadow: "hairline",
-            p: "6px",
-          },
-          props.quantity > 0 && { boxShadow: "0 0 0 2px {colors.navy}" },
-        )}
-      >
-        <Show when={props.product.image}>
-          {(src) => (
-            <img
-              src={src()}
-              alt=""
-              loading="lazy"
-              class={css(
-                { width: "100%", height: "100%", objectFit: "contain" },
-                props.product.stock === 0 && { opacity: 0.4 },
-              )}
-            />
-          )}
-        </Show>
-        <Show when={props.quantity > 0}>
-          <span class={css(countBadge)}>×{props.quantity}</span>
-        </Show>
-      </span>
-      <span>
-        <span
-          class={css({
-            display: "block",
-            fontSize: "14px",
-            lineHeight: "18px",
-            fontWeight: "600",
-            lineClamp: 2,
-          })}
-        >
-          {props.product.name}
-        </span>
-        <span
-          class={css(muted, {
-            display: "block",
-            fontSize: "13px",
-            lineHeight: "18px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          })}
-        >
-          {props.product.count} ш · {props.product.brand}
-        </span>
-        <b
-          class={css(
-            { display: "block", fontSize: "14px", lineHeight: "20px", fontWeight: "600" },
-            props.product.stock === 0 && { color: "owes" },
-          )}
-        >
-          {props.product.stock === 0 ? "Дууссан" : money(props.product.price)}
-        </b>
-      </span>
-    </button>
   );
 }

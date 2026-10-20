@@ -2,8 +2,9 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import pandaPreset from "@pandacss/preset-panda";
 
-// The dashboard's look is decided in PRODUCT.md: cream and navy. Color
-// means a status or what's selected, never decoration.
+// The dashboard's look is decided in PRODUCT.md: "Native, two-tone". Warm ink
+// does things, petrol teal shows what is selected or done, and the other
+// colours are statuses. Photos, depth and type carry the rest.
 export default defineConfig({
   include: ["./src/**/*.{ts,tsx}"],
   jsxFramework: "solid",
@@ -18,30 +19,47 @@ export default defineConfig({
         colors: {
           page: { value: "#f8f4ec" },
           surface: { value: "#fffdf9" },
-          // Navy-black, so text and the navy belong together.
-          ink: { value: "#151a28" },
-          inkMuted: { value: "#6b6862" },
+          ink: { value: "#1e1b17" },
+          inkMuted: { value: "#665e54" },
           line: { value: "#e9e3d8" },
           chip: { value: "#efeae0" },
-          // The one strong color: the main button, what's selected, ×N, done.
-          navy: { value: "#1d2d50" },
-          // The quiet version for marks that sit next to a navy button.
-          navySoft: { value: "#e2e7f3" },
+          sel: { value: "#0f4c5c" },
+          selSoft: { value: "#e1ecee" },
           paid: { value: "#2f6b3a" },
           paidBg: { value: "#e5efe2" },
           owes: { value: "#b4233c" },
           owesBg: { value: "#fbe6e8" },
-          ship: { value: "#8a5a00" },
-          note: { value: "#fff3d1" },
-          shipBg: { value: "#f8ecce" },
+          wait: { value: "#8a5a00" },
+          waitBg: { value: "#f8ecce" },
+          waitInk: { value: "#4d3400" },
         },
         fonts: {
-          // Onest was drawn for Cyrillic screens and has Mongolian's Ө and Ү.
-          sans: { value: "'Onest Variable', -apple-system, system-ui, sans-serif" },
+          // Inter has Mongolian's Ө and Ү; its optical sizes draw large titles as Inter Display.
+          sans: { value: "'Inter Variable', -apple-system, system-ui, sans-serif" },
         },
         shadows: {
-          card: { value: "0 0 0 1px #e9e3d8, 0 2px 8px -4px rgba(21, 26, 40, 0.12)" },
-          hairline: { value: "0 0 0 1px #e9e3d8" },
+          raise: {
+            value:
+              "0 0 0 .5px rgba(30,27,23,.07), 0 1px 2px rgba(30,27,23,.06), 0 4px 10px -4px rgba(30,27,23,.08), 0 16px 30px -16px rgba(30,27,23,.16)",
+          },
+          raiseSm: {
+            value:
+              "0 0 0 .5px rgba(30,27,23,.08), 0 1px 2px rgba(30,27,23,.06), 0 6px 12px -8px rgba(30,27,23,.14)",
+          },
+          lift: {
+            value:
+              "inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(30,27,23,.22), 0 8px 18px -10px rgba(30,27,23,.55)",
+          },
+          glass: {
+            value:
+              "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 .5px rgba(30,27,23,.1), 0 6px 14px -6px rgba(30,27,23,.2)",
+          },
+        },
+        easings: {
+          spring: {
+            value:
+              "linear(0,.057,.188,.346,.503,.642,.758,.847,.913,.959,.989,1.007,1.016,1.02,1.02,1.017,1.014,1.011,1.008,1.006,1.004,1.002,1.001,1)",
+          },
         },
       },
     },

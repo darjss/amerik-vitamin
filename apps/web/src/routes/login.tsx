@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/client";
 import { createSignal, Show } from "solid-js";
 import { css } from "styled-system/css";
 
-import { button, darkButton, muted } from "../ui";
+import { act, button, large, largeTitle, muted } from "../ui";
 
 // A Google account off the allowlist lands on better-auth's error page.
 export default function Login() {
@@ -28,26 +28,8 @@ export default function Login() {
         textAlign: "center",
       })}
     >
-      <h1
-        class={css({
-          fontSize: "26px",
-          lineHeight: "32px",
-          fontWeight: "700",
-          letterSpacing: "-0.4px",
-        })}
-      >
-        Америк Хүнс Бараа
-      </h1>
-      <button
-        type="button"
-        onClick={signIn}
-        class={css(button, darkButton, {
-          height: "50px",
-          borderRadius: "14px",
-          fontSize: "16px",
-          px: "28px",
-        })}
-      >
+      <h1 class={css(largeTitle)}>Америк Хүнс Бараа</h1>
+      <button type="button" onClick={signIn} class={css(button, act, large, { px: "32px" })}>
         Google-ээр нэвтрэх
       </button>
       <Show when={failure()}>{(message) => <p class={css(muted)}>{message()}</p>}</Show>

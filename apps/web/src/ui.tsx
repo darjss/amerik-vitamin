@@ -1,18 +1,11 @@
 import { Unauthorized } from "@amerik/contracts";
 import type { OrderSummary } from "@amerik/contracts";
-import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { createEffect, For, Show, useContext } from "solid-js";
+import { For, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
 import CheckIcon from "~icons/ph/check-circle-fill";
-import HouseFillIcon from "~icons/ph/house-fill";
-import HouseIcon from "~icons/ph/house";
-import PackageFillIcon from "~icons/ph/package-fill";
-import PackageIcon from "~icons/ph/package";
-import PillFillIcon from "~icons/ph/pill-fill";
-import PillIcon from "~icons/ph/pill";
-import TruckIcon from "~icons/ph/truck";
-import CloseIcon from "~icons/ph/x";
+import TruckIcon from "~icons/ph/truck-bold";
+import WarningIcon from "~icons/ph/warning-circle-fill";
 
 import { RuntimeContext } from "./api/solid-effect";
 import { money } from "./format";
@@ -23,254 +16,217 @@ import type { Product } from "./zoom";
 
 type Order = typeof OrderSummary.Type;
 
-type Line = Order["lines"][number];
+export type Icon = (props: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 
-/** A full-width section: lists run edge to edge, with page color between sections. */
-export const block = css.raw({
-  bg: "surface",
-  borderTop: "1px solid {colors.line}",
-  borderBottom: "1px solid {colors.line}",
-  mb: "8px",
-});
-
-/** A section heading; an icon in front gives the page landmarks. */
-export const blockTitle = css.raw({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  fontSize: "17px",
-  lineHeight: "22px",
-  fontWeight: "700",
-  px: "16px",
-  pt: "14px",
-  pb: "8px",
-  "& svg": { fontSize: "20px", color: "navy", flex: "none" },
-});
-
-/** Clears the iPhone status bar when the page runs full screen, and a little air otherwise. */
-export const top = css.raw({ pt: "calc(env(safe-area-inset-top) + 12px)" });
+/** Clears the iPhone status bar when the page runs full screen. */
+export const top = css.raw({ pt: "calc(env(safe-area-inset-top) + 14px)" });
 
 export const muted = css.raw({ color: "inkMuted" });
 
-export const button = css.raw({
+/** The iOS large title. */
+export const largeTitle = css.raw({
+  fontSize: "34px",
+  lineHeight: "40px",
+  fontWeight: "700",
+  letterSpacing: "-0.025em",
+  textWrap: "balance",
+});
+
+export const title2 = css.raw({
+  fontSize: "22px",
+  lineHeight: "28px",
+  fontWeight: "700",
+  letterSpacing: "-0.02em",
+});
+
+export const title3 = css.raw({
+  fontSize: "20px",
+  lineHeight: "25px",
+  fontWeight: "650",
+  letterSpacing: "-0.015em",
+});
+
+export const headline = css.raw({
+  fontSize: "17px",
+  lineHeight: "22px",
+  fontWeight: "600",
+  letterSpacing: "-0.01em",
+});
+
+export const sub = css.raw({ fontSize: "15px", lineHeight: "20px", color: "inkMuted" });
+
+/** A section of a page: a title over content, with air between sections. */
+export const section = css.raw({ px: "20px", mt: "34px" });
+
+export const sectionHead = css.raw({
+  display: "flex",
+  alignItems: "baseline",
+  justifyContent: "space-between",
+  mb: "14px",
+});
+
+/** A raised surface: something she handles, standing up off the cream. */
+export const panel = css.raw({
+  bg: "surface",
+  borderRadius: "22px",
+  boxShadow: "inset 0 1px 0 #fff, {shadows.raise}",
+});
+
+/** Squeezes on touch-down and springs back on release. */
+export const press = css.raw({
+  cursor: "pointer",
+  transition: "transform .56s {easings.spring}",
+  _active: { transform: "scale(.97)", transition: "transform .12s ease-out" },
+});
+
+export const button = css.raw(press, {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "6px",
-  height: "44px",
-  borderRadius: "12px",
-  px: "16px",
+  gap: "8px",
+  flex: "none",
+  height: "48px",
+  px: "20px",
+  borderRadius: "999px",
+  fontSize: "17px",
   fontWeight: "600",
-  fontSize: "15px",
+  letterSpacing: "-0.01em",
   whiteSpace: "nowrap",
   bg: "surface",
-  border: "1px solid {colors.line}",
   color: "ink",
-  cursor: "pointer",
-  transition: "transform 0.1s ease-out",
-  _active: { transform: "scale(0.97)" },
-  _disabled: { opacity: 0.45 },
-  "& svg": { fontSize: "18px" },
+  boxShadow: "raiseSm",
+  "& svg": { fontSize: "20px" },
+  _disabled: {
+    bg: "chip",
+    color: "#857d72",
+    boxShadow: "none",
+    cursor: "default",
+    _active: { transform: "none" },
+  },
 });
 
-/** A note she must not miss: a door code, "call first". */
-export const note = css.raw({
-  display: "flex",
-  gap: "6px",
-  alignItems: "flex-start",
-  bg: "note",
-  borderRadius: "10px",
-  px: "10px",
-  py: "7px",
-  fontSize: "15px",
-  fontWeight: "600",
-  "& svg": { flex: "none", mt: "2px", color: "ship" },
-});
+/** A filled action: warm ink does things. */
+export const act = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
 
-/** A solid button: the main action on a screen, and the next step on each order. */
-export const darkButton = css.raw({
-  bg: "navy",
-  borderColor: "navy",
-  color: "surface",
-  // Not ready yet reads as a quiet hint, not a grayed-out navy.
-  _disabled: { opacity: 1, bg: "chip", borderColor: "chip", color: "inkMuted" },
-});
+export const large = css.raw({ height: "56px", fontSize: "18px" });
 
-/** A round icon button: call, copy. */
-export const circle = css.raw({
+export const small = css.raw({ height: "44px", px: "18px", fontSize: "16px" });
+
+export const round = css.raw(press, {
   width: "44px",
   height: "44px",
   borderRadius: "50%",
-  border: "1px solid {colors.line}",
-  color: "navy",
   display: "grid",
   placeItems: "center",
   flex: "none",
-  cursor: "pointer",
-  "& svg": { fontSize: "20px" },
+  fontSize: "20px",
+  bg: "surface",
+  color: "ink",
+  boxShadow: "raiseSm",
 });
 
-/** One choice out of a few, as an iOS segmented control. */
-export function Segmented<T extends string>(props: {
-  options: ReadonlyArray<readonly [T, string]>;
-  value: T;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div class={css({ display: "flex", p: "3px", gap: "3px", borderRadius: "12px", bg: "chip" })}>
-      <For each={props.options}>
-        {([value, label]) => (
-          <button
-            type="button"
-            aria-pressed={props.value === value ? "true" : "false"}
-            onClick={() => props.onChange(value)}
-            class={css(
-              {
-                flex: 1,
-                height: "38px",
-                borderRadius: "9px",
-                fontSize: "15px",
-                fontWeight: "600",
-                color: "inkMuted",
-                cursor: "pointer",
-              },
-              props.value === value && {
-                bg: "surface",
-                color: "ink",
-                boxShadow: "0 1px 3px rgba(42, 29, 22, 0.14)",
-              },
-            )}
-          >
-            {label}
-          </button>
-        )}
-      </For>
-    </div>
-  );
-}
+export const roundAct = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
 
-export const bigButton = css.raw({ height: "52px", borderRadius: "14px", fontSize: "16px" });
+/** Frosted glass for buttons that float over the page. */
+export const glass = css.raw({
+  bg: "rgba(255,253,249,.78)",
+  backdropFilter: "blur(20px) saturate(180%)",
+  boxShadow: "glass",
+});
 
 export const field = css.raw({
   width: "100%",
   bg: "surface",
-  border: "1px solid {colors.line}",
-  borderRadius: "12px",
-  px: "12px",
-  py: "11px",
-  fontSize: "16px",
+  borderRadius: "14px",
+  boxShadow: "0 0 0 .5px rgba(30,27,23,.12), inset 0 1px 2px rgba(30,27,23,.05)",
+  px: "14px",
+  py: "12px",
+  fontSize: "17px",
   color: "ink",
   outline: "none",
-  _focus: { borderColor: "navy" },
+  _focus: { boxShadow: "0 0 0 2px {colors.sel}" },
 });
 
-const photoFrame = css.raw({
-  position: "relative",
-  zIndex: 1,
-  flex: "none",
-  display: "block",
-  bg: "white",
-  borderRadius: "12px",
-  boxShadow: "hairline",
-  p: "4px",
+export const searchBox = css.raw({
+  height: "46px",
+  borderRadius: "14px",
+  bg: "surface",
+  boxShadow: "0 0 0 .5px rgba(30,27,23,.1), inset 0 1px 2px rgba(30,27,23,.05)",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  px: "14px",
+  color: "inkMuted",
+  "& svg": { fontSize: "20px", flex: "none" },
+  "& input": {
+    flex: 1,
+    minWidth: 0,
+    bg: "transparent",
+    outline: "none",
+    color: "ink",
+    fontSize: "17px",
+    _placeholder: { color: "inkMuted" },
+  },
 });
 
-/**
- * A product photo at a fixed size. A tap shows it full size and never follows
- * a link around it. The size is an inline style: Panda only builds classes for
- * values written in a css() call.
- */
-export function Photo(props: { product: Product; size: number }) {
-  const zoom = useContext(Zoom);
-  const box = () => ({ width: `${props.size}px`, height: `${props.size}px` });
-
+/** A note she must not miss: a door code, "call first". */
+export function Note(props: { children: JSX.Element; large?: boolean }) {
   return (
-    <Show when={props.product.image} fallback={<span class={css(photoFrame)} style={box()} />}>
-      {(src) => (
-        <button
-          type="button"
-          aria-label={`${props.product.name} томоор харах`}
-          onClick={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            zoom(props.product);
-          }}
-          class={css(photoFrame, { cursor: "zoom-in" })}
-          style={box()}
-        >
-          <img
-            src={src()}
-            alt={`${props.product.brand} ${props.product.name}`}
-            loading="lazy"
-            class={css({ width: "100%", height: "100%", objectFit: "contain" })}
-          />
-        </button>
+    <div
+      class={css(
+        {
+          display: "flex",
+          gap: "8px",
+          alignItems: "flex-start",
+          px: "12px",
+          py: "10px",
+          borderRadius: "14px",
+          bg: "waitBg",
+          color: "waitInk",
+          fontSize: "15px",
+          lineHeight: "20px",
+          fontWeight: "650",
+          textAlign: "left",
+          "& svg": { fontSize: "19px", color: "wait", flex: "none" },
+        },
+        props.large && { fontSize: "17px", lineHeight: "22px", px: "14px", py: "12px" },
       )}
-    </Show>
-  );
-}
-
-export const countBadge = css.raw({
-  position: "absolute",
-  zIndex: 2,
-  right: "-6px",
-  bottom: "-6px",
-  bg: "navy",
-  color: "surface",
-  border: "2px solid {colors.surface}",
-  borderRadius: "10px",
-  fontSize: "13px",
-  fontWeight: "700",
-  px: "6px",
-  lineHeight: "18px",
-  fontVariantNumeric: "tabular-nums",
-  pointerEvents: "none",
-});
-
-/** One photo per product, each with how many of it go in the bag. */
-export function PhotoStrip(props: { lines: ReadonlyArray<Line>; size: number }) {
-  return (
-    <div class={css({ display: "flex", gap: "10px", flexWrap: "wrap" })}>
-      <For each={props.lines} keyed={(line) => line.productId}>
-        {(line) => (
-          <span class={css({ position: "relative", display: "block" })}>
-            <Photo product={line()} size={props.size} />
-            <Show when={line().quantity > 1}>
-              <span class={css(countBadge)}>×{line().quantity}</span>
-            </Show>
-          </span>
-        )}
-      </For>
+    >
+      <WarningIcon />
+      <span>{props.children}</span>
     </div>
   );
 }
 
-const pill = css.raw({
+const pillBase = css.raw({
   display: "inline-flex",
   alignItems: "center",
-  gap: "4px",
-  fontSize: "14px",
-  fontWeight: "600",
-  borderRadius: "8px",
-  px: "8px",
-  lineHeight: "26px",
+  gap: "5px",
+  flex: "none",
+  height: "28px",
+  px: "10px",
+  borderRadius: "14px",
+  fontSize: "15px",
+  fontWeight: "650",
   whiteSpace: "nowrap",
   fontVariantNumeric: "tabular-nums",
+  "& svg": { fontSize: "15px" },
 });
 
 const tones = {
-  paid: css.raw({ bg: "paidBg", color: "paid" }),
   owes: css.raw({ bg: "owesBg", color: "owes" }),
-  ship: css.raw({ bg: "shipBg", color: "ship" }),
+  paid: css.raw({ bg: "paidBg", color: "paid" }),
+  wait: css.raw({ bg: "waitBg", color: "wait" }),
+  soft: css.raw({ bg: "selSoft", color: "sel" }),
   neutral: css.raw({ bg: "chip", color: "inkMuted" }),
 };
 
 export function Pill(props: { tone: keyof typeof tones; children: JSX.Element }) {
-  return <span class={css(pill, tones[props.tone])}>{props.children}</span>;
+  return <span class={css(pillBase, tones[props.tone])}>{props.children}</span>;
 }
 
-/** Paid, or what is still owed and how. */
-export function PayPill(props: { order: Pick<Order, "terms" | "paid" | "balance"> }) {
+/** Money to collect in red, or paid in green. */
+export function Money(props: { order: Pick<Order, "terms" | "paid" | "balance"> }) {
   return (
     <Show
       when={props.order.balance > 0}
@@ -284,43 +240,195 @@ export function PayPill(props: { order: Pick<Order, "terms" | "paid" | "balance"
       }
     >
       <Show when={props.order.terms === "cod"} fallback={<Pill tone="owes">Төлбөр хүлээж</Pill>}>
-        {/* The money she has to collect is the heaviest text on the row. */}
-        <span
-          class={css({
-            display: "block",
-            textAlign: "right",
-            color: "owes",
-            lineHeight: "1.15",
-            whiteSpace: "nowrap",
-          })}
-        >
-          <small class={css({ display: "block", fontSize: "12px", fontWeight: "600" })}>
-            Хүргэлтээр авах
-          </small>
-          <b
-            class={css({ fontSize: "18px", fontWeight: "800", fontVariantNumeric: "tabular-nums" })}
-          >
-            {money(props.order.balance)}
-          </b>
-        </span>
+        <Pill tone="owes">{money(props.order.balance)}</Pill>
       </Show>
     </Show>
   );
 }
 
-const shipText = {
-  new: "Илгээгээгүй",
-  paid: "Илгээгээгүй",
-  shipped: "Замд",
-  delivered: "Хүргэсэн",
-  cancelled: "Цуцалсан",
+const tileBase = css.raw({
+  position: "relative",
+  display: "block",
+  flex: "none",
+  bg: "white",
+  boxShadow: "raiseSm",
+  "& img": {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+    p: "9%",
+  },
+});
+
+const rings = {
+  page: css.raw({ boxShadow: "0 0 0 2.5px {colors.page}" }),
+  surface: css.raw({ boxShadow: "0 0 0 2.5px {colors.surface}" }),
 };
 
-export function ShipPill(props: { status: Order["status"] }) {
+/**
+ * A product photo as a raised white tile, with ×N as a teal badge on its
+ * corner. A tap shows it full size unless `still`; sizes are inline styles
+ * because Panda only builds classes for values written in a css() call.
+ */
+export function Tile(props: {
+  product: Product;
+  size?: number;
+  quantity?: number;
+  soft?: boolean;
+  ring?: keyof typeof rings;
+  still?: boolean;
+}) {
+  const zoom = useContext(Zoom);
+
+  const box = () => {
+    const radius = props.size === undefined || props.size >= 100 ? 20 : props.size >= 60 ? 17 : 14;
+
+    return props.size === undefined
+      ? { width: "100%", "aspect-ratio": "1", "border-radius": `${radius}px` }
+      : { width: `${props.size}px`, height: `${props.size}px`, "border-radius": `${radius}px` };
+  };
+
+  const inside = () => (
+    <>
+      <Show when={props.product.image}>
+        {(src) => (
+          <img src={src()} alt={`${props.product.brand} ${props.product.name}`} loading="lazy" />
+        )}
+      </Show>
+      <Show when={props.quantity}>
+        {(quantity) => (
+          <b
+            class={css(
+              {
+                position: "absolute",
+                zIndex: 2,
+                top: "-7px",
+                right: "-7px",
+                minWidth: "28px",
+                height: "28px",
+                px: "7px",
+                borderRadius: "14px",
+                bg: "sel",
+                color: "white",
+                fontSize: "15px",
+                fontWeight: "700",
+                display: "grid",
+                placeItems: "center",
+                fontVariantNumeric: "tabular-nums",
+                pointerEvents: "none",
+              },
+              rings[props.ring ?? "page"],
+              props.soft && { bg: "selSoft", color: "sel" },
+            )}
+          >
+            ×{quantity()}
+          </b>
+        )}
+      </Show>
+    </>
+  );
+
   return (
-    <Pill tone={props.status === "new" || props.status === "paid" ? "ship" : "neutral"}>
-      {shipText[props.status]}
-    </Pill>
+    <Show
+      when={!props.still && props.product.image}
+      fallback={
+        <span class={css(tileBase)} style={box()}>
+          {inside()}
+        </span>
+      }
+    >
+      <button
+        type="button"
+        aria-label={`${props.product.name} томоор харах`}
+        onClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          zoom(props.product);
+        }}
+        class={css(tileBase, { zIndex: 1, cursor: "zoom-in" })}
+        style={box()}
+      >
+        {inside()}
+      </button>
+    </Show>
+  );
+}
+
+/** One choice out of a few: an iOS segmented control with a sliding thumb. */
+export function Segmented<T extends string>(props: {
+  options: ReadonlyArray<readonly [T, string, Icon?]>;
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  const index = () =>
+    Math.max(
+      0,
+      props.options.findIndex(([value]) => value === props.value),
+    );
+
+  return (
+    <div
+      role="radiogroup"
+      class={css({
+        position: "relative",
+        display: "grid",
+        gridAutoFlow: "column",
+        gridAutoColumns: "1fr",
+        height: "46px",
+        p: "3px",
+        borderRadius: "14px",
+        bg: "chip",
+      })}
+    >
+      <span
+        class={css({
+          position: "absolute",
+          top: "3px",
+          bottom: "3px",
+          left: "3px",
+          borderRadius: "11px",
+          bg: "surface",
+          boxShadow: "0 0 0 .5px rgba(30,27,23,.06), 0 3px 8px -2px rgba(30,27,23,.16)",
+          transition: "transform .5s {easings.spring}",
+        })}
+        style={{
+          width: `calc((100% - 6px) / ${props.options.length})`,
+          transform: `translateX(${index() * 100}%)`,
+        }}
+      />
+      <For each={props.options}>
+        {([value, label, OptionIcon]) => (
+          <button
+            type="button"
+            role="radio"
+            aria-checked={props.value === value ? "true" : "false"}
+            onClick={() => props.onChange(value)}
+            class={css(
+              {
+                position: "relative",
+                zIndex: 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "6px",
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "inkMuted",
+                cursor: "pointer",
+                transition: "color .2s ease",
+                "& svg": { fontSize: "18px" },
+              },
+              props.value === value && { color: "ink" },
+            )}
+          >
+            {OptionIcon && <OptionIcon />}
+            {label}
+          </button>
+        )}
+      </For>
+    </div>
   );
 }
 
@@ -351,7 +459,7 @@ export function StepButton(props: {
           fallback={
             <button
               type="button"
-              class={css(button, darkButton, { position: "relative", zIndex: 1 })}
+              class={css(button, act, { position: "relative", zIndex: 1 })}
               onClick={() => start(props.order.id, next().step)}
             >
               <TruckIcon />
@@ -366,8 +474,6 @@ export function StepButton(props: {
                 position: "relative",
                 zIndex: 1,
                 overflow: "hidden",
-                bg: "surface",
-                boxShadow: "inset 0 0 0 1.5px {colors.ink}",
                 fontVariantNumeric: "tabular-nums",
               })}
               onClick={() => release(props.order.id)}
@@ -379,7 +485,7 @@ export function StepButton(props: {
                   left: 0,
                   bottom: 0,
                   height: "4px",
-                  bg: "navy",
+                  bg: "sel",
                   transition: "width 1s linear",
                 })}
                 style={{ width: `${((left() - 1) / 5) * 100}%` }}
@@ -392,140 +498,16 @@ export function StepButton(props: {
   );
 }
 
-/** A bottom sheet on the native dialog: Escape, the backdrop and × close it. */
-export function Sheet(props: {
-  open: boolean;
-  title: string;
-  onClose: () => void;
-  children: JSX.Element;
-}) {
-  let dialog: HTMLDialogElement | undefined;
-
-  createEffect(
-    () => props.open,
-    (open) => {
-      if (open) dialog?.showModal();
-      else dialog?.close();
-    },
-  );
-
-  return (
-    <dialog
-      ref={(element) => {
-        dialog = element;
-      }}
-      // Only her own close counts: a sheet closed because another opened says nothing.
-      onClose={() => {
-        if (props.open) props.onClose();
-      }}
-      onClick={(event) => {
-        if (event.target === dialog) dialog.close();
-      }}
-      class={css({
-        mt: "auto",
-        mx: 0,
-        mb: 0,
-        width: "100%",
-        maxWidth: "100%",
-        bg: "surface",
-        border: "none",
-        borderRadius: "20px 20px 0 0",
-        p: "0 16px calc(env(safe-area-inset-bottom) + 20px)",
-        "&::backdrop": { bg: "rgba(42, 29, 22, 0.35)" },
-      })}
-    >
-      <div class={css({ display: "flex", alignItems: "center", py: "14px" })}>
-        <b class={css({ flex: 1, fontSize: "18px", fontWeight: "600" })}>{props.title}</b>
-        <button
-          type="button"
-          aria-label="Хаах"
-          onClick={() => dialog?.close()}
-          class={css({ fontSize: "22px", p: "6px", cursor: "pointer" })}
-        >
-          <CloseIcon />
-        </button>
-      </div>
-      {props.children}
-    </dialog>
-  );
-}
-
-const tab = css.raw({
-  flex: 1,
-  textAlign: "center",
-  fontSize: "11px",
-  lineHeight: "14px",
-  color: "inkMuted",
-  "& svg": { display: "block", fontSize: "25px", mx: "auto", mb: "2px" },
-});
-
-// The active tab's icon sits on a soft navy pill.
-const activeTab = css.raw({
-  color: "navy",
-  fontWeight: "600",
-  "& svg": {
-    width: "56px",
-    height: "30px",
-    px: "15px",
-    py: "3px",
-    borderRadius: "15px",
-    bg: "navySoft",
-  },
-});
-
-export function TabBar() {
-  const location = useLocation();
-
-  const at = (path: string) =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
-
-  return (
-    <nav
-      class={css({
-        position: "fixed",
-        // Above photo buttons, which sit at zIndex 1 over their row link.
-        zIndex: 10,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        height: "84px",
-        bg: "surface",
-        borderTop: "1px solid {colors.line}",
-        display: "flex",
-        pt: "8px",
-      })}
-    >
-      <a href="/" class={css(tab, at("/") && activeTab)}>
-        <Show when={at("/")} fallback={<HouseIcon />}>
-          <HouseFillIcon />
-        </Show>
-        Нүүр
-      </a>
-      <a href="/orders" class={css(tab, at("/orders") && activeTab)}>
-        <Show when={at("/orders")} fallback={<PackageIcon />}>
-          <PackageFillIcon />
-        </Show>
-        Захиалга
-      </a>
-      <a href="/products" class={css(tab, at("/products") && activeTab)}>
-        <Show when={at("/products")} fallback={<PillIcon />}>
-          <PillFillIcon />
-        </Show>
-        Бараа
-      </a>
-    </nav>
-  );
-}
-
 /** A failed read, or an expired session. */
 export function Problem(props: { error: unknown }) {
   const unauthorized = () => props.error instanceof Unauthorized;
 
   return (
-    <div class={css(block, { p: "16px" })}>
+    <div class={css(panel, { m: "16px", p: "20px", display: "grid", gap: "14px" })}>
       <Show when={unauthorized()} fallback={<p>Ачаалж чадсангүй. Дахин оролдоно уу.</p>}>
-        <a href="/login" class={css(button, darkButton)}>
-          Дахин нэвтрэх
+        <p>Дахин нэвтэрнэ үү.</p>
+        <a href="/login" class={css(button, act)}>
+          Нэвтрэх
         </a>
       </Show>
     </div>

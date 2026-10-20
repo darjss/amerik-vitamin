@@ -5,8 +5,9 @@
     background-color: var(--colors-page);
     color: var(--colors-ink);
     font-family: var(--fonts-sans);
-    font-size: 15px;
-    line-height: 20px;
+    font-optical-sizing: auto;
+    font-size: 17px;
+    line-height: 1.3;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
@@ -18,5 +19,12 @@
 
   img {
     display: block;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 }
