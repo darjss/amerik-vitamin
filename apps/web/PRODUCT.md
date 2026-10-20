@@ -37,57 +37,64 @@ None for the dashboard. It's internal, and vit-store's look does not carry over.
 
 The owner picked this on 2026-10-19 after two rounds of phone prototypes. Her most-used apps set the feel: Facebook, Messenger, Instagram, Meta Business Suite and Amazon. The dashboard borrows their habits: photo-first rows, filter chips, a to-do list with a button on each row and a step tracker on the order. It copies none of their screens, so there are no stories, no chat bubbles, and no borrowed headers or brand colors.
 
-Palette "cream and navy", chosen 2026-10-20 over espresso and clay, which tinted every surface brown. Cream is only the page. Everything she taps is surface white or navy. Navy is the one strong color: no status and almost no bottle in the catalog is navy, so it never gets mixed up with paid, owed or a product photo. Solid navy marks the main button, the active filter, ×N on photos and done steps. Soft navy marks quieter things next to a navy button: the active tab, ×N on the order page, "3 дахь захиалга". Color means a status or what's selected, never decoration.
+The look is "Native, two-tone", chosen 2026-10-20 from three directions drawn from scratch (Atelier, Native, Market). Earlier rounds were rejected: espresso and clay (brown everywhere), cold iOS gray, marigold and lilac highlights, cream and navy on flat hairline strips ("dead, bare"), and stacked rounded order cards. The prototype is in the scratchpad at `prototypes/v6/native/`.
 
-| Token       | Value                  | Use                                                                       |
-| ----------- | ---------------------- | ------------------------------------------------------------------------- |
-| page        | `#f8f4ec`              | Background                                                                |
-| surface     | `#fffdf9`              | Blocks, buttons, chips, search fields, tab bar, bottom dock               |
-| ink         | `#151a28`              | Text, a navy-black                                                        |
-| ink-muted   | `#6b6862`              | Secondary text                                                            |
-| line        | `#e9e3d8`              | Dividers, button and photo outlines                                       |
-| chip        | `#efeae0`              | Segmented control track, a main button that isn't ready                   |
-| navy        | `#1d2d50`              | Main button, active filter, ×N on photos, done steps, held row, call icon |
-| navy-soft   | `#e2e7f3`              | Active tab pill, ×N on the order page, repeat-customer tag                |
-| paid        | `#2f6b3a` on `#e5efe2` | QPay or Khaan paid                                                        |
-| owes        | `#b4233c` on `#fbe6e8` | Money to collect, QPay waiting                                            |
-| not shipped | `#8a5a00` on `#f8ecce` | Not handed to TU yet                                                      |
+It should feel like Apple built it for her phone, but warm. Everything she handles, such as bottles, the packing list, the receipt and buttons, stands up off the cream with soft depth. Everything she only reads is plain type on the cream with no box around it. Bars that float over the page are frosted glass. Every tap squeezes slightly and springs back.
 
-Type is Onest. It was drawn for Cyrillic screens and has Mongolian's Ө and Ү. Bold is for the phone, money and ×N only. Numbers use tabular figures. Icons are Phosphor only.
+Two tones do the work. Warm ink fills every action. Petrol teal marks what's selected or done. The other colors are statuses only, so teal never means paid and ink never means a status.
 
-Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Sections carry a bold heading with a navy Phosphor icon (Бараа, Хүргэх, Төлбөр, Мөнгө) so the page has landmarks.
+| Token     | Value                  | Use                                                                                 |
+| --------- | ---------------------- | ----------------------------------------------------------------------------------- |
+| page      | `#f8f4ec`              | Background                                                                          |
+| surface   | `#fffdf9`              | Raised panels, buttons, chips, search fields                                        |
+| ink       | `#1e1b17`              | Text, and every filled action: TU-д өгөх, Савлах, +, call, Захиалга үүсгэх          |
+| ink-muted | `#665e54`              | Secondary text                                                                      |
+| chip      | `#efeae0`              | Segmented control track, an action that isn't ready yet                             |
+| sel       | `#0f4c5c`              | Active filter, done tracker steps, ticks, packing progress, ×N badges, picked tiles |
+| sel-soft  | `#e1ecee`              | Active tab, ×N on the order page, "2 дахь захиалга", a held row                     |
+| paid      | `#2f6b3a` on `#e5efe2` | Paid                                                                                |
+| owes      | `#b4233c` on `#fbe6e8` | Money to collect, payment waiting, sold out                                         |
+| wait      | `#8a5a00` on `#f8ecce` | Notes she must not miss, "3 хоног", low stock                                       |
 
-An action looks like an action. The next step on every order row is a solid navy button, as vit-store's yellow "Хүргэсэн" was; on a to-do list each row's step is that row's main action. An outlined step read as a label, and the screens felt dead. Buttons press down a little when tapped. COD money is the heaviest text on a row: "Хүргэлтээр авах" over a bold red amount. A note (door code, "call first") sits in a pale yellow box. There is no loud banner at the top; the number to act on rides in a pinned bar above the tab bar. Every other button, the call and copy circles included, is surface color with a hairline outline; a tan fill read as dirty on her screen. A choice between two or three options is an iOS segmented control: a chip track with a white thumb, not filled color buttons. A dark button that isn't ready yet turns chip with muted text that says what's missing.
+Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only.
+
+Rules:
+
+- An action looks like an action. The next step on every order is a filled ink button, and an outlined step reads as a label.
+- Product photos are raised white tiles with ×N as a teal badge on the corner. A tap shows the photo full size, except in the packing checklist and the new-order grid, where a tap does the row's job.
+- Orders are separated by space, not lines or cards. Panels are for things she handles: today's packing, the checklist, the receipt, the grouped form fields.
+- Pages open with an iOS large title. Sections get a bold title over plain content, never a gray uppercase label.
+- The tab bar is one floating glass capsule. A screen's main action is docked at the bottom over frosted material.
+- A choice between two or three options is a segmented control with a sliding white thumb.
+- No loud banner at the top. Today's packing on Orders is one quiet row with three bottle thumbnails and Савлах.
 
 Screens:
 
-- **Orders** (Захиалга). A large "Захиалга" title with a round + for a new order, then the search field. Search takes an order number, or any 3 to 8 digits of a phone. The filter chips show counts: Илгээх 4, Төлбөр хүлээж 1, Замд 3. On Илгээх, a navy bar pinned above the tab bar says "4 илгээмж · 9 ширхэг" and opens Савлах; it stays under her thumb while she scrolls.
-  Each row has:
-  - the phone, with the money on the right (bold red "Хүргэлтээр авах 286,000₮", or a "Төлсөн" pill)
+- **Нүүр** opens with the date as a large title. Today's packing comes first: one raised panel with every bottle to pull off the shelf and its ×N, and a full-width Савлах. Then Хийх (a payment to verify, with Шалгах), Мөнгө (COD left to collect in red, money in today), and Дуусаж байна (low stock with what's left).
+- **Захиалга** has a large title, a round + for a new order, search (order number, or 3 to 8 digits of a phone), and filter chips with counts. On Илгээх, a packing row opens Савлах. Each order shows:
+  - the phone, with "3 хоног" once a ready order has waited two days, and the money pill on the right
   - the address on one line
-  - the note in full, in a note box
-  - one 64px photo per product, each with its own ×N
-  - the solid next-step button
-  - a "2 хоног" pill when a ready order has waited two days or more
+  - the note in a note box
+  - one photo per product with ×N
+  - the next-step button
 
-  Customers are known by phone, so no screen shows a customer's name.
+  Tapping the step holds it for 5 seconds as "Болих N" before writing. Customers are known by phone, so no screen shows a name.
 
-- **Home** (Нүүр) opens with the date. Then comes the morning's packing: how many parcels, Савлах, and every bottle to pull off the shelf with ×N, all visible at once. Хийх зүйлс holds only rows with a button. Мөнгө is two plain rows: COD left to collect, and money in today. Stock running low comes last.
-- **Order** reads top to bottom:
-  - the status in one line
-  - a muted line with payment, time and source
-  - a thin four-step tracker
-  - Бараа: the items with 72px photos
-  - Хүргэх: the phone, with how many orders it has placed and a call button; the address, with a copy button; the note in a note box
-  - Төлбөр: the lines and the total
-  - "Мөнгө авсан", which records cash or a transfer she took by hand
+- **Order** has:
+  - a frosted bar with × and ⋯
+  - the status as a large title, with payment, time and source under it
+  - a four-step tracker with dots
+  - Бараа
+  - Захиалагч: the phone with "Нийт N захиалга" and an ink call button, then the address with copy, then the note
+  - Төлбөр: a raised receipt ending in a green paid band or a red amount-to-collect band, with "Мөнгө авсан" under it
 
-  The ⋯ menu edits the address and note, or cancels the order. One "TU-д өгөх" button stays docked at the bottom.
+  The ⋯ sheet edits the address and note, or cancels the order. "TU-д өгөх" stays docked.
 
-- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр), then fills phone, address and note in one grouped block with an icon on each row. A known phone fills in the last address, says which order this is ("3 дахь захиалга") and shows "Өмнө авсан", the products it bought before, one tap to add again. Every product sits in a three-column photo grid with name, count, brand and price; a tap adds one, the tile gets a navy ring and ×N, and sold-out ones fade to the end. The search field narrows the grid. Chosen items collect in Сагс with +/- steppers. Prepay or COD and "Захиалга үүсгэх · total" stay docked at the bottom. A walk-in order has no delivery fee and needs no phone.
-- **Бараа**. A search field, and a list with photo, price and stock. A tap on the stock opens a counter that saves the count.
+- **Савлах** is one parcel at a time as a checklist. Progress segments fill as she ticks. The parcel header has the phone, money, address and note. Each row is the whole tap target: a 112px photo, the name, brand and count, a big ×N, and a square tick that fills teal. Алгасах and Савласан stay docked. After the last parcel come the packed list, the COD total and "N илгээмжийг TU-д өгөх".
+- **Шинэ захиалга** has Болих, then the source (Чат, Утас, Дэлгүүр) and one grouped panel for phone, address and note. A known phone shows "N дахь захиалга", fills the last address and lists Өмнө авсан to add again. Below that is a 3-column photo grid: a tap adds one, the tile gets a teal ring and ×N, and sold-out items fade to the end. Then Сагс with steppers and sums, prepay or COD, and a docked "Захиалга үүсгэх · total" that names what's missing until it's ready. A walk-in order has no delivery fee and needs no phone.
+- **Бараа** has a large title, search, and rows with photo, name, brand, count and price. The stock number is a button that opens a counter sheet.
 
-Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button.
+Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button, hairline-strip lists, stacked rounded order cards, a loud banner at the top.
 
 ## Features
 
