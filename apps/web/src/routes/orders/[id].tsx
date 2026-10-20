@@ -245,7 +245,7 @@ export default function OrderPage() {
                     <span
                       class={css(
                         { display: "block", height: "4px", borderRadius: "2px", bg: "line" },
-                        step.done && { bg: "highlight" },
+                        step.done && { bg: "navy" },
                       )}
                     />
                     <span
@@ -281,7 +281,8 @@ export default function OrderPage() {
                       class={css({
                         fontSize: "20px",
                         fontWeight: "700",
-                        bg: "highlight",
+                        bg: "navySoft",
+                        color: "navy",
                         borderRadius: "8px",
                         px: "7px",
                       })}
@@ -536,7 +537,8 @@ function History(props: { phone: string }) {
           fontSize: "14px",
           fontWeight: "600",
           textDecoration: "underline",
-          textDecorationColor: "highlight",
+          color: "navy",
+          textDecorationColor: "navySoft",
           textDecorationThickness: "3px",
           textUnderlineOffset: "3px",
         })}

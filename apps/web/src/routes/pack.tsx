@@ -95,8 +95,8 @@ export default function Pack() {
                   <span
                     class={css(
                       { flex: 1, height: "4px", borderRadius: "2px", bg: "line" },
-                      at() < index() && { bg: "highlight" },
-                      at() === index() && { bg: "ink" },
+                      at() < index() && { bg: "navy" },
+                      at() === index() && { bg: "inkMuted" },
                     )}
                     title={`#${order().number}`}
                   />
@@ -198,7 +198,8 @@ export default function Pack() {
                                 fontSize: "28px",
                                 fontWeight: "700",
                                 lineHeight: "38px",
-                                bg: "highlight",
+                                bg: "navy",
+                                color: "surface",
                                 px: "10px",
                                 borderRadius: "10px",
                                 fontVariantNumeric: "tabular-nums",

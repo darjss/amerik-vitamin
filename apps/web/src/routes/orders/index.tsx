@@ -77,7 +77,12 @@ const chip = css.raw({
   "& span": { color: "inkMuted", fontVariantNumeric: "tabular-nums" },
 });
 
-const chipOn = css.raw({ bg: "highlight", borderColor: "highlight", "& span": { color: "ink" } });
+const chipOn = css.raw({
+  bg: "navy",
+  borderColor: "navy",
+  color: "surface",
+  "& span": { color: "navySoft" },
+});
 
 const ellipsis = css.raw({ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" });
 
@@ -226,7 +231,7 @@ export default function Orders() {
                         "& + &": { borderTop: "1px solid {colors.line}" },
                       },
                       secondsLeft(order().id) !== undefined && {
-                        boxShadow: "inset 4px 0 0 {colors.highlight}",
+                        boxShadow: "inset 4px 0 0 {colors.navy}",
                       },
                     )}
                   >
