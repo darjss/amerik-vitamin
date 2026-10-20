@@ -34,12 +34,14 @@ import {
   block,
   blockTitle,
   button,
+  circle,
   darkButton,
   field,
   muted,
   PayPill,
   Photo,
   Problem,
+  Segmented,
   Sheet,
   top,
 } from "../../ui";
@@ -104,18 +106,6 @@ const row = css.raw({
   px: "16px",
   py: "12px",
   "& + &": { borderTop: "1px solid {colors.line}" },
-});
-
-const circle = css.raw({
-  width: "44px",
-  height: "44px",
-  borderRadius: "50%",
-  bg: "chip",
-  display: "grid",
-  placeItems: "center",
-  flex: "none",
-  cursor: "pointer",
-  "& svg": { fontSize: "20px" },
 });
 
 const kv = css.raw({
@@ -338,7 +328,10 @@ export default function OrderPage() {
                     type="button"
                     aria-label="Хаяг хуулах"
                     onClick={() => copy(address())}
-                    class={css(circle, copied() && { bg: "paidBg", color: "paid" })}
+                    class={css(
+                      circle,
+                      copied() && { bg: "paidBg", borderColor: "paidBg", color: "paid" },
+                    )}
                   >
                     <CopyIcon />
                   </button>
@@ -552,27 +545,15 @@ function PaySheet(props: {
 
   return (
     <Sheet open={props.open} title="Мөнгө авсан" onClose={() => props.onClose()}>
-      <div class={css({ display: "flex", gap: "8px", pb: "12px" })}>
-        <For
-          each={
-            [
-              ["cash", "Бэлэн"],
-              ["transfer", "Шилжүүлэг"],
-            ] as const
-          }
-        >
-          {([key, label]) => (
-            <button
-              type="button"
-              onClick={() => setMethod(key)}
-              class={css(button, { flex: 1 }, method() === key && { bg: "clay", color: "white" })}
-            >
-              {label}
-            </button>
-          )}
-        </For>
-      </div>
-      <label class={css({ display: "block", pb: "16px" })}>
+      <Segmented
+        options={[
+          ["cash", "Бэлэн"],
+          ["transfer", "Шилжүүлэг"],
+        ]}
+        value={method()}
+        onChange={setMethod}
+      />
+      <label class={css({ display: "block", pt: "12px", pb: "16px" })}>
         <span class={css(muted, { display: "block", fontSize: "14px", pb: "6px" })}>Дүн, ₮</span>
         <input
           inputmode="numeric"

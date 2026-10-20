@@ -58,7 +58,8 @@ export const button = css.raw({
   fontWeight: "600",
   fontSize: "15px",
   whiteSpace: "nowrap",
-  bg: "chip",
+  bg: "surface",
+  border: "1px solid {colors.line}",
   color: "ink",
   cursor: "pointer",
   _disabled: { opacity: 0.45 },
@@ -66,7 +67,66 @@ export const button = css.raw({
 });
 
 /** The one main action on a screen. */
-export const darkButton = css.raw({ bg: "espresso", color: "white" });
+export const darkButton = css.raw({
+  bg: "espresso",
+  borderColor: "espresso",
+  color: "white",
+  // Not ready yet reads as a quiet hint, not a grayed-out espresso.
+  _disabled: { opacity: 1, bg: "chip", borderColor: "chip", color: "inkMuted" },
+});
+
+/** A round icon button: call, copy. */
+export const circle = css.raw({
+  width: "44px",
+  height: "44px",
+  borderRadius: "50%",
+  border: "1px solid {colors.line}",
+  color: "clay",
+  display: "grid",
+  placeItems: "center",
+  flex: "none",
+  cursor: "pointer",
+  "& svg": { fontSize: "20px" },
+});
+
+/** One choice out of a few, as an iOS segmented control. */
+export function Segmented<T extends string>(props: {
+  options: ReadonlyArray<readonly [T, string]>;
+  value: T;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <div class={css({ display: "flex", p: "3px", gap: "3px", borderRadius: "12px", bg: "chip" })}>
+      <For each={props.options}>
+        {([value, label]) => (
+          <button
+            type="button"
+            aria-pressed={props.value === value ? "true" : "false"}
+            onClick={() => props.onChange(value)}
+            class={css(
+              {
+                flex: 1,
+                height: "38px",
+                borderRadius: "9px",
+                fontSize: "15px",
+                fontWeight: "600",
+                color: "inkMuted",
+                cursor: "pointer",
+              },
+              props.value === value && {
+                bg: "surface",
+                color: "ink",
+                boxShadow: "0 1px 3px rgba(42, 29, 22, 0.14)",
+              },
+            )}
+          >
+            {label}
+          </button>
+        )}
+      </For>
+    </div>
+  );
+}
 
 export const bigButton = css.raw({ height: "52px", borderRadius: "14px", fontSize: "16px" });
 

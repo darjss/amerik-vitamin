@@ -21,7 +21,7 @@ export default defineConfig({
           ink: { value: "#2a1d16" },
           inkMuted: { value: "#786a60" },
           line: { value: "#ece2d7" },
-          chip: { value: "#f1e8de" },
+          chip: { value: "#f2eeea" },
           espresso: { value: "#33241d" },
           clay: { value: "#bf4f2c" },
           paid: { value: "#3b6338" },
