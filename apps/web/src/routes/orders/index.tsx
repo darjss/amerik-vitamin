@@ -6,7 +6,9 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import { createMemo, Errored, For, Loading, refresh, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
+import ArrowIcon from "~icons/ph/arrow-right-bold";
 import NoteIcon from "~icons/ph/note-pencil";
+import PackageIcon from "~icons/ph/package";
 import SearchIcon from "~icons/ph/magnifying-glass";
 import PlusIcon from "~icons/ph/plus";
 
@@ -19,6 +21,7 @@ import {
   button,
   darkButton,
   muted,
+  note,
   PayPill,
   PhotoStrip,
   Pill,
@@ -120,11 +123,35 @@ export default function Orders() {
     );
 
   return (
-    <main class={css(top, { pb: "100px" })}>
-      <div class={css({ display: "flex", gap: "8px", px: "16px", pb: "10px" })}>
-        <label
+    <main class={css(top, { pb: "170px" })}>
+      <div class={css({ display: "flex", alignItems: "center", px: "16px", pb: "10px" })}>
+        <h1
           class={css({
             flex: 1,
+            fontSize: "30px",
+            lineHeight: "36px",
+            fontWeight: "800",
+            letterSpacing: "-0.5px",
+          })}
+        >
+          Захиалга
+        </h1>
+        <a
+          href="/orders/new"
+          aria-label="Шинэ захиалга"
+          class={css(button, darkButton, {
+            width: "44px",
+            px: 0,
+            borderRadius: "50%",
+            "& svg": { fontSize: "22px" },
+          })}
+        >
+          <PlusIcon />
+        </a>
+      </div>
+      <div class={css({ px: "16px", pb: "10px" })}>
+        <label
+          class={css({
             height: "44px",
             borderRadius: "12px",
             bg: "surface",
@@ -156,13 +183,6 @@ export default function Orders() {
             }
           />
         </label>
-        <a
-          href="/orders/new"
-          aria-label="Шинэ захиалга"
-          class={css(button, darkButton, { width: "44px", px: 0, "& svg": { fontSize: "22px" } })}
-        >
-          <PlusIcon />
-        </a>
       </div>
 
       <nav class={css({ display: "flex", gap: "8px", px: "16px", pb: "12px", overflowX: "auto" })}>
@@ -187,28 +207,37 @@ export default function Orders() {
 
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<div class={css(block, { height: "240px" })} />}>
+          {/* Pinned above the tab bar, under her thumb, while she scrolls the parcels. */}
           <Show when={view().key === "to_ship" && params.q === undefined && orders().length > 0}>
-            <div
-              class={css(block, {
+            <a
+              href="/pack"
+              class={css({
+                position: "fixed",
+                zIndex: 10,
+                left: "12px",
+                right: "12px",
+                bottom: "calc(env(safe-area-inset-bottom) + 92px)",
+                height: "56px",
+                borderRadius: "16px",
+                bg: "navy",
+                color: "surface",
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",
                 px: "16px",
-                py: "12px",
+                boxShadow: "0 8px 20px -8px rgba(21, 26, 40, 0.45)",
+                transition: "transform 0.1s ease-out",
+                _active: { transform: "scale(0.98)" },
+                "& svg": { fontSize: "22px", flex: "none" },
               })}
             >
-              <div class={css({ flex: 1 })}>
-                <b class={css({ fontSize: "17px", fontWeight: "600" })}>
-                  {orders().length} илгээмж · {pieces()} ширхэг
-                </b>
-                <small class={css(muted, { display: "block", fontSize: "14px" })}>
-                  Нэг нэгээр нь савлаад TU-д өгнө
-                </small>
-              </div>
-              <a href="/pack" class={css(button, darkButton)}>
-                Савлах
-              </a>
-            </div>
+              <PackageIcon />
+              <span class={css({ flex: 1, fontSize: "16px", fontWeight: "700" })}>
+                {orders().length} илгээмж · {pieces()} ширхэг
+              </span>
+              <span class={css({ fontSize: "16px", fontWeight: "700" })}>Савлах</span>
+              <ArrowIcon />
+            </a>
           </Show>
 
           <Show
@@ -241,11 +270,11 @@ export default function Orders() {
                       aria-label={`#${order().number}`}
                       class={css({ position: "absolute", inset: 0 })}
                     />
-                    <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
+                    <div class={css({ display: "flex", alignItems: "flex-start", gap: "8px" })}>
                       <b
                         class={css({
-                          fontSize: "17px",
-                          fontWeight: "600",
+                          fontSize: "18px",
+                          fontWeight: "700",
                           fontVariantNumeric: "tabular-nums",
                         })}
                       >
@@ -276,16 +305,7 @@ export default function Orders() {
                     </Show>
                     <Show when={order().notes}>
                       {(notes) => (
-                        <div
-                          class={css({
-                            display: "flex",
-                            gap: "6px",
-                            alignItems: "flex-start",
-                            fontSize: "15px",
-                            mt: "4px",
-                            "& svg": { flex: "none", mt: "2px", color: "inkMuted" },
-                          })}
-                        >
+                        <div class={css(note, { mt: "8px" })}>
                           <NoteIcon />
                           {notes()}
                         </div>
@@ -300,7 +320,7 @@ export default function Orders() {
                       })}
                     >
                       <div class={css({ flex: 1, minWidth: 0 })}>
-                        <PhotoStrip lines={order().lines} size={56} />
+                        <PhotoStrip lines={order().lines} size={64} />
                       </div>
                       <Show when={nextStep(order()) === undefined}>
                         <ShipPill status={order().status} />

@@ -20,9 +20,12 @@ import { css } from "styled-system/css";
 import BackIcon from "~icons/ph/caret-left";
 import CopyIcon from "~icons/ph/copy";
 import MoreIcon from "~icons/ph/dots-three-bold";
+import MapPinIcon from "~icons/ph/map-pin";
 import NoteIcon from "~icons/ph/note-pencil";
+import PackageIcon from "~icons/ph/package";
 import PhoneIcon from "~icons/ph/phone";
 import TruckIcon from "~icons/ph/truck";
+import WalletIcon from "~icons/ph/wallet";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
@@ -38,6 +41,7 @@ import {
   darkButton,
   field,
   muted,
+  note,
   PayPill,
   Photo,
   Problem,
@@ -264,7 +268,8 @@ export default function OrderPage() {
 
           <div class={css(block)}>
             <h2 class={css(blockTitle)}>
-              {order().lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
+              <PackageIcon />
+              Бараа · {order().lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
             </h2>
             <For each={order().lines} keyed={(line) => line.productId}>
               {(line) => (
@@ -299,6 +304,10 @@ export default function OrderPage() {
           </div>
 
           <div class={css(block)}>
+            <h2 class={css(blockTitle)}>
+              <MapPinIcon />
+              Хүргэх
+            </h2>
             <Show when={order().customerPhone}>
               {(digits) => (
                 <div class={css(row)}>
@@ -353,22 +362,29 @@ export default function OrderPage() {
                   type="button"
                   disabled={!editable(order())}
                   onClick={() => setSheet("edit")}
-                  class={css(row, {
+                  class={css({
+                    display: "block",
                     width: "100%",
                     textAlign: "left",
-                    fontSize: "16px",
+                    px: "16px",
+                    pb: "14px",
                     cursor: "pointer",
-                    "& svg": { fontSize: "20px", color: "inkMuted", flex: "none" },
                   })}
                 >
-                  <NoteIcon />
-                  {notes()}
+                  <span class={css(note)}>
+                    <NoteIcon />
+                    {notes()}
+                  </span>
                 </button>
               )}
             </Show>
           </div>
 
-          <div class={css(block, { px: "16px", py: "12px", fontVariantNumeric: "tabular-nums" })}>
+          <div class={css(block, { px: "16px", pb: "12px", fontVariantNumeric: "tabular-nums" })}>
+            <h2 class={css(blockTitle, { px: 0 })}>
+              <WalletIcon />
+              Төлбөр
+            </h2>
             <div class={css(kv)}>
               <span class={css(muted)}>Бараа</span>
               <span>{money(order().total - order().deliveryFee)}</span>

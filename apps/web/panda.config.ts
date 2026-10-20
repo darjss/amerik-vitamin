@@ -32,6 +32,7 @@ export default defineConfig({
           owes: { value: "#b4233c" },
           owesBg: { value: "#fbe6e8" },
           ship: { value: "#8a5a00" },
+          note: { value: "#fff3d1" },
           shipBg: { value: "#f8ecce" },
         },
         fonts: {

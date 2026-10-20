@@ -33,13 +33,18 @@ export const block = css.raw({
   mb: "8px",
 });
 
+/** A section heading; an icon in front gives the page landmarks. */
 export const blockTitle = css.raw({
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
   fontSize: "17px",
   lineHeight: "22px",
-  fontWeight: "600",
+  fontWeight: "700",
   px: "16px",
   pt: "14px",
   pb: "8px",
+  "& svg": { fontSize: "20px", color: "navy", flex: "none" },
 });
 
 /** Clears the iPhone status bar when the page runs full screen, and a little air otherwise. */
@@ -62,11 +67,27 @@ export const button = css.raw({
   border: "1px solid {colors.line}",
   color: "ink",
   cursor: "pointer",
+  transition: "transform 0.1s ease-out",
+  _active: { transform: "scale(0.97)" },
   _disabled: { opacity: 0.45 },
   "& svg": { fontSize: "18px" },
 });
 
-/** The one main action on a screen. */
+/** A note she must not miss: a door code, "call first". */
+export const note = css.raw({
+  display: "flex",
+  gap: "6px",
+  alignItems: "flex-start",
+  bg: "note",
+  borderRadius: "10px",
+  px: "10px",
+  py: "7px",
+  fontSize: "15px",
+  fontWeight: "600",
+  "& svg": { flex: "none", mt: "2px", color: "ship" },
+});
+
+/** A solid button: the main action on a screen, and the next step on each order. */
 export const darkButton = css.raw({
   bg: "navy",
   borderColor: "navy",
@@ -263,7 +284,25 @@ export function PayPill(props: { order: Pick<Order, "terms" | "paid" | "balance"
       }
     >
       <Show when={props.order.terms === "cod"} fallback={<Pill tone="owes">Төлбөр хүлээж</Pill>}>
-        <Pill tone="owes">Авах {money(props.order.balance)}</Pill>
+        {/* The money she has to collect is the heaviest text on the row. */}
+        <span
+          class={css({
+            display: "block",
+            textAlign: "right",
+            color: "owes",
+            lineHeight: "1.15",
+            whiteSpace: "nowrap",
+          })}
+        >
+          <small class={css({ display: "block", fontSize: "12px", fontWeight: "600" })}>
+            Хүргэлтээр авах
+          </small>
+          <b
+            class={css({ fontSize: "18px", fontWeight: "800", fontVariantNumeric: "tabular-nums" })}
+          >
+            {money(props.order.balance)}
+          </b>
+        </span>
       </Show>
     </Show>
   );
@@ -312,7 +351,7 @@ export function StepButton(props: {
           fallback={
             <button
               type="button"
-              class={css(button, { position: "relative", zIndex: 1 })}
+              class={css(button, darkButton, { position: "relative", zIndex: 1 })}
               onClick={() => start(props.order.id, next().step)}
             >
               <TruckIcon />

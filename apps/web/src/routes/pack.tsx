@@ -21,7 +21,18 @@ import { ApiClient } from "../api/client";
 import { runEffect, RuntimeContext } from "../api/solid-effect";
 import { money, phone } from "../format";
 import { advance } from "../steps";
-import { bigButton, block, button, darkButton, muted, PayPill, Photo, Problem, top } from "../ui";
+import {
+  bigButton,
+  block,
+  button,
+  darkButton,
+  muted,
+  note,
+  PayPill,
+  Photo,
+  Problem,
+  top,
+} from "../ui";
 
 type Order = typeof OrderSummary.Type;
 
@@ -127,17 +138,7 @@ export default function Pack() {
                   <p class={css({ fontSize: "16px", mt: "4px" })}>{order().address}</p>
                   <Show when={order().notes}>
                     {(notes) => (
-                      <p
-                        class={css({
-                          display: "flex",
-                          gap: "8px",
-                          alignItems: "flex-start",
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          mt: "8px",
-                          "& svg": { flex: "none", mt: "3px" },
-                        })}
-                      >
+                      <p class={css(note, { fontSize: "16px", mt: "10px" })}>
                         <NoteIcon />
                         {notes()}
                       </p>

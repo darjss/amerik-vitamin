@@ -1,8 +1,11 @@
 import * as DateTime from "effect/DateTime";
 import { createMemo, Errored, For, Loading, Show } from "solid-js";
 import { css } from "styled-system/css";
+import ChecklistIcon from "~icons/ph/list-checks";
 import ClockIcon from "~icons/ph/clock";
 import PackageIcon from "~icons/ph/package";
+import WalletIcon from "~icons/ph/wallet";
+import WarningIcon from "~icons/ph/warning-circle";
 
 import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
@@ -129,7 +132,10 @@ export default function Home() {
 
           <Show when={home().awaitingPayment > 0}>
             <section class={css(block)}>
-              <h2 class={css(blockTitle)}>Хийх зүйлс</h2>
+              <h2 class={css(blockTitle)}>
+                <ChecklistIcon />
+                Хийх зүйлс
+              </h2>
               <div class={css(row)}>
                 <span class={css(circle)}>
                   <ClockIcon />
@@ -148,7 +154,10 @@ export default function Home() {
           </Show>
 
           <section class={css(block, { fontVariantNumeric: "tabular-nums" })}>
-            <h2 class={css(blockTitle)}>Мөнгө</h2>
+            <h2 class={css(blockTitle)}>
+              <WalletIcon />
+              Мөнгө
+            </h2>
             <div class={css(row)}>
               <span class={css({ flex: 1, fontSize: "16px" })}>
                 Хүргэлтээр авах
@@ -166,7 +175,10 @@ export default function Home() {
 
           <Show when={home().lowStock.length > 0}>
             <section class={css(block)}>
-              <h2 class={css(blockTitle)}>Удахгүй дуусна</h2>
+              <h2 class={css(blockTitle)}>
+                <WarningIcon />
+                Удахгүй дуусна
+              </h2>
               <For each={home().lowStock} keyed={(product) => product.productId}>
                 {(product) => (
                   <div class={css(row)}>
