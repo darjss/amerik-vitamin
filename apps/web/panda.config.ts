@@ -2,7 +2,7 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import pandaPreset from "@pandacss/preset-panda";
 
-// The dashboard's look is decided in PRODUCT.md: cream, ink and marigold. Color
+// The dashboard's look is decided in PRODUCT.md: cream, ink and lilac. Color
 // means a status or what's selected, never decoration.
 export default defineConfig({
   include: ["./src/**/*.{ts,tsx}"],
@@ -23,14 +23,13 @@ export default defineConfig({
           line: { value: "#e7ddc9" },
           chip: { value: "#efe7d5" },
           // A highlighter, always with ink on it: selected, ×N, done.
-          marigold: { value: "#ffbe1a" },
+          highlight: { value: "#b9a6ff" },
           paid: { value: "#2f6b3a" },
           paidBg: { value: "#e3eedd" },
           owes: { value: "#b4233c" },
           owesBg: { value: "#fbe3e6" },
-          // Blue, so "not shipped" never reads as marigold.
-          ship: { value: "#2d4c78" },
-          shipBg: { value: "#e2e9f4" },
+          ship: { value: "#8a5a00" },
+          shipBg: { value: "#f8ecce" },
         },
         fonts: {
           // Onest was drawn for Cyrillic screens and has Mongolian's Ө and Ү.

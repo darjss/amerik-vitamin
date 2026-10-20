@@ -233,7 +233,7 @@ export default function NewOrder() {
                   justifySelf: "start",
                   fontSize: "13px",
                   fontWeight: "600",
-                  bg: "marigold",
+                  bg: "highlight",
                   borderRadius: "6px",
                   px: "6px",
                   lineHeight: "20px",
@@ -502,7 +502,7 @@ function Tile(props: { product: Product; quantity: number; onAdd: () => void }) 
             boxShadow: "hairline",
             p: "6px",
           },
-          props.quantity > 0 && { boxShadow: "0 0 0 3px {colors.marigold}" },
+          props.quantity > 0 && { boxShadow: "0 0 0 3px {colors.highlight}" },
         )}
       >
         <Show when={props.product.image}>

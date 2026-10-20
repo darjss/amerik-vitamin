@@ -194,7 +194,7 @@ export const countBadge = css.raw({
   zIndex: 2,
   right: "-6px",
   bottom: "-6px",
-  bg: "marigold",
+  bg: "highlight",
   color: "ink",
   border: "2px solid {colors.surface}",
   borderRadius: "10px",
@@ -340,7 +340,7 @@ export function StepButton(props: {
                   left: 0,
                   bottom: 0,
                   height: "4px",
-                  bg: "marigold",
+                  bg: "highlight",
                   transition: "width 1s linear",
                 })}
                 style={{ width: `${((left() - 1) / 5) * 100}%` }}
@@ -420,7 +420,7 @@ const tab = css.raw({
   "& svg": { display: "block", fontSize: "25px", mx: "auto", mb: "2px" },
 });
 
-// The active tab's icon sits on a marigold pill.
+// The active tab's icon sits on a highlight pill.
 const activeTab = css.raw({
   color: "ink",
   fontWeight: "600",
@@ -430,7 +430,7 @@ const activeTab = css.raw({
     px: "15px",
     py: "3px",
     borderRadius: "15px",
-    bg: "marigold",
+    bg: "highlight",
   },
 });
 
