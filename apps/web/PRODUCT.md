@@ -46,7 +46,7 @@ Palette "espresso and clay". Color means a status or what's selected, never deco
 | ink         | `#2a1d16`              | Text                                                        |
 | ink-muted   | `#786a60`              | Secondary text, 4.8:1 on page                               |
 | line        | `#ece2d7`              | Dividers, card and photo outlines                           |
-| chip        | `#f1e8de`              | Filter chips, secondary buttons, icon circles               |
+| chip        | `#f2eeea`              | Filter chips, search fields, segmented control track        |
 | espresso    | `#33241d`              | Main buttons, white text                                    |
 | clay        | `#bf4f2c`              | Selected tab, active filter, ×N counts, white text at 4.8:1 |
 | paid        | `#3b6338` on `#e4eedf` | QPay or Khaan paid                                          |
@@ -55,7 +55,7 @@ Palette "espresso and clay". Color means a status or what's selected, never deco
 
 Type is Onest. It was drawn for Cyrillic screens and has Mongolian's Ө and Ү. Bold is for the phone, money and ×N only. Numbers use tabular figures. Icons are Phosphor only.
 
-Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Each screen has at most one dark button. Every other button is the soft chip color.
+Lists run edge to edge as full-width blocks with hairlines, not rounded cards, with page color between blocks. Each screen has at most one dark button. Every other button, the call and copy circles included, is surface color with a hairline outline; the tan fill read as dirty on her screen. A choice between two or three options is an iOS segmented control: a chip track with a white thumb, not filled clay buttons. A dark button that isn't ready yet turns chip with muted text that says what's missing.
 
 Screens:
 
@@ -84,7 +84,7 @@ Screens:
 
   The ⋯ menu edits the address and note, or cancels the order. One "TU-д өгөх" button stays docked at the bottom.
 
-- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр) and enters the phone; a known phone fills in the last address. Then the address, the note, prepay or COD, and products found by search, each with photo, price and stock and +/- for the count. A walk-in order has no delivery fee.
+- **New order** (+). She picks where it came from (Чат, Утас, Дэлгүүр), then fills phone, address and note in one grouped block with an icon on each row. A known phone fills in the last address, says which order this is ("3 дахь захиалга") and shows "Өмнө авсан", the products it bought before, one tap to add again. Every product sits in a three-column photo grid with name, count, brand and price; a tap adds one, the tile gets a clay ring and ×N, and sold-out ones fade to the end. The search field narrows the grid. Chosen items collect in Сагс with +/- steppers. Prepay or COD and "Захиалга үүсгэх · total" stay docked at the bottom. A walk-in order has no delivery fee and needs no phone.
 - **Бараа**. A search field, and a list with photo, price and stock. A tap on the stock opens a counter that saves the count.
 
 Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button.
