@@ -74,12 +74,12 @@ Supplement bottles have UPC barcodes. The phone camera reads them through the br
 
 ### 4. It behaves like paper
 
-- **Opens to Today in under a second.** Google sign-in once, then a long-lived session on her phone.
+- **Opens in under a second.** Google sign-in once, then a long-lived session on her phone.
 - **A typed line is never lost.** Each line saves to the phone first with an ID made on the phone, then syncs. The server treats a repeat of the same ID as the same line. Reading needs signal; writing never waits for it.
 - **Never rejects input.** An unparseable line saves as a note on the day, flagged "needs a look."
-- **Today looks like a notebook page.** A plain chronological list: who, what, how much, paid or owes. Swipe left for yesterday, like flipping a page.
+- **It looks like her phone apps, not a notebook page.** Orders open on the ones to ship, three or four to a screen, each with product photos, phone, address and what to collect. Any older day is one filter or search away. The screens and colors are in [apps/web/PRODUCT.md](../apps/web/PRODUCT.md).
 - **Corrections are visible.** Edits keep history, like a crossed-out line.
-- **Big type, Cyrillic, one thumb.** Cheap Android, bad light, standing up.
+- **Big type, Cyrillic, one thumb.** Her iPhone (a Pro, about a 14), standing up.
 
 ### 5. The collage comes out of the DB
 
