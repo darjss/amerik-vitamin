@@ -9,7 +9,7 @@ export {
   transaction,
 } from "./database.ts";
 
-export { claimOutbox, markSent, notify } from "./outbox.ts";
+export { claimOutbox, markFailed, markSent, notify } from "./outbox.ts";
 
 export * as schema from "./schema.ts";
 

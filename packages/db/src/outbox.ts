@@ -6,7 +6,7 @@ import * as Effect from "effect/Effect";
 import { Database, dieOnDatabaseError } from "./database.ts";
 import { outbox, outboxKind } from "./schema.ts";
 
-/** About four hours of 5-minute cron runs. A row past this stays unsent, for SQL to find. */
+/** Failed sends: about four hours of 5-minute cron runs. A row past this stays unsent, for SQL to find. */
 const MAX_ATTEMPTS = 50;
 
 /** Queues an admin-chat message. Call it inside the transaction of the change it reports. */
@@ -52,7 +52,7 @@ export const claimOutbox = Effect.fn("claimOutbox")(function* claimOutbox(
 
   const rows = yield* db
     .update(outbox)
-    .set({ attempts: sql`${outbox.attempts} + 1`, claimedUntil: until })
+    .set({ claimedUntil: until })
     .where(inArray(outbox.id, due))
     .returning({ id: outbox.id, text: outbox.text });
 
@@ -66,5 +66,15 @@ export const markSent = Effect.fn("markSent")(function* markSent(id: OutboxId) {
   yield* db
     .update(outbox)
     .set({ sentAt: DateTime.toDateUtc(yield* DateTime.now) })
+    .where(eq(outbox.id, id));
+}, dieOnDatabaseError);
+
+/** Counts a failed send. A row the run never tried keeps its count. */
+export const markFailed = Effect.fn("markFailed")(function* markFailed(id: OutboxId) {
+  const db = yield* Database;
+
+  yield* db
+    .update(outbox)
+    .set({ attempts: sql`${outbox.attempts} + 1` })
     .where(eq(outbox.id, id));
 }, dieOnDatabaseError);

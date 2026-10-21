@@ -1,4 +1,4 @@
-import { claimOutbox, markSent } from "@amerik/db";
+import { claimOutbox, markFailed, markSent } from "@amerik/db";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -97,6 +97,7 @@ export const dispatchOutbox = Effect.fn("dispatchOutbox")(function* dispatchOutb
     const result = yield* Effect.result(telegram.send(row.text));
 
     if (Result.isFailure(result)) {
+      yield* markFailed(row.id);
       yield* Effect.logWarning("telegram send failed", { status: result.failure.status });
       break;
     }
