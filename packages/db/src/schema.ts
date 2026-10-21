@@ -19,6 +19,7 @@ import type {
   PaymentId,
   ProductId,
   StockMoveId,
+  UserId,
 } from "@amerik/contracts";
 import { sql } from "drizzle-orm";
 import {
@@ -244,7 +245,7 @@ export const orderEvents = shop.table(
  * outside that file reads them.
  */
 export const users = shop.table("users", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").$type<UserId>().primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull(),
@@ -258,6 +259,7 @@ export const sessions = shop.table(
   {
     id: uuid("id").primaryKey(),
     userId: uuid("user_id")
+      .$type<UserId>()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     token: text("token").notNull().unique(),
@@ -275,6 +277,7 @@ export const accounts = shop.table(
   {
     id: uuid("id").primaryKey(),
     userId: uuid("user_id")
+      .$type<UserId>()
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     accountId: text("account_id").notNull(),
