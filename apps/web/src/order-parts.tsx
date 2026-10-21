@@ -1,4 +1,4 @@
-import type { OrderDetail } from "@amerik/contracts";
+import type { ManualPayment, OrderDetail } from "@amerik/contracts";
 import * as Effect from "effect/Effect";
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { css } from "styled-system/css";
@@ -9,15 +9,13 @@ import MoneyIcon from "~icons/ph/money";
 import { ApiClient } from "./api/client";
 import { runEffect } from "./api/solid-effect";
 import { Sheet } from "./chrome";
-import { money } from "./format";
-import { act, button, field, large, Pill, Segmented, sub } from "./ui";
-
-type Order = typeof OrderDetail.Type;
+import { money, thousands } from "./format";
+import { act, button, Failed, field, Pill, Segmented, sub, wide } from "./ui";
 
 // Pieces of the order page: the step tracker, the phone's order count and the two form sheets.
 
 /** COD is paid at the door, so its payment step comes last. */
-const steps = (order: Order) => {
+const steps = (order: OrderDetail) => {
   const placed = { label: "Захиалсан", done: true };
   const paid = { label: "Төлсөн", done: order.paid > 0 && order.balance <= 0 };
 
@@ -34,7 +32,7 @@ const steps = (order: Order) => {
 };
 
 /** Four steps across the top; done ones fill teal, the next one is ringed. */
-export function Tracker(props: { order: Order }) {
+export function Tracker(props: { order: OrderDetail }) {
   const nextIndex = () => steps(props.order).findIndex((step) => !step.done);
 
   return (
@@ -68,7 +66,7 @@ export function Tracker(props: { order: Order }) {
                   width: "100%",
                   height: "3px",
                   borderRadius: "2px",
-                  bg: "#e1d9cb",
+                  bg: "track",
                 },
                 _first: { _before: { display: "none" } },
               },
@@ -87,7 +85,7 @@ export function Tracker(props: { order: Order }) {
                   display: "grid",
                   placeItems: "center",
                   bg: "page",
-                  boxShadow: "inset 0 0 0 2px #d9d1c3",
+                  boxShadow: "inset 0 0 0 2px {colors.dot}",
                   fontSize: "15px",
                 },
                 step.done && { bg: "sel", boxShadow: "none", color: "white" },
@@ -123,7 +121,8 @@ export function History(props: { phone: string }) {
     return runEffect(
       ApiClient.use((api) => api.findCustomer({ phone: digits })).pipe(
         Effect.map((customer) => customer.orders),
-        Effect.orElseSucceed(() => 0),
+        // A phone with no customer row yet has no orders; anything else is a real failure.
+        Effect.catchTag("CustomerNotFound", () => Effect.succeed(0)),
       ),
     );
   });
@@ -145,9 +144,10 @@ export function PaySheet(props: {
   balance: number;
   busy: boolean;
   onClose: () => void;
-  onSave: (amount: number, method: "cash" | "transfer") => void;
+  failed: string | undefined;
+  onSave: (amount: number, method: ManualPayment["method"]) => void;
 }) {
-  const [method, setMethod] = createSignal<"cash" | "transfer">("cash");
+  const [method, setMethod] = createSignal<ManualPayment["method"]>("cash");
   const [typed, setTyped] = createSignal<string>();
   const amount = () => Number((typed() ?? String(props.balance)).replaceAll(/\D/gu, ""));
 
@@ -165,7 +165,7 @@ export function PaySheet(props: {
         <span class={css(sub, { display: "block", pb: "6px" })}>Дүн, ₮</span>
         <input
           inputmode="numeric"
-          value={(typed() ?? String(props.balance)).replace(/\B(?=(\d{3})+(?!\d))/gu, ",")}
+          value={thousands(amount())}
           onInput={(event) => setTyped(event.currentTarget.value)}
           class={css(field, {
             fontSize: "24px",
@@ -174,11 +174,12 @@ export function PaySheet(props: {
           })}
         />
       </label>
+      <Failed text={props.failed} />
       <button
         type="button"
         disabled={props.busy || amount() <= 0}
         onClick={() => props.onSave(amount(), method())}
-        class={css(button, act, large, { width: "100%" })}
+        class={css(button, act, wide)}
       >
         {money(amount())} бүртгэх
       </button>
@@ -189,8 +190,9 @@ export function PaySheet(props: {
 /** Address and note change until the parcel leaves. */
 export function EditSheet(props: {
   open: boolean;
-  order: Order;
+  order: OrderDetail;
   busy: boolean;
+  failed: string | undefined;
   onClose: () => void;
   onSave: (address: string, notes: string) => void;
 }) {
@@ -216,13 +218,14 @@ export function EditSheet(props: {
           class={css(field)}
         />
       </label>
+      <Failed text={props.failed} />
       <button
         type="button"
         disabled={props.busy}
         onClick={() =>
           props.onSave(address() ?? props.order.address ?? "", notes() ?? props.order.notes ?? "")
         }
-        class={css(button, act, large, { width: "100%" })}
+        class={css(button, act, wide)}
       >
         Хадгалах
       </button>

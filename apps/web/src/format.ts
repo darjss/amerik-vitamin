@@ -1,8 +1,12 @@
+import * as Cause from "effect/Cause";
+import * as DateTime from "effect/DateTime";
+import * as Match from "effect/Match";
+import * as Option from "effect/Option";
+import * as Predicate from "effect/Predicate";
+
 // Mongolia keeps UTC+8 all year. The Worker renders in UTC, so every date
 // shown to mom goes through this zone.
 const zone = "Asia/Ulaanbaatar";
-
-const dayOf = new Intl.DateTimeFormat("en-CA", { timeZone: zone });
 
 const clockOf = new Intl.DateTimeFormat("en-GB", {
   timeZone: zone,
@@ -12,38 +16,68 @@ const clockOf = new Intl.DateTimeFormat("en-GB", {
 
 const WEEKDAYS = ["Ням", "Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан", "Бямба"];
 
+/** 155000 → "155,000" */
+export const thousands = (amount: number) => amount.toLocaleString("en-US");
+
 /** 155000 → "155,000₮" */
-export const money = (amount: number) => `${amount.toLocaleString("en-US")}₮`;
+export const money = (amount: number) => `${thousands(amount)}₮`;
 
 /** "88551290" → "8855 1290" */
 export const phone = (digits: string) => digits.replace(/^(\d{4})(\d{4})$/u, "$1 $2");
 
-const day = (date: Date) => {
-  const [year = 0, month = 1, dayOfMonth = 1] = dayOf.format(date).split("-").map(Number);
+/** A search over brand and name, as she types it. */
+export const matches = (product: { brand: string; name: string }, query: string) =>
+  `${product.brand} ${product.name}`.toLowerCase().includes(query.trim().toLowerCase());
 
-  return { month, dayOfMonth, utc: Date.UTC(year, month - 1, dayOfMonth) };
+const day = (date: Date) => {
+  const parts = DateTime.toParts(DateTime.makeZonedUnsafe(date, { timeZone: zone }));
+
+  return { ...parts, utc: Date.UTC(parts.year, parts.month - 1, parts.day) };
 };
 
 const DAY_MS = 86_400_000;
 
+/** Calendar days in Ulaanbaatar from `date` to `now`: 0 today, 1 yesterday. */
+export const daysBetween = (date: Date, now: Date) => (day(now).utc - day(date).utc) / DAY_MS;
+
 /** Today's orders show the time, yesterday's say so, older ones the date. */
 export const when = (date: Date, now: Date) => {
-  const gap = (day(now).utc - day(date).utc) / DAY_MS;
+  const gap = daysBetween(date, now);
 
   if (gap === 0) return clockOf.format(date);
 
   if (gap === 1) return "Өчигдөр";
 
-  const { month, dayOfMonth } = day(date);
+  const { month, day: dayOfMonth } = day(date);
 
   return `${month}/${dayOfMonth}`;
 };
 
-/** "Бямба, 10-р сарын 18" */
+/** { weekday: "Бямба", date: "10-р сарын 18" } */
 export const longDate = (date: Date) => {
-  const { month, dayOfMonth, utc } = day(date);
+  const { weekDay, month, day: dayOfMonth } = day(date);
 
-  return `${WEEKDAYS[new Date(utc).getUTCDay()]}, ${month}-р сарын ${dayOfMonth}`;
+  return { weekday: WEEKDAYS[weekDay], date: `${month}-р сарын ${dayOfMonth}` };
 };
 
 export const clock = (date: Date) => clockOf.format(date);
+
+/** A failed write as one line for her, by error tag. */
+export const failureText = (
+  cause: Cause.Cause<{ readonly _tag: string }>,
+  fallback = "Болсонгүй. Дахин оролдоно уу.",
+) =>
+  Option.match(Cause.findErrorOption(cause), {
+    onNone: () => fallback,
+    onSome: (error) =>
+      Match.value(error).pipe(
+        Match.tag("Unauthorized", () => "Дахин нэвтэрнэ үү."),
+        Match.tag("WrongOrderStatus", () => "Захиалга аль хэдийн өөрчлөгдсөн байна."),
+        Match.tag("RpcClientError", () => "Интернэт тасарсан. Дахин оролдоно уу."),
+        Match.orElse(() => fallback),
+      ),
+  });
+
+/** The write never reached the API, so a reload right now would fail the same way. */
+export const offline = (cause: Cause.Cause<{ readonly _tag: string }>) =>
+  Option.exists(Cause.findErrorOption(cause), Predicate.isTagged("RpcClientError"));

@@ -1,5 +1,5 @@
 import { OrderNumber } from "@amerik/contracts";
-import type { ListOrders } from "@amerik/contracts";
+import type { ListOrders, OrderCounts, OrderSummary } from "@amerik/contracts";
 import { useSearchParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
@@ -14,7 +14,7 @@ import PlusIcon from "~icons/ph/plus-bold";
 import { ApiClient } from "../../api/client";
 import { runEffect } from "../../api/solid-effect";
 import { TabBar } from "../../chrome";
-import { phone } from "../../format";
+import { daysBetween, phone } from "../../format";
 import { HeldSteps, nextStep } from "../../steps";
 import {
   act,
@@ -50,7 +50,7 @@ const views = [
 ] satisfies ReadonlyArray<{
   key: string;
   label: string;
-  count: "toShip" | "awaitingPayment" | "shipped" | undefined;
+  count: keyof OrderCounts | undefined;
   input: ListOrders;
 }>;
 
@@ -89,8 +89,8 @@ const chip = css.raw(press, {
 const chipOn = css.raw({
   bg: "sel",
   color: "white",
-  boxShadow: "0 1px 2px rgba(15,76,92,.25)",
-  "& b": { color: "rgba(255,255,255,.78)" },
+  boxShadow: "0 1px 2px {colors.sel/25}",
+  "& b": { color: "white/78" },
 });
 
 // Shown where there is no next step to take.
@@ -102,20 +102,18 @@ const statusText = {
   cancelled: "Цуцалсан",
 };
 
-const DAY_MS = 86_400_000;
-
 /** Days a ready order has waited to ship, from the second day on. */
-const waitingDays = (order: Parameters<typeof nextStep>[0] & { createdAt: Date }, now: Date) => {
+const waitingDays = (order: Pick<OrderSummary, "status" | "terms" | "createdAt">, now: Date) => {
   if (nextStep(order)?.step !== "ship") return undefined;
 
-  const days = Math.floor((now.getTime() - order.createdAt.getTime()) / DAY_MS);
+  const days = daysBetween(order.createdAt, now);
 
   return days >= 2 ? days : undefined;
 };
 
 export default function Orders() {
   const [params, setParams] = useSearchParams<{ view?: string; q?: string }>();
-  const { secondsLeft } = useContext(HeldSteps);
+  const { failure, secondsLeft } = useContext(HeldSteps);
   const view = () => views.find((candidate) => candidate.key === params.view) ?? views[0];
   const input = createMemo(() => searchOf(params.q ?? "") ?? view().input);
 
@@ -127,7 +125,10 @@ export default function Orders() {
 
   const counts = createMemo(() => runEffect(ApiClient.use((api) => api.orderCounts())));
   const now = createMemo(() => runEffect(DateTime.nowAsDate));
-  const reload = () => Promise.all([refresh(orders), refresh(counts)]);
+
+  const reload = async () => {
+    await Promise.all([refresh(orders), refresh(counts)]);
+  };
 
   const lines = () => orders().flatMap((order) => order.lines);
   const pieces = () => lines().reduce((sum, line) => sum + line.quantity, 0);
@@ -248,7 +249,7 @@ export default function Orders() {
                         borderRadius: "22px",
                         transition: "transform .56s {easings.spring}, background .2s ease",
                         _active: {
-                          bg: "rgba(30,27,23,.05)",
+                          bg: "ink/5",
                           transform: "scale(.985)",
                           transition: "transform .12s ease-out, background 0s",
                         },
@@ -273,7 +274,7 @@ export default function Orders() {
                         })}
                       >
                         <Show when={order().customerPhone} fallback="Утасгүй">
-                          {(digits) => phone(digits())}
+                          {(digits) => <>{phone(digits())}</>}
                         </Show>
                       </b>
                       <Show when={waitingDays(order(), now())}>
@@ -317,6 +318,13 @@ export default function Orders() {
                         </div>
                       )}
                     </Show>
+                    <Show when={failure(order().id)}>
+                      {(text) => (
+                        <div class={css(sub, { mt: "5px", color: "owes", fontWeight: "600" })}>
+                          {text()}
+                        </div>
+                      )}
+                    </Show>
                     <Show when={order().notes}>
                       {(notes) => (
                         <div class={css({ mt: "10px" })}>
@@ -342,7 +350,7 @@ export default function Orders() {
                         when={nextStep(order())}
                         fallback={<Pill tone="neutral">{statusText[order().status]}</Pill>}
                       >
-                        <StepButton order={order()} onDone={() => void reload()} />
+                        <StepButton order={order()} reload={reload} />
                       </Show>
                     </div>
                   </div>

@@ -1,20 +1,16 @@
 import { Unauthorized } from "@amerik/contracts";
 import type { OrderSummary } from "@amerik/contracts";
 import type { JSX } from "@solidjs/web";
-import { For, Show, useContext } from "solid-js";
+import { createUniqueId, For, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
 import CheckIcon from "~icons/ph/check-circle-fill";
 import TruckIcon from "~icons/ph/truck-bold";
 import WarningIcon from "~icons/ph/warning-circle-fill";
 
-import { RuntimeContext } from "./api/solid-effect";
 import { money } from "./format";
-import { advance, HeldSteps, nextStep } from "./steps";
-import type { Step } from "./steps";
+import { HeldSteps, nextStep } from "./steps";
 import { Zoom } from "./zoom";
 import type { Product } from "./zoom";
-
-type Order = typeof OrderSummary.Type;
 
 export type Icon = (props: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 
@@ -69,7 +65,7 @@ export const sectionHead = css.raw({
 export const panel = css.raw({
   bg: "surface",
   borderRadius: "22px",
-  boxShadow: "inset 0 1px 0 #fff, {shadows.raise}",
+  boxShadow: "inset 0 1px 0 {colors.white}, {shadows.raise}",
 });
 
 /** Squeezes on touch-down and springs back on release. */
@@ -98,7 +94,7 @@ export const button = css.raw(press, {
   "& svg": { fontSize: "20px" },
   _disabled: {
     bg: "chip",
-    color: "#857d72",
+    color: "inkFaint",
     boxShadow: "none",
     cursor: "default",
     _active: { transform: "none" },
@@ -109,6 +105,9 @@ export const button = css.raw(press, {
 export const act = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
 
 export const large = css.raw({ height: "56px", fontSize: "18px" });
+
+/** A docked action across the whole width. */
+export const wide = css.raw(large, { width: "100%" });
 
 export const small = css.raw({ height: "44px", px: "18px", fontSize: "16px" });
 
@@ -129,16 +128,28 @@ export const roundAct = css.raw({ bg: "ink", color: "surface", boxShadow: "lift"
 
 /** Frosted glass for buttons that float over the page. */
 export const glass = css.raw({
-  bg: "rgba(255,253,249,.78)",
+  bg: "surface/78",
   backdropFilter: "blur(20px) saturate(180%)",
   boxShadow: "glass",
+});
+
+/** The frosted bar a pushed page opens with; each page lays out its own row. */
+export const glassBar = css.raw({
+  position: "sticky",
+  top: 0,
+  zIndex: 5,
+  px: "14px",
+  pt: "calc(env(safe-area-inset-top) + 8px)",
+  pb: "8px",
+  bg: "page/90",
+  backdropFilter: "blur(22px) saturate(180%)",
 });
 
 export const field = css.raw({
   width: "100%",
   bg: "surface",
   borderRadius: "14px",
-  boxShadow: "0 0 0 .5px rgba(30,27,23,.12), inset 0 1px 2px rgba(30,27,23,.05)",
+  boxShadow: "0 0 0 .5px {colors.ink/12}, inset 0 1px 2px {colors.ink/5}",
   px: "14px",
   py: "12px",
   fontSize: "17px",
@@ -151,7 +162,7 @@ export const searchBox = css.raw({
   height: "46px",
   borderRadius: "14px",
   bg: "surface",
-  boxShadow: "0 0 0 .5px rgba(30,27,23,.1), inset 0 1px 2px rgba(30,27,23,.05)",
+  boxShadow: "0 0 0 .5px {colors.ink/10}, inset 0 1px 2px {colors.ink/5}",
   display: "flex",
   alignItems: "center",
   gap: "8px",
@@ -226,7 +237,7 @@ export function Pill(props: { tone: keyof typeof tones; children: JSX.Element })
 }
 
 /** Money to collect in red, or paid in green. */
-export function Money(props: { order: Pick<Order, "terms" | "paid" | "balance"> }) {
+export function Money(props: { order: Pick<OrderSummary, "terms" | "paid" | "balance"> }) {
   return (
     <Show
       when={props.order.balance > 0}
@@ -362,12 +373,15 @@ export function Segmented<T extends string>(props: {
   value: T;
   onChange: (value: T) => void;
 }) {
+  const name = createUniqueId();
+
   const index = () =>
     Math.max(
       0,
       props.options.findIndex(([value]) => value === props.value),
     );
 
+  // Native radios: arrow keys and one tab stop come with them.
   return (
     <div
       role="radiogroup"
@@ -390,7 +404,7 @@ export function Segmented<T extends string>(props: {
           left: "3px",
           borderRadius: "11px",
           bg: "surface",
-          boxShadow: "0 0 0 .5px rgba(30,27,23,.06), 0 3px 8px -2px rgba(30,27,23,.16)",
+          boxShadow: "0 0 0 .5px {colors.ink/6}, 0 3px 8px -2px {colors.ink/16}",
           transition: "transform .5s {easings.spring}",
         })}
         style={{
@@ -400,11 +414,7 @@ export function Segmented<T extends string>(props: {
       />
       <For each={props.options}>
         {([value, label, OptionIcon]) => (
-          <button
-            type="button"
-            role="radio"
-            aria-checked={props.value === value ? "true" : "false"}
-            onClick={() => props.onChange(value)}
+          <label
             class={css(
               {
                 position: "relative",
@@ -419,13 +429,26 @@ export function Segmented<T extends string>(props: {
                 cursor: "pointer",
                 transition: "color .2s ease",
                 "& svg": { fontSize: "18px" },
+                "&:has(:focus-visible)": {
+                  outline: "2px solid {colors.sel}",
+                  outlineOffset: "-2px",
+                  borderRadius: "11px",
+                },
               },
               props.value === value && { color: "ink" },
             )}
           >
+            <input
+              type="radio"
+              name={name}
+              value={value}
+              checked={props.value === value}
+              onChange={() => props.onChange(value)}
+              class={css({ srOnly: true })}
+            />
             {OptionIcon && <OptionIcon />}
             {label}
-          </button>
+          </label>
         )}
       </For>
     </div>
@@ -433,23 +456,16 @@ export function Segmented<T extends string>(props: {
 }
 
 /**
- * A row's next step. A tap holds it for 5 seconds as [Болих N] with a bar
- * draining under it, then writes; `onDone` reloads the list either way.
+ * An order's next step. A tap holds it for 5 seconds as [Болих N] with a bar
+ * draining under it, then writes and calls `reload`. It stays disabled while
+ * the write runs; a failure shows through `HeldSteps.failure`.
  */
 export function StepButton(props: {
-  order: Pick<Order, "id" | "status" | "terms">;
-  onDone: () => void;
+  order: Pick<OrderSummary, "id" | "status" | "terms">;
+  reload: () => Promise<void>;
+  wide?: boolean;
 }) {
-  const runtime = useContext(RuntimeContext);
-  const { hold, release, secondsLeft } = useContext(HeldSteps);
-
-  const start = (orderId: Order["id"], step: Step) =>
-    hold(orderId, () =>
-      runtime.runPromise(advance(orderId, step)).then(
-        () => props.onDone(),
-        () => props.onDone(),
-      ),
-    );
+  const { hold, release, running, secondsLeft } = useContext(HeldSteps);
 
   return (
     <Show when={nextStep(props.order)}>
@@ -459,8 +475,9 @@ export function StepButton(props: {
           fallback={
             <button
               type="button"
-              class={css(button, act, { position: "relative", zIndex: 1 })}
-              onClick={() => start(props.order.id, next().step)}
+              disabled={running(props.order.id)}
+              class={css(button, act, { position: "relative", zIndex: 1 }, props.wide && wide)}
+              onClick={() => hold(props.order.id, next().step, props.reload)}
             >
               <TruckIcon />
               {next().label}
@@ -470,12 +487,16 @@ export function StepButton(props: {
           {(left) => (
             <button
               type="button"
-              class={css(button, {
-                position: "relative",
-                zIndex: 1,
-                overflow: "hidden",
-                fontVariantNumeric: "tabular-nums",
-              })}
+              class={css(
+                button,
+                {
+                  position: "relative",
+                  zIndex: 1,
+                  overflow: "hidden",
+                  fontVariantNumeric: "tabular-nums",
+                },
+                props.wide && wide,
+              )}
               onClick={() => release(props.order.id)}
             >
               Болих {left()}
@@ -493,6 +514,19 @@ export function StepButton(props: {
             </button>
           )}
         </Show>
+      )}
+    </Show>
+  );
+}
+
+/** Why a write didn't go through, right above the button she tapped. */
+export function Failed(props: { text: string | undefined }) {
+  return (
+    <Show when={props.text}>
+      {(text) => (
+        <p class={css({ pb: "12px", color: "owes", fontSize: "15px", textAlign: "center" })}>
+          {text()}
+        </p>
       )}
     </Show>
   );

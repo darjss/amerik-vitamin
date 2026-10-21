@@ -1,4 +1,6 @@
-import type { OrderSummary, ProductId } from "@amerik/contracts";
+import type { OrderNumber, OrderSummary, ProductId } from "@amerik/contracts";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import {
   action,
   createMemo,
@@ -26,6 +28,7 @@ import {
   act,
   button,
   glass,
+  glassBar,
   headline,
   large,
   Money,
@@ -36,13 +39,12 @@ import {
   sub,
   Tile,
   title2,
+  wide,
 } from "../ui";
 
-type Order = typeof OrderSummary.Type;
+const key = (order: OrderSummary, productId: ProductId) => `${order.id}:${productId}`;
 
-const key = (order: Order, productId: ProductId) => `${order.id}:${productId}`;
-
-const phoneText = (order: Order) =>
+const phoneText = (order: OrderSummary) =>
   order.customerPhone === null ? "Утасгүй" : phone(order.customerPhone);
 
 /**
@@ -57,22 +59,24 @@ export default function Pack() {
 
   const [index, setIndex] = createSignal(0);
   const [ticked, setTicked] = createStore<Record<string, boolean>>({});
-  const [packed, setPacked] = createSignal<ReadonlyArray<Order>>([]);
+  const [packed, setPacked] = createSignal<ReadonlyArray<OrderSummary>>([]);
 
   const current = () => orders()[index()];
-  const isTicked = (order: Order, productId: ProductId) => ticked[key(order, productId)] === true;
 
-  const tickedCount = (order: Order) =>
+  const isTicked = (order: OrderSummary, productId: ProductId) =>
+    ticked[key(order, productId)] === true;
+
+  const tickedCount = (order: OrderSummary) =>
     order.lines.filter((line) => isTicked(order, line.productId)).length;
 
-  const allTicked = (order: Order) => tickedCount(order) === order.lines.length;
+  const allTicked = (order: OrderSummary) => tickedCount(order) === order.lines.length;
 
-  const tick = (order: Order, productId: ProductId) =>
+  const tick = (order: OrderSummary, productId: ProductId) =>
     setTicked((draft) => {
       draft[key(order, productId)] = !draft[key(order, productId)];
     });
 
-  const next = (order: Order, done: boolean) => {
+  const next = (order: OrderSummary, done: boolean) => {
     if (done) setPacked((list) => [...list, order]);
     setIndex((at) => at + 1);
     window.scrollTo(0, 0);
@@ -93,18 +97,7 @@ export default function Pack() {
     <main class={css({ pb: "130px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<div class={css(panel, { m: "80px 16px 0", height: "400px" })} />}>
-          <header
-            class={css({
-              position: "sticky",
-              top: 0,
-              zIndex: 5,
-              px: "14px",
-              pt: "calc(env(safe-area-inset-top) + 8px)",
-              pb: "10px",
-              bg: "rgba(248,244,236,.9)",
-              backdropFilter: "blur(22px) saturate(180%)",
-            })}
-          >
+          <header class={css(glassBar, { pb: "10px" })}>
             <div class={css({ display: "flex", alignItems: "center", gap: "10px" })}>
               <a href="/" aria-label="Хаах" class={css(round, glass)}>
                 <CloseIcon />
@@ -131,7 +124,7 @@ export default function Pack() {
                       flex: 1,
                       height: "4px",
                       borderRadius: "2px",
-                      bg: "#e2dacc",
+                      bg: "track",
                       overflow: "hidden",
                     })}
                   >
@@ -206,7 +199,7 @@ export default function Pack() {
                           p: "14px 16px 14px 14px",
                           cursor: "pointer",
                           transition: "background .2s ease",
-                          _active: { bg: "rgba(30,27,23,.04)" },
+                          _active: { bg: "ink/4" },
                           "& + &": { boxShadow: "inset 0 .5px 0 {colors.line}" },
                         })}
                       >
@@ -276,7 +269,7 @@ export default function Pack() {
                               placeItems: "center",
                               fontSize: "20px",
                               color: "transparent",
-                              boxShadow: "inset 0 0 0 2px #c9c0b1",
+                              boxShadow: "inset 0 0 0 2px {colors.tick}",
                               transition:
                                 "background .15s ease, box-shadow .15s ease, color .15s ease",
                             },
@@ -323,31 +316,37 @@ export default function Pack() {
 }
 
 /** The end of the pass: check the pile against the list, then hand it all to TU. */
-function Hand(props: { packed: ReadonlyArray<Order>; total: number }) {
+function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
   const runtime = useContext(RuntimeContext);
   const [busy, setBusy] = createOptimistic(false);
-  const [result, setResult] = createSignal<{ sent: number; failed: number }>();
+  const [result, setResult] = createSignal<{ sent: number; failed: ReadonlyArray<OrderNumber> }>();
 
   const collect = () =>
     props.packed
       .filter((order) => order.terms === "cod")
       .reduce((total, order) => total + Math.max(order.balance, 0), 0);
 
-  // Runs to the last parcel even if she leaves the page.
-  const handAll = action(function* handAll(parcels: ReadonlyArray<Order>) {
+  // Runs to the last parcel even if she leaves the page. Each parcel's Exit is
+  // kept, so this never fails; a failed one stays in Илгээх for another try.
+  const handAll = action(async function* handAll(parcels: ReadonlyArray<OrderSummary>) {
     setBusy(true);
-    let sent = 0;
 
-    for (const parcel of parcels) {
-      try {
-        yield runtime.runPromise(advance(parcel.id, "ship"));
-        sent += 1;
-      } catch {
-        // Counted below; the order stays in Илгээх for another try.
-      }
-    }
+    const handed = await runtime.runPromise(
+      Effect.forEach(
+        parcels,
+        (parcel) =>
+          advance(parcel.id, "ship").pipe(
+            Effect.exit,
+            Effect.map((exit) => ({ number: parcel.number, exit })),
+          ),
+        { concurrency: 4 },
+      ),
+    );
 
-    setResult({ sent, failed: parcels.length - sent });
+    yield;
+
+    const failed = handed.flatMap(({ number, exit }) => (Exit.isFailure(exit) ? [number] : []));
+    setResult({ sent: parcels.length - failed.length, failed });
   });
 
   const disc = css.raw({
@@ -422,7 +421,7 @@ function Hand(props: { packed: ReadonlyArray<Order>; total: number }) {
                 type="button"
                 disabled={busy()}
                 onClick={() => handAll(props.packed)}
-                class={css(button, act, large, { width: "100%" })}
+                class={css(button, act, wide)}
               >
                 <TruckIcon />
                 {props.packed.length} илгээмжийг TU-д өгөх
@@ -438,9 +437,12 @@ function Hand(props: { packed: ReadonlyArray<Order>; total: number }) {
             <TruckIcon />
           </span>
           <h1 class={css(title2)}>{done().sent} илгээмж TU-д өглөө</h1>
-          <Show when={done().failed > 0}>
+          <Show when={done().failed.length > 0}>
             <p class={css({ color: "owes", mt: "8px" })}>
-              {done().failed} нь болсонгүй. Захиалга дотроос дахин оролдоно уу.
+              {done()
+                .failed.map((number) => `#${number}`)
+                .join(", ")}{" "}
+              болсонгүй. Захиалга дотроос дахин оролдоно уу.
             </p>
           </Show>
           <a href="/" class={css(button, act, large, { mt: "28px", px: "32px" })}>

@@ -41,11 +41,7 @@ export default function Home() {
   const now = createMemo(() => runEffect(DateTime.nowAsDate));
 
   // "Мягмар, 10-р сарын 20": the weekday in ink, the date softer.
-  const date = () => {
-    const [weekday, rest] = longDate(now()).split(", ");
-
-    return { weekday, rest };
-  };
+  const date = () => longDate(now());
 
   return (
     <main class={css(top, { pb: "120px" })}>
@@ -60,7 +56,7 @@ export default function Home() {
             })}
           >
             {date().weekday},{" "}
-            <span class={css({ color: "inkMuted", fontWeight: "600" })}>{date().rest}</span>
+            <span class={css({ color: "inkMuted", fontWeight: "600" })}>{date().date}</span>
           </h1>
 
           <section class={css(panel, { mx: "16px", mt: "20px", borderRadius: "26px" })}>

@@ -1,6 +1,14 @@
-import type { OrderSource, OrderSummary, ProductId, ProductRow } from "@amerik/contracts";
+import type {
+  OrderSource,
+  PaymentTerms,
+  PlaceOrder,
+  ProductId,
+  ProductRow,
+} from "@amerik/contracts";
 import { useNavigate } from "@solidjs/router";
+import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import {
   action,
   createMemo,
@@ -9,6 +17,7 @@ import {
   createStore,
   Errored,
   For,
+  latest,
   Loading,
   Show,
   useContext,
@@ -19,7 +28,6 @@ import ChatIcon from "~icons/ph/chat-circle";
 import CoinsIcon from "~icons/ph/hand-coins";
 import SearchIcon from "~icons/ph/magnifying-glass";
 import MapPinIcon from "~icons/ph/map-pin";
-import MinusIcon from "~icons/ph/minus-bold";
 import NoteIcon from "~icons/ph/note-pencil";
 import PhoneIcon from "~icons/ph/phone";
 import PlusIcon from "~icons/ph/plus-bold";
@@ -27,28 +35,28 @@ import StoreIcon from "~icons/ph/storefront";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
+import { Cart } from "../../cart";
 import { Dock } from "../../chrome";
-import { money } from "../../format";
+import { failureText, matches, money } from "../../format";
 import {
   act,
   button,
+  Failed,
+  glassBar,
   headline,
-  large,
   panel,
   Pill,
   press,
   Problem,
   searchBox,
   section,
-  sectionHead,
   Segmented,
   sub,
   Tile,
   title3,
+  wide,
 } from "../../ui";
 import type { Icon } from "../../ui";
-
-type Product = typeof ProductRow.Type;
 
 const FEE = 6000;
 
@@ -77,7 +85,7 @@ const fieldRow = css.raw({
     lineHeight: "22px",
     color: "ink",
     resize: "none",
-    _placeholder: { color: "#8a8277" },
+    _placeholder: { color: "inkFaint" },
   },
 });
 
@@ -92,16 +100,49 @@ export default function NewOrder() {
   const navigate = useNavigate();
 
   const [phone, setPhone] = createSignal("");
-  const [address, setAddress] = createSignal("");
+  const [typedAddress, setAddress] = createSignal<string>();
   const [notes, setNotes] = createSignal("");
   const [source, setSource] = createSignal<OrderSource>("messenger_human");
-  const [terms, setTerms] = createSignal<"prepay" | "cod">("prepay");
+  const [terms, setTerms] = createSignal<PaymentTerms>("prepay");
   const [query, setQuery] = createSignal("");
   const [cart, setCart] = createStore<Record<ProductId, number>>({});
-  const [history, setHistory] = createSignal<ReadonlyArray<typeof OrderSummary.Type>>([]);
   const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal(false);
+  const [failed, setFailed] = createSignal<string>();
 
+  // A full phone looks up the customer: how many orders, and the last address.
+  const customer = createMemo(() => {
+    const digits = phone();
+
+    return runEffect(
+      Effect.gen(function* () {
+        if (digits.length !== 8) return undefined;
+
+        const api = yield* ApiClient;
+
+        return yield* api.findCustomer({ phone: digits }).pipe(
+          // A new phone has no customer yet; any other failure reaches Errored.
+          Effect.catchTag("CustomerNotFound", () => Effect.succeed(undefined)),
+        );
+      }),
+    );
+  });
+
+  // The phone's past orders, for Өмнө авсан.
+  const pastOrders = createMemo(() => {
+    const digits = phone();
+
+    return runEffect(
+      Effect.gen(function* () {
+        if (digits.length !== 8) return [];
+
+        const api = yield* ApiClient;
+
+        return yield* api.listOrders({ phone: digits });
+      }),
+    );
+  });
+
+  const address = () => typedAddress() ?? customer()?.address ?? "";
   const walkIn = () => source() === "walk_in";
   const fee = () => (walkIn() ? 0 : FEE);
   const live = () => products().filter((product) => product.archivedAt === null);
@@ -114,17 +155,15 @@ export default function NewOrder() {
     });
 
   // Sold out goes last; a search narrows by brand or name.
-  const shown = () => {
-    const words = query().trim().toLowerCase();
-
-    return live()
-      .filter((product) => `${product.brand} ${product.name}`.toLowerCase().includes(words))
-      .toSorted((a, b) => Number(a.stock === 0) - Number(b.stock === 0));
-  };
+  const shown = createMemo(() =>
+    live()
+      .filter((product) => matches(product, query()))
+      .toSorted((a, b) => Number(a.stock === 0) - Number(b.stock === 0)),
+  );
 
   // What this phone bought before, most recent first.
   const before = () => {
-    const ids = new Set(history().flatMap((order) => order.lines.map((line) => line.productId)));
+    const ids = new Set(pastOrders().flatMap((order) => order.lines.map((line) => line.productId)));
 
     return live().filter((product) => ids.has(product.id));
   };
@@ -132,30 +171,10 @@ export default function NewOrder() {
   const subtotal = () =>
     picked().reduce((sum, line) => sum + line.product.price * line.quantity, 0);
 
-  const add = (product: Product, change: number) =>
+  const add = (product: ProductRow, change: number) =>
     setCart((draft) => {
       draft[product.id] = Math.max(0, (draft[product.id] ?? 0) + change);
     });
-
-  const lookUp = (digits: string) => {
-    setHistory([]);
-
-    if (digits.length !== 8) return;
-
-    void runtime
-      .runPromise(
-        ApiClient.use((api) => api.listOrders({ phone: digits })).pipe(
-          Effect.orElseSucceed(() => []),
-        ),
-      )
-      .then((orders) => {
-        setHistory(orders);
-
-        const last = orders.find((order) => order.address !== null)?.address;
-
-        if (address() === "" && last !== undefined && last !== null) setAddress(last);
-      });
-  };
 
   const missing = () => {
     if (picked().length === 0) return "Бараа сонгоно уу";
@@ -163,52 +182,44 @@ export default function NewOrder() {
     return walkIn() || phone().length === 8 ? undefined : "Утасны дугаар оруулна уу";
   };
 
-  const place = action(function* place() {
-    const [first, ...rest] = picked().map(({ product, quantity }) => ({
-      productId: product.id,
-      quantity,
-    }));
+  // A failure keeps the draft and says why above the button.
+  const place = action(async function* place() {
+    const lines = picked().map(({ product, quantity }) => ({ productId: product.id, quantity }));
 
-    if (first === undefined) return;
+    if (!Arr.isArrayNonEmpty(lines)) return;
 
     const input = {
       phone: phone().length === 8 ? phone() : undefined,
-      address: address().trim() || undefined,
+      // The prefilled address may still be loading; send what she sees.
+      address: latest(address).trim() || undefined,
       notes: notes().trim() || undefined,
       source: source(),
       terms: terms(),
-      fulfillment: walkIn() ? ("in_store" as const) : ("courier" as const),
+      fulfillment: walkIn() ? "in_store" : "courier",
       deliveryFee: fee(),
-      lines: [first, ...rest] as const,
-    };
+      lines,
+    } satisfies PlaceOrder;
 
     setBusy(true);
-    setFailed(false);
+    const exit = await runtime.runPromiseExit(ApiClient.use((api) => api.placeOrder(input)));
+    yield;
 
-    try {
-      yield runtime
-        .runPromise(ApiClient.use((api) => api.placeOrder(input)))
-        .then((placed) => navigate(`/orders/${placed.orderId}`, { replace: true }));
-    } catch {
-      setFailed(true);
+    if (Exit.isFailure(exit)) {
+      setFailed(failureText(exit.cause, "Хадгалж чадсангүй. Дахин оролдоно уу."));
+
+      return;
     }
+
+    navigate(`/orders/${exit.value.orderId}`, { replace: true });
   });
 
   return (
     <main class={css({ pb: "140px" })}>
       <header
-        class={css({
-          position: "sticky",
-          top: 0,
-          zIndex: 5,
+        class={css(glassBar, {
           display: "grid",
           gridTemplateColumns: "1fr auto 1fr",
           alignItems: "center",
-          px: "14px",
-          pt: "calc(env(safe-area-inset-top) + 8px)",
-          pb: "8px",
-          bg: "rgba(248,244,236,.9)",
-          backdropFilter: "blur(22px) saturate(180%)",
         })}
       >
         <a
@@ -228,58 +239,57 @@ export default function NewOrder() {
         <b class={css(headline)}>Шинэ захиалга</b>
       </header>
 
-      <div class={css({ px: "20px", pt: "12px" })}>
-        <Segmented options={sources} value={source()} onChange={setSource} />
+      {/* A failed customer lookup lands here too, not in a quiet empty pill. */}
+      <Errored fallback={(error) => <Problem error={error()} />}>
+        <div class={css({ px: "20px", pt: "12px" })}>
+          <Segmented options={sources} value={source()} onChange={setSource} />
 
-        <div class={css(panel, { mt: "16px", borderRadius: "20px", overflow: "hidden" })}>
-          <label class={css(fieldRow)}>
-            <PhoneIcon />
-            <input
-              inputmode="numeric"
-              autocomplete="off"
-              aria-label="Утас"
-              placeholder={walkIn() ? "Утас, заавал биш" : "Утас"}
-              value={phone()}
-              onInput={(event) => {
-                const digits = event.currentTarget.value.replaceAll(/\D/gu, "").slice(-8);
-                setPhone(digits);
-                lookUp(digits);
-              }}
-              class={css({
-                fontWeight: "650",
-                letterSpacing: "0.01em",
-                fontVariantNumeric: "tabular-nums",
-              })}
-            />
-            <Show when={history().length > 0}>
-              <Pill tone="soft">{history().length + 1} дахь захиалга</Pill>
-            </Show>
-          </label>
-          <Show when={!walkIn()}>
+          <div class={css(panel, { mt: "16px", borderRadius: "20px", overflow: "hidden" })}>
             <label class={css(fieldRow)}>
-              <MapPinIcon />
-              <textarea
-                rows={2}
-                aria-label="Хаяг"
-                placeholder="Хаяг"
-                value={address()}
-                onInput={(event) => setAddress(event.currentTarget.value)}
+              <PhoneIcon />
+              <input
+                inputmode="numeric"
+                autocomplete="off"
+                aria-label="Утас"
+                placeholder={walkIn() ? "Утас, заавал биш" : "Утас"}
+                value={phone()}
+                onInput={(event) =>
+                  setPhone(event.currentTarget.value.replaceAll(/\D/gu, "").slice(-8))
+                }
+                class={css({
+                  fontWeight: "650",
+                  letterSpacing: "0.01em",
+                  fontVariantNumeric: "tabular-nums",
+                })}
+              />
+              <Show when={customer()?.orders}>
+                {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
+              </Show>
+            </label>
+            <Show when={!walkIn()}>
+              <label class={css(fieldRow)}>
+                <MapPinIcon />
+                <textarea
+                  rows={2}
+                  aria-label="Хаяг"
+                  placeholder="Хаяг"
+                  value={address()}
+                  onInput={(event) => setAddress(event.currentTarget.value)}
+                />
+              </label>
+            </Show>
+            <label class={css(fieldRow)}>
+              <NoteIcon />
+              <input
+                aria-label="Тэмдэглэл"
+                placeholder="Тэмдэглэл: орцны код, залгах"
+                value={notes()}
+                onInput={(event) => setNotes(event.currentTarget.value)}
               />
             </label>
-          </Show>
-          <label class={css(fieldRow)}>
-            <NoteIcon />
-            <input
-              aria-label="Тэмдэглэл"
-              placeholder="Тэмдэглэл: орцны код, залгах"
-              value={notes()}
-              onInput={(event) => setNotes(event.currentTarget.value)}
-            />
-          </label>
+          </div>
         </div>
-      </div>
 
-      <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<div class={css(panel, { m: "28px 16px", height: "320px" })} />}>
           <Show when={before().length > 0}>
             <section class={css(section, { mt: "28px" })}>
@@ -395,7 +405,7 @@ export default function NewOrder() {
                           transition: "box-shadow .2s ease",
                         },
                         (cart[product().id] ?? 0) > 0 && {
-                          boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px rgba(15,76,92,.5)",
+                          boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px {colors.sel/50}",
                         },
                       )}
                     >
@@ -448,87 +458,7 @@ export default function NewOrder() {
             </Show>
           </section>
 
-          <section class={css(section)}>
-            <div class={css(sectionHead)}>
-              <h2 class={css(title3)}>Сагс</h2>
-            </div>
-            <Show
-              when={picked().length > 0}
-              fallback={<p class={css(sub)}>Дээрээс бараа сонгоно уу</p>}
-            >
-              <div class={css({ display: "grid", gap: "14px" })}>
-                <For each={picked()} keyed={(line) => line.product.id}>
-                  {(line) => (
-                    <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
-                      <Tile product={line().product} size={52} />
-                      <div class={css({ flex: 1, minWidth: 0 })}>
-                        <div class={css(headline, { fontSize: "16px" })}>{line().product.name}</div>
-                        <div class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
-                          {money(line().product.price * line().quantity)}
-                        </div>
-                      </div>
-                      <div
-                        class={css({
-                          display: "flex",
-                          alignItems: "center",
-                          flex: "none",
-                          height: "44px",
-                          borderRadius: "22px",
-                          bg: "surface",
-                          boxShadow: "raiseSm",
-                          "& button": {
-                            width: "44px",
-                            height: "44px",
-                            display: "grid",
-                            placeItems: "center",
-                            fontSize: "18px",
-                            cursor: "pointer",
-                          },
-                        })}
-                      >
-                        <button
-                          type="button"
-                          aria-label="Хасах"
-                          onClick={() => add(line().product, -1)}
-                        >
-                          <MinusIcon />
-                        </button>
-                        <b
-                          class={css({
-                            minWidth: "18px",
-                            textAlign: "center",
-                            fontWeight: "700",
-                            fontVariantNumeric: "tabular-nums",
-                          })}
-                        >
-                          {line().quantity}
-                        </b>
-                        <button
-                          type="button"
-                          aria-label="Нэмэх"
-                          onClick={() => add(line().product, 1)}
-                        >
-                          <PlusIcon />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </For>
-              </div>
-              <div
-                class={css({ mt: "18px", color: "inkMuted", fontVariantNumeric: "tabular-nums" })}
-              >
-                <div class={css({ display: "flex", justifyContent: "space-between", py: "5px" })}>
-                  <span>Бараа</span>
-                  <span class={css({ color: "ink", fontWeight: "600" })}>{money(subtotal())}</span>
-                </div>
-                <div class={css({ display: "flex", justifyContent: "space-between", py: "5px" })}>
-                  <span>{walkIn() ? "Хүргэлтгүй" : "Хүргэлт"}</span>
-                  <span class={css({ color: "ink", fontWeight: "600" })}>{money(fee())}</span>
-                </div>
-              </div>
-            </Show>
-          </section>
+          <Cart lines={picked()} subtotal={subtotal()} fee={fee()} walkIn={walkIn()} onAdd={add} />
 
           <section class={css(section, { mt: "26px" })}>
             <h2 class={css(title3, { mb: "10px" })}>Төлбөр</h2>
@@ -543,20 +473,14 @@ export default function NewOrder() {
           </section>
 
           <Dock>
-            <Show when={failed()}>
-              <p class={css({ color: "owes", fontSize: "15px", textAlign: "center" })}>
-                Хадгалж чадсангүй. Дахин оролдоно уу.
-              </p>
-            </Show>
+            <Failed text={failed()} />
             <button
               type="button"
               disabled={missing() !== undefined || busy()}
               onClick={() => place()}
-              class={css(button, act, large, { width: "100%" })}
+              class={css(button, act, wide)}
             >
-              <Show when={missing()} fallback={`Захиалга үүсгэх · ${money(subtotal() + fee())}`}>
-                {(why) => why()}
-              </Show>
+              {missing() ?? `Захиалга үүсгэх · ${money(subtotal() + fee())}`}
             </button>
           </Dock>
         </Loading>

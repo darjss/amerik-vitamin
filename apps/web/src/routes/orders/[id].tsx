@@ -1,8 +1,16 @@
 import { OrderId } from "@amerik/contracts";
-import type { OrderDetail, OrderSource } from "@amerik/contracts";
+import type {
+  EditOrder,
+  ManualPayment,
+  OrderDetail,
+  OrderSource,
+  PaymentMethod,
+} from "@amerik/contracts";
 import { useParams } from "@solidjs/router";
+import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
+import type * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 import {
   action,
@@ -12,6 +20,7 @@ import {
   Errored,
   For,
   Loading,
+  onCleanup,
   refresh,
   Show,
   useContext,
@@ -22,20 +31,19 @@ import CopyIcon from "~icons/ph/copy-bold";
 import MoreIcon from "~icons/ph/dots-three-bold";
 import MapPinIcon from "~icons/ph/map-pin";
 import PhoneIcon from "~icons/ph/phone-fill";
-import TruckIcon from "~icons/ph/truck-bold";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { Dock, Sheet } from "../../chrome";
-import { clock, money, phone, when } from "../../format";
+import { clock, failureText, money, offline, phone, when } from "../../format";
 import { EditSheet, History, PaySheet, Tracker } from "../../order-parts";
-import { advance, nextStep } from "../../steps";
-import type { Step } from "../../steps";
+import { HeldSteps, nextStep } from "../../steps";
 import {
-  act,
   button,
+  Failed,
   glass,
+  glassBar,
   headline,
   large,
   largeTitle,
@@ -46,14 +54,13 @@ import {
   roundAct,
   section,
   sectionHead,
+  StepButton,
   sub,
   Tile,
   title2,
 } from "../../ui";
 
-type Order = typeof OrderDetail.Type;
-
-const headlineOf = (order: Order) => {
+const headlineOf = (order: OrderDetail) => {
   if (order.status === "cancelled") return "Цуцалсан";
 
   if (order.status === "delivered") return "Хүргэгдсэн";
@@ -75,9 +82,13 @@ const sourceText: Record<OrderSource, string> = {
   notebook: "Дэвтэр",
 };
 
-const methodText = { qpay: "QPay", transfer: "Шилжүүлэг", cash: "Бэлэн" };
+const methodText: Record<PaymentMethod, string> = {
+  qpay: "QPay",
+  transfer: "Шилжүүлэг",
+  cash: "Бэлэн",
+};
 
-const payText = (order: Order) => {
+const payText = (order: OrderDetail) => {
   const last = order.payments.at(-1);
 
   if (order.balance <= 0 && last !== undefined) return `${methodText[last.method]} төлсөн`;
@@ -85,7 +96,7 @@ const payText = (order: Order) => {
   return order.terms === "cod" ? "Хүргэлтээр төлнө" : "Төлбөр хүлээж";
 };
 
-const editable = (order: Order) => order.status === "new" || order.status === "paid";
+const editable = (order: OrderDetail) => order.status === "new" || order.status === "paid";
 
 const receiptRow = css.raw({
   display: "flex",
@@ -97,7 +108,7 @@ const receiptRow = css.raw({
 });
 
 export default function OrderPage() {
-  const params = useParams<{ id: OrderId }>();
+  const params = useParams();
   const orderId = () => Schema.decodeUnknownSync(OrderId)(params.id);
 
   const order = createMemo(() => {
@@ -108,29 +119,37 @@ export default function OrderPage() {
 
   const now = createMemo(() => runEffect(DateTime.nowAsDate));
   const runtime = useContext(RuntimeContext);
+  const { failure } = useContext(HeldSteps);
   const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal(false);
+  const [failed, setFailed] = createSignal<string>();
   const [copied, setCopied] = createSignal(false);
   const [sheet, setSheet] = createSignal<"menu" | "pay" | "edit" | "cancel">();
 
-  // Runs to completion even if she leaves the page.
-  const write = action(function* write<A, E>(effect: Effect.Effect<A, E, ApiClient>) {
+  const open = (next: ReturnType<typeof sheet>) => {
+    setFailed(undefined);
+    setSheet(next);
+  };
+
+  // Runs to completion even if she leaves the page. A failure keeps the sheet open and says why.
+  const write = action(async function* write<A, E extends { readonly _tag: string }>(
+    effect: Effect.Effect<A, E, ApiClient>,
+  ) {
     setBusy(true);
-    setFailed(false);
+    const exit = await runtime.runPromiseExit(effect);
+    yield;
 
-    try {
-      yield runtime.runPromise(effect);
-      setSheet(undefined);
-    } catch {
-      setFailed(true);
-    }
+    if (Exit.isFailure(exit)) setFailed(failureText(exit.cause));
+    else open(undefined);
 
-    yield refresh(order);
+    // A reload shows what changed, unless the network is down and it would fail too.
+    if (Exit.isSuccess(exit) || !offline(exit.cause)) yield refresh(order);
   });
 
-  const take = (step: Step) => write(advance(orderId(), step));
+  const reload = async () => {
+    await refresh(order);
+  };
 
-  const pay = (amount: number, method: "cash" | "transfer") => {
+  const pay = (amount: number, method: ManualPayment["method"]) => {
     const id = orderId();
 
     return write(ApiClient.use((api) => api.recordPayment({ orderId: id, amount, method })));
@@ -145,49 +164,36 @@ export default function OrderPage() {
   // The lines go back unchanged: editOrder takes the full line list.
   const edit = (address: string, notes: string) => {
     const current = order();
-    const [first, ...rest] = current.lines;
+    const lines = current.lines.map(({ productId, quantity }) => ({ productId, quantity }));
 
-    if (first === undefined) return;
+    if (!Arr.isArrayNonEmpty(lines)) return;
 
-    const line = ({ productId, quantity }: typeof first) => ({ productId, quantity });
+    const input = {
+      orderId: current.id,
+      address,
+      notes,
+      deliveryFee: current.deliveryFee,
+      lines,
+    } satisfies EditOrder;
 
-    return write(
-      ApiClient.use((api) =>
-        api.editOrder({
-          orderId: current.id,
-          address,
-          notes,
-          deliveryFee: current.deliveryFee,
-          lines: [line(first), ...rest.map(line)],
-        }),
-      ),
-    );
+    return write(ApiClient.use((api) => api.editOrder(input)));
   };
+
+  let copiedReset: ReturnType<typeof setTimeout> | undefined;
+  onCleanup(() => clearTimeout(copiedReset));
 
   const copy = async (address: string) => {
     await navigator.clipboard.writeText(address);
     setCopied(true);
+    clearTimeout(copiedReset);
+    copiedReset = setTimeout(() => setCopied(false), 2000);
   };
 
   return (
     <main class={css({ pb: "130px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<div class={css(panel, { m: "80px 16px 0", height: "400px" })} />}>
-          <header
-            class={css({
-              position: "sticky",
-              top: 0,
-              zIndex: 5,
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              px: "14px",
-              pt: "calc(env(safe-area-inset-top) + 8px)",
-              pb: "8px",
-              bg: "rgba(248,244,236,.9)",
-              backdropFilter: "blur(22px) saturate(180%)",
-            })}
-          >
+          <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
             <a href="/orders" aria-label="Хаах" class={css(round, glass)}>
               <CloseIcon />
             </a>
@@ -203,7 +209,7 @@ export default function OrderPage() {
             <button
               type="button"
               aria-label="Бусад үйлдэл"
-              onClick={() => setSheet("menu")}
+              onClick={() => open("menu")}
               class={css(round, glass)}
             >
               <MoreIcon />
@@ -299,7 +305,7 @@ export default function OrderPage() {
               <button
                 type="button"
                 disabled={!editable(order())}
-                onClick={() => setSheet("edit")}
+                onClick={() => open("edit")}
                 class={css({
                   flex: 1,
                   textAlign: "left",
@@ -330,7 +336,7 @@ export default function OrderPage() {
                 <button
                   type="button"
                   disabled={!editable(order())}
-                  onClick={() => setSheet("edit")}
+                  onClick={() => open("edit")}
                   class={css({ display: "block", width: "100%", mt: "14px", cursor: "pointer" })}
                 >
                   <Note>{notes()}</Note>
@@ -374,7 +380,7 @@ export default function OrderPage() {
                       fontSize: "17px",
                       fontWeight: "650",
                       fontVariantNumeric: "tabular-nums",
-                      "& + &": { boxShadow: "inset 0 .5px 0 rgba(47,107,58,.2)" },
+                      "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
                     })}
                   >
                     <span class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
@@ -415,7 +421,7 @@ export default function OrderPage() {
             <Show when={order().balance > 0 && order().status !== "cancelled"}>
               <button
                 type="button"
-                onClick={() => setSheet("pay")}
+                onClick={() => open("pay")}
                 class={css(button, { width: "100%", mt: "14px" })}
               >
                 Мөнгө авсан
@@ -423,33 +429,20 @@ export default function OrderPage() {
             </Show>
           </section>
 
-          <Show when={nextStep(order())}>
-            {(next) => (
-              <Dock>
-                <Show when={failed()}>
-                  <p class={css({ color: "owes", fontSize: "15px", textAlign: "center" })}>
-                    Болсонгүй. Дахин оролдоно уу.
-                  </p>
-                </Show>
-                <button
-                  type="button"
-                  disabled={busy()}
-                  onClick={() => take(next().step)}
-                  class={css(button, act, large, { width: "100%" })}
-                >
-                  <TruckIcon />
-                  {next().label}
-                </button>
-              </Dock>
-            )}
+          {/* A failed step keeps the dock even when the order has no next step left. */}
+          <Show when={nextStep(order()) !== undefined || failure(order().id) !== undefined}>
+            <Dock>
+              <Failed text={failure(order().id)} />
+              <StepButton order={order()} reload={reload} wide />
+            </Dock>
           </Show>
 
-          <Sheet open={sheet() === "menu"} title="Захиалга" onClose={() => setSheet(undefined)}>
+          <Sheet open={sheet() === "menu"} title="Захиалга" onClose={() => open(undefined)}>
             <div class={css({ display: "grid", gap: "10px" })}>
               <button
                 type="button"
                 disabled={!editable(order())}
-                onClick={() => setSheet("edit")}
+                onClick={() => open("edit")}
                 class={css(button, large, { width: "100%" })}
               >
                 Хаяг, тэмдэглэл засах
@@ -457,7 +450,7 @@ export default function OrderPage() {
               <Show when={editable(order())}>
                 <button
                   type="button"
-                  onClick={() => setSheet("cancel")}
+                  onClick={() => open("cancel")}
                   class={css(button, large, { width: "100%", color: "owes" })}
                 >
                   Захиалга цуцлах
@@ -470,7 +463,8 @@ export default function OrderPage() {
             open={sheet() === "pay"}
             balance={order().balance}
             busy={busy()}
-            onClose={() => setSheet(undefined)}
+            failed={failed()}
+            onClose={() => open(undefined)}
             onSave={pay}
           />
 
@@ -478,22 +472,24 @@ export default function OrderPage() {
             open={sheet() === "edit"}
             order={order()}
             busy={busy()}
-            onClose={() => setSheet(undefined)}
+            failed={failed()}
+            onClose={() => open(undefined)}
             onSave={edit}
           />
 
           <Sheet
             open={sheet() === "cancel"}
             title="Захиалга цуцлах уу?"
-            onClose={() => setSheet(undefined)}
+            onClose={() => open(undefined)}
           >
             <p class={css(sub, { pb: "18px" })}>
               Цуцалсан захиалгыг буцааж сэргээх боломжгүй. Төлсөн мөнгийг өөрөө буцааж өгнө.
             </p>
+            <Failed text={failed()} />
             <div class={css({ display: "flex", gap: "10px" })}>
               <button
                 type="button"
-                onClick={() => setSheet(undefined)}
+                onClick={() => open(undefined)}
                 class={css(button, large, { flex: 1 })}
               >
                 Үгүй

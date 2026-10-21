@@ -1,4 +1,5 @@
 import type { ProductRow } from "@amerik/contracts";
+import * as Exit from "effect/Exit";
 import {
   action,
   createMemo,
@@ -19,13 +20,13 @@ import PlusIcon from "~icons/ph/plus-bold";
 import { ApiClient } from "../api/client";
 import { runEffect, RuntimeContext } from "../api/solid-effect";
 import { Sheet, TabBar } from "../chrome";
-import { money } from "../format";
+import { failureText, matches, money } from "../format";
 import {
   act,
   button,
+  Failed,
   field,
   headline,
-  large,
   largeTitle,
   panel,
   Problem,
@@ -35,9 +36,8 @@ import {
   sub,
   Tile,
   top,
+  wide,
 } from "../ui";
-
-type Product = typeof ProductRow.Type;
 
 // Null until the first count or receipt.
 const stockText = (stock: number | null) => {
@@ -46,31 +46,41 @@ const stockText = (stock: number | null) => {
   return stock === 0 ? "Дууссан" : `${stock}`;
 };
 
-const matches = (product: Product, query: string) =>
-  `${product.brand} ${product.name}`.toLowerCase().includes(query.trim().toLowerCase());
-
 export default function Products() {
   const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
   const runtime = useContext(RuntimeContext);
   const [query, setQuery] = createSignal("");
-  const [counting, setCounting] = createSignal<Product>();
+  const [counting, setCounting] = createSignal<ProductRow>();
   const [counted, setCounted] = createSignal(0);
   const [busy, setBusy] = createOptimistic(false);
+  const [failed, setFailed] = createSignal<string>();
 
   const shown = () =>
     products().filter((product) => product.archivedAt === null && matches(product, query()));
 
-  const open = (product: Product) => {
+  const open = (product: ProductRow) => {
+    setFailed(undefined);
     setCounted(product.stock ?? 0);
     setCounting(product);
   };
 
   // A hand count sets stock to what she sees on the shelf; the log keeps the difference.
-  const save = action(function* save(product: Product, stock: number) {
+  // A failure keeps the sheet open and says why.
+  const save = action(async function* save(product: ProductRow, stock: number) {
     setBusy(true);
-    yield runtime.runPromise(
+
+    const exit = await runtime.runPromiseExit(
       ApiClient.use((api) => api.countStock({ productId: product.id, counted: stock })),
     );
+
+    yield;
+
+    if (Exit.isFailure(exit)) {
+      setFailed(failureText(exit.cause));
+
+      return;
+    }
+
     setCounting(undefined);
     yield refresh(products);
   });
@@ -174,11 +184,12 @@ export default function Products() {
                   <PlusIcon />
                 </button>
               </div>
+              <Failed text={failed()} />
               <button
                 type="button"
                 disabled={busy()}
                 onClick={() => save(product(), counted())}
-                class={css(button, act, large, { width: "100%" })}
+                class={css(button, act, wide)}
               >
                 Хадгалах
               </button>
