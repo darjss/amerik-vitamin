@@ -13,13 +13,13 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import type * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 import {
   FetchHttpClient,
   HttpClient,
   HttpClientRequest,
+  HttpClientResponse,
   HttpServerRequest,
   HttpServerResponse,
 } from "effect/http";
@@ -70,15 +70,19 @@ const PaymentCheck = Schema.Struct({
 /** vit-store's merchant settings, registered with QPay. */
 const INVOICE_CODE = "AMERIK_VITAMIN_INVOICE";
 
-const make = Effect.fn("QPay.make")(function* make(config: {
-  readonly url: string;
-  readonly username: string;
-  readonly password: Redacted.Redacted<string>;
-}) {
+/**
+ * `callbackUrl` is where QPay reports a payment: the stage's own API origin,
+ * so a dev stage never sends callbacks to production.
+ */
+const make = Effect.fn("QPay.make")(function* make(
+  config: Effect.Success<typeof qpayConfig>,
+  callbackUrl: string,
+) {
   const base = config.url.endsWith("/") ? config.url : `${config.url}/`;
 
   const http = (yield* HttpClient.HttpClient).pipe(
     HttpClient.retryTransient({ schedule: Schedule.exponential("500 millis"), times: 2 }),
+    HttpClient.filterStatusOk,
   );
 
   /** One POST: status checked, body decoded. The cause is logged here and never leaves. */
@@ -88,18 +92,18 @@ const make = Effect.fn("QPay.make")(function* make(config: {
     output: Schema.Codec<A, I>,
     request: (request: HttpClientRequest.HttpClientRequest) => HttpClientRequest.HttpClientRequest,
   ) =>
-    Effect.gen(function* () {
-      const response = yield* http.execute(request(HttpClientRequest.post(`${base}${path}`)));
-
-      if (response.status !== 200) {
-        const body = yield* response.text;
-
-        return yield* Effect.fail({ status: response.status, body: body.slice(0, 300) });
-      }
-
-      return yield* Schema.decodeUnknownEffect(output)(yield* response.json);
-    }).pipe(
-      Effect.scoped,
+    http.execute(request(HttpClientRequest.post(`${base}${path}`))).pipe(
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(output)),
+      // QPay says why it refused in the body.
+      Effect.catchReason("HttpClientError", "StatusCodeError", ({ response }, error) =>
+        response.text.pipe(
+          Effect.flatMap((body) =>
+            Effect.logError("qpay refused", { operation, body: body.slice(0, 300) }),
+          ),
+          Effect.ignore({ log: true }),
+          Effect.andThen(Effect.fail(error)),
+        ),
+      ),
       Effect.timeout("15 seconds"),
       Effect.tapError((cause) => Effect.logError("qpay request failed", { operation, cause })),
       Effect.mapError(() => new QPayUnavailable()),
@@ -133,11 +137,12 @@ const make = Effect.fn("QPay.make")(function* make(config: {
     );
 
   return {
+    /** The order id in the callback URL lets the callback find the invoices to re-check. */
     createInvoice: (input: {
+      readonly orderId: OrderId;
       readonly senderInvoiceNo: string;
       readonly amount: number;
       readonly description: string;
-      readonly callbackUrl: string;
     }) =>
       authed("createInvoice", "invoice", Invoice, {
         invoice_code: INVOICE_CODE,
@@ -146,7 +151,7 @@ const make = Effect.fn("QPay.make")(function* make(config: {
         sender_branch_code: "SALBAR1",
         invoice_description: input.description,
         amount: input.amount,
-        callback_url: input.callbackUrl,
+        callback_url: `${callbackUrl}?order=${input.orderId}`,
       }),
 
     checkInvoice: (invoiceId: QPayInvoiceId) =>
@@ -162,16 +167,9 @@ export class QPay extends Context.Service<QPay, Effect.Success<ReturnType<typeof
   "amerik/QPay",
 ) {
   /** Built per request or cron run, so the token cache never outlives it. */
-  static readonly layer = (config: Parameters<typeof make>[0]) =>
-    Layer.effect(QPay, make(config)).pipe(Layer.provide(FetchHttpClient.layer));
+  static readonly layer = (config: Effect.Success<typeof qpayConfig>, callbackUrl: string) =>
+    Layer.effect(QPay, make(config, callbackUrl)).pipe(Layer.provide(FetchHttpClient.layer));
 }
-
-/** Where QPay reports a payment. The order id lets the callback find the invoices to re-check. */
-export class QPayCallbackUrl extends Context.Service<QPayCallbackUrl, string>()(
-  "amerik/QPayCallbackUrl",
-) {}
-
-const now = DateTime.now.pipe(Effect.map(DateTime.toDateUtc));
 
 /**
  * A QPay invoice for what the order still owes. A cancelled order can't be
@@ -182,7 +180,6 @@ export const createQPayInvoice = Effect.fn("createQPayInvoice")(function* create
 ) {
   const db = yield* Database;
   const qpay = yield* QPay;
-  const callbackUrl = yield* QPayCallbackUrl;
 
   const [order] = yield* db.select().from(orders).where(eq(orders.id, orderId));
 
@@ -196,13 +193,13 @@ export const createQPayInvoice = Effect.fn("createQPayInvoice")(function* create
 
   if (amount <= 0) return yield* new NothingOwed({ orderId });
 
-  const createdAt = yield* now;
+  const createdAt = DateTime.toDateUtc(yield* DateTime.now);
 
   const invoice = yield* qpay.createInvoice({
+    orderId: order.id,
     senderInvoiceNo: `${order.number}-${createdAt.getTime()}`,
     amount,
     description: `Amerik Vitamin #${order.number}`,
-    callbackUrl: `${callbackUrl}?order=${order.id}`,
   });
 
   yield* db.insert(qpayInvoices).values({ id: invoice.invoice_id, orderId, amount, createdAt });
@@ -233,15 +230,8 @@ export const checkQPayInvoices = Effect.fn("checkQPayInvoices")(function* checkQ
     .from(qpayInvoices)
     .where(eq(qpayInvoices.orderId, orderId));
 
-  const paid = [];
-
-  for (const invoice of invoices) {
-    const check = yield* qpay.checkInvoice(invoice.id);
-
-    for (const row of check.rows) {
-      if (row.payment_status === "PAID") paid.push(row);
-    }
-  }
+  const checks = yield* Effect.forEach(invoices, (invoice) => qpay.checkInvoice(invoice.id));
+  const paid = checks.flatMap((check) => check.rows).filter((row) => row.payment_status === "PAID");
 
   for (const row of paid) {
     yield* recordPayment(

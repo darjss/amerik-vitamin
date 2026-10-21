@@ -9,7 +9,7 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
-import { FetchHttpClient, HttpClient, HttpClientRequest } from "effect/http";
+import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 /** The admin bot posts to one chat: mom's and the owner's. Never a customer. */
 export const telegramConfig = Config.all({
@@ -30,11 +30,8 @@ const make = Effect.fn("Telegram.make")(function* make(
   // Retries only what Telegram rejected (429, 5xx) or never received (a
   // transport error). A timeout may have delivered, so it is not retried here.
   const http = (yield* HttpClient.HttpClient).pipe(
-    HttpClient.retryTransient({
-      retryOn: "errors-and-responses",
-      schedule: Schedule.exponential("1 second"),
-      times: 3,
-    }),
+    HttpClient.retryTransient({ schedule: Schedule.exponential("1 second"), times: 3 }),
+    HttpClient.filterStatusOk,
   );
 
   // The bot token is part of the URL, so the request never reaches a log or a span.
@@ -48,19 +45,20 @@ const make = Effect.fn("Telegram.make")(function* make(
         ),
       );
 
-      if (response.status !== 200) {
-        return yield* new TelegramUnavailable({ status: response.status });
-      }
-
-      yield* Schema.decodeUnknownEffect(Sent)(yield* response.json);
+      yield* HttpClientResponse.schemaBodyJson(Sent)(response);
     },
-    Effect.scoped,
     Effect.timeout("20 seconds"),
-    // The other failures carry the request, and with it the token.
-    Effect.catchIf(
-      (error) => !(error instanceof TelegramUnavailable),
+    // The failures carry the request, and with it the token. Only the status leaves.
+    Effect.catchReason(
+      "HttpClientError",
+      "StatusCodeError",
+      ({ response }) => Effect.fail(new TelegramUnavailable({ status: response.status })),
       () => Effect.fail(new TelegramUnavailable({})),
     ),
+    Effect.catchTags({
+      SchemaError: () => Effect.fail(new TelegramUnavailable({})),
+      TimeoutError: () => Effect.fail(new TelegramUnavailable({})),
+    }),
     Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
   );
 

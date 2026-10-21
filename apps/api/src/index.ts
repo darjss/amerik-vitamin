@@ -9,11 +9,11 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
-import { apiDomain, apiHostname } from "../infra/domain";
+import { apiDevPort, apiDomain, apiOrigin } from "../infra/domain";
 import { pingDatabase } from "./health";
 import { Khaan, khaanConfig, syncKhaan } from "./khaan";
 import { dispatchOutbox, Telegram, telegramConfig } from "./outbox";
-import { QPay, QPayCallbackUrl, qpayCallback, qpayConfig, sweepQPayInvoices } from "./qpay";
+import { QPay, qpayCallback, qpayConfig, sweepQPayInvoices } from "./qpay";
 import { ApiHandlers, HideDefectsLive } from "./rpc";
 import { ApiWorker } from "./worker";
 
@@ -21,7 +21,7 @@ export default ApiWorker.make(
   apiDomain.pipe(
     Effect.map((domain) => ({
       compatibility: { date: "2026-09-08", flags: ["nodejs_compat"] },
-      dev: { port: 8788, strictPort: true },
+      dev: { port: apiDevPort, strictPort: true },
       domain,
       main: import.meta.url,
     })),
@@ -37,8 +37,7 @@ export default ApiWorker.make(
     // QPay token never outlives one.
     const services = Layer.mergeAll(
       database,
-      QPay.layer(yield* qpayConfig),
-      Layer.succeed(QPayCallbackUrl, `https://${apiHostname}/qpay/callback`),
+      QPay.layer(yield* qpayConfig, `${yield* apiOrigin}/qpay/callback`),
       Khaan.layer(yield* khaanConfig),
       Telegram.layer(yield* telegramConfig),
     );
