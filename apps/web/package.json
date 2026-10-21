@@ -8,10 +8,11 @@
     "build": "vp build",
     "start": "vp preview",
     "preview": "vp preview",
-    "prepare": "node scripts/file-routes.ts"
+    "prepare": "panda codegen && node scripts/file-routes.ts"
   },
   "dependencies": {
     "@amerik/contracts": "workspace:*",
+    "@fontsource-variable/inter": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
     "better-auth": "catalog:",
@@ -22,9 +23,14 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "catalog:",
     "@cloudflare/workers-types": "catalog:",
+    "@iconify-json/ph": "catalog:",
+    "@pandacss/dev": "catalog:",
+    "@pandacss/preset-base": "catalog:",
+    "@pandacss/preset-panda": "catalog:",
     "@solidjs/vite-plugin": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:",
+    "unplugin-icons": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   }

@@ -30,10 +30,15 @@ export type CountStock = typeof CountStock.Type;
 export const ProductRow = Schema.Struct({
   id: ProductId,
   name: Schema.String,
+  brand: Schema.String,
+  count: Schema.Int,
+  image: Schema.NullOr(Schema.String),
   price: Schema.Int,
   stock: Schema.NullOr(Schema.Int),
   archivedAt: Schema.NullOr(Schema.Date),
 });
+
+export type ProductRow = typeof ProductRow.Type;
 
 /** The product doesn't exist, or it's archived and can't be added to an order. */
 export class ProductUnavailable extends Schema.TaggedError<ProductUnavailable>()(

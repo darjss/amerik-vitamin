@@ -4,6 +4,7 @@ import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 
 import { Authenticated } from "./auth.ts";
+import { Home } from "./home.ts";
 import { OrderId, OrderNumber, PaymentId } from "./ids.ts";
 import {
   Customer,
@@ -13,6 +14,7 @@ import {
   ListOrders,
   ManualPayment,
   OrderAction,
+  OrderCounts,
   OrderDetail,
   OrderNotFound,
   OrderStatus,
@@ -47,6 +49,8 @@ const Dashboard = RpcGroup.make(
     success: Customer,
     error: CustomerNotFound,
   }),
+  Rpc.make("home", { success: Home }),
+  Rpc.make("orderCounts", { success: OrderCounts }),
   Rpc.make("listProducts", { success: Schema.Array(ProductRow) }),
   Rpc.make("placeOrder", {
     payload: PlaceOrder,

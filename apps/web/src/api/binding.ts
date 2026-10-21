@@ -1,3 +1,4 @@
+import { getRequestEvent } from "@solidjs/web";
 import * as Layer from "effect/Layer";
 import * as Predicate from "effect/Predicate";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -24,7 +25,13 @@ const bindingFetch: typeof globalThis.fetch = async (input, init) => {
     throw new TypeError("cloudflare:workers did not expose env");
   }
 
-  return await workers.env.API.fetch(input, init);
+  // SSR reads run as the signed-in admin: the page request's cookie goes along.
+  const headers = new Headers(init?.headers);
+  const cookie = getRequestEvent()?.request.headers.get("cookie");
+
+  if (cookie !== null && cookie !== undefined) headers.set("cookie", cookie);
+
+  return await workers.env.API.fetch(input, { ...init, headers });
 };
 
 // The SSR counterpart of WebLayer: workerd cannot resolve the relative

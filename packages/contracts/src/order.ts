@@ -107,18 +107,38 @@ export type ManualPayment = typeof ManualPayment.Type;
 /** Ship, deliver and cancel take only the order. */
 export const OrderAction = Schema.Struct({ orderId: OrderId });
 
+/** `to_ship`: paid, or new on COD. `awaiting_payment`: new on prepay. */
+export const OrderQueue = Schema.Literals(["to_ship", "awaiting_payment"]);
+
+export type OrderQueue = typeof OrderQueue.Type;
+
 /**
- * The inbox: every filter given must match. `today` is since midnight in
+ * The inbox: every filter given must match. `phone` matches anywhere in the number. `today` is since midnight in
  * Ulaanbaatar. Newest first, at most 100 rows.
  */
 export const ListOrders = Schema.Struct({
+  queue: Schema.optional(OrderQueue),
   status: Schema.optional(OrderStatus),
   today: Schema.optional(Schema.Boolean),
-  phone: Schema.optional(Phone),
+  // Any 3 to 8 digits of the phone: she often remembers only the last four.
+  phone: Schema.optional(Schema.String.check(Schema.isPattern(/^[0-9]{3,8}$/u))),
   number: Schema.optional(OrderNumber),
 });
 
 export type ListOrders = typeof ListOrders.Type;
+
+/** A line as the dashboard shows it. The photo tells look-alike products apart. */
+export const OrderLineView = Schema.Struct({
+  productId: ProductId,
+  name: Schema.String,
+  brand: Schema.String,
+  count: Schema.Int,
+  image: Schema.NullOr(Schema.String),
+  quantity: Schema.Int,
+  unitPrice: Schema.Int,
+});
+
+export type OrderLineView = typeof OrderLineView.Type;
 
 /** Balance is `total - paid`: above 0 the customer owes, below 0 a refund is due. */
 export const OrderSummary = Schema.Struct({
@@ -131,10 +151,23 @@ export const OrderSummary = Schema.Struct({
   total: Schema.Int,
   paid: Schema.Int,
   balance: Schema.Int,
-  customerName: Schema.NullOr(Schema.String),
   customerPhone: Schema.NullOr(Schema.String),
+  address: Schema.NullOr(Schema.String),
+  notes: Schema.NullOr(Schema.String),
+  lines: Schema.Array(OrderLineView),
   createdAt: Schema.Date,
 });
+
+export type OrderSummary = typeof OrderSummary.Type;
+
+/** How many orders sit behind each filter chip on the orders list. */
+export const OrderCounts = Schema.Struct({
+  toShip: Schema.Int,
+  awaitingPayment: Schema.Int,
+  shipped: Schema.Int,
+});
+
+export type OrderCounts = typeof OrderCounts.Type;
 
 const LineSnapshot = Schema.Struct({
   productId: ProductId,
@@ -165,10 +198,7 @@ export type OrderEventData = typeof OrderEventData.Type;
 export const OrderDetail = Schema.Struct({
   ...OrderSummary.fields,
   customerId: Schema.NullOr(CustomerId),
-  address: Schema.NullOr(Schema.String),
-  notes: Schema.NullOr(Schema.String),
   deliveryFee: Schema.Int,
-  lines: Schema.Array(Schema.Struct({ ...LineSnapshot.fields, name: Schema.String })),
   payments: Schema.Array(
     Schema.Struct({
       id: PaymentId,
@@ -189,6 +219,8 @@ export const OrderDetail = Schema.Struct({
   ),
 });
 
+export type OrderDetail = typeof OrderDetail.Type;
+
 /** A known customer, for the manual-order draft: "existing customer, 3 past orders". */
 export const Customer = Schema.Struct({
   id: CustomerId,
@@ -197,6 +229,8 @@ export const Customer = Schema.Struct({
   address: Schema.NullOr(Schema.String),
   orders: Schema.Int,
 });
+
+export type Customer = typeof Customer.Type;
 
 export class CustomerNotFound extends Schema.TaggedError<CustomerNotFound>()("CustomerNotFound", {
   phone: Phone,

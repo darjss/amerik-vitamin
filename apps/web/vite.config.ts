@@ -1,6 +1,7 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { fileRoutes } from "filesystem-routing/vite";
 import solid from "@solidjs/vite-plugin";
+import Icons from "unplugin-icons/vite";
 import { defineConfig } from "vite-plus";
 
 // Alchemy's Website.Vite injects the Cloudflare plugin itself; the plugin is
@@ -26,7 +27,11 @@ export default defineConfig({
       start: { middleware: "./src/middleware.ts", renderMode: "async" },
     }),
     fileRoutes({ codeSplitting: false, httpMethods: true, types: true }),
+    Icons({ compiler: "solid" }),
   ],
+  resolve: {
+    alias: { "styled-system": `${import.meta.dirname}/styled-system` },
+  },
   root: import.meta.dirname,
   server: {
     host: "127.0.0.1",

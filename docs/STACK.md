@@ -79,7 +79,7 @@ Ultracite is out on purpose. Its generic TypeScript rules fight Effect idioms.
 
 ## UI (decided 2026-10-18)
 
-Each package is added with the first screen that uses it, and Solid moves to rc.15 in the same PR. solid-toast's peer is `^2.0.0-rc.15`. tranzfer2 runs Panda, Phosphor and solid-toast on Solid 2.
+Each package is added with the first screen that uses it, and Solid moves to rc.15 in the same PR. Solid rc.15, Panda and the Phosphor icons landed with the first screens (PR #11). solid-toast's peer is `^2.0.0-rc.15`. tranzfer2 runs Panda, Phosphor and solid-toast on Solid 2.
 
 | Package                                     | Use                                                                                                                                                                          |
 | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
