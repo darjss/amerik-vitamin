@@ -12,6 +12,7 @@ import * as Redacted from "effect/Redacted";
 import ApiWorkerLive from "../apps/api/src/index";
 import { deployStage, devWebPort, productionHost } from "../apps/api/infra/stage";
 import { localDatabase } from "../apps/api/infra/database";
+import { ProductImages } from "../apps/api/infra/images";
 import { ApiWorker } from "../apps/api/src/worker";
 
 const envFile = new URL("../.env", import.meta.url);
@@ -83,8 +84,11 @@ export default Alchemy.Stack(
       rootDir: webRoot,
     });
 
+    const images = yield* ProductImages;
+
     return {
       apiUrl: api.url.as<string>(),
+      imageBucket: images.bucketName,
       webUrl: web.url.as<string>(),
     };
   }).pipe(Effect.provide(ApiWorkerLive)),

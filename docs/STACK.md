@@ -27,6 +27,10 @@ infra                Alchemy stack `amerik-vitamin`
 - **Migrations.** `vp run migrate` applies `packages/db/migrations` to `DATABASE_URL`, with the journal in `shop.migrations`. A production deploy runs the same script through a `Command.Exec` resource, and the Hyperdrive connection depends on it.
 - **Transactions** go through `transaction` from `@amerik/db`, which wraps `db.$client.withTransaction`. There is no D1-style batch.
 
+## Images (decided)
+
+- **Product photos live in v2's own R2 bucket, `ProductImages`, served at `img.amerikvitamin.mn`** (`apps/api/infra/images.ts`). Nothing is copied from vit-store's bucket or `cdn.amerikvitamin.mn`. The hostname has no "v2" in it, so the URLs stored in `products.images` outlive the cutover. Only production attaches the domain, and the bucket is retained on destroy.
+
 ## Now
 
 Exact versions live in the `pnpm-workspace.yaml` catalog. This table says why each tool is here and what to watch when bumping it.
