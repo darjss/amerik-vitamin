@@ -9,9 +9,6 @@ import { outbox, outboxKind } from "./schema.ts";
 /** About four hours of 5-minute cron runs. A row past this stays unsent, for SQL to find. */
 const MAX_ATTEMPTS = 50;
 
-/** `125000` as `125,000₮`, the way mom writes amounts. */
-export const tugrik = (amount: number) => `${amount.toLocaleString("en-US")}₮`;
-
 /** Queues an admin-chat message. Call it inside the transaction of the change it reports. */
 export const notify = Effect.fn("notify")(function* notify(
   kind: (typeof outboxKind.enumValues)[number],

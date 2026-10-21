@@ -1,6 +1,6 @@
 import { BankTransactionId, newId, TransferUnavailable } from "@amerik/contracts";
 import type { AssignTransfer, OrderId, OrderNumber, PaymentId } from "@amerik/contracts";
-import { Database, notify, schema, transaction, tugrik } from "@amerik/db";
+import { Database, notify, schema, transaction } from "@amerik/db";
 import { and, eq, gte, isNull, lte, ne, sum } from "drizzle-orm";
 import { isIncoming, KhaanAuthError, KhaanClient, KhaanRateLimitError } from "khaan-client";
 import * as Config from "effect/Config";
@@ -15,6 +15,7 @@ import * as Schema from "effect/Schema";
 import { Hex } from "effect/encoding";
 
 import { lockOrder, owed, recordPayment } from "./orders";
+import { tugrik } from "./outbox";
 
 // The rules behind matching: docs/COMMERCE-RULES.md, Payments.
 const { bankTransactions, customers, orders, payments } = schema;

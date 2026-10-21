@@ -11,6 +11,9 @@ import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
+/** `125000` as `125,000₮`, the way mom writes amounts. */
+export const tugrik = (amount: number) => `${amount.toLocaleString("en-US")}₮`;
+
 /** The admin bot posts to one chat: mom's and the owner's. Never a customer. */
 export const telegramConfig = Config.all({
   token: Config.Redacted("TELEGRAM_ADMIN_BOT_TOKEN"),

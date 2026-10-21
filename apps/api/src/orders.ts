@@ -21,18 +21,12 @@ import type {
   ProductId,
   RecordPayment,
 } from "@amerik/contracts";
-import {
-  customerByPhone,
-  Database,
-  moveStock,
-  notify,
-  schema,
-  transaction,
-  tugrik,
-} from "@amerik/db";
+import { customerByPhone, Database, moveStock, notify, schema, transaction } from "@amerik/db";
 import { and, eq, inArray, isNull, sum } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+
+import { tugrik } from "./outbox";
 
 // The rules behind every function here: docs/COMMERCE-RULES.md.
 const { orderEvents, orderLines, orders, payments, products } = schema;
