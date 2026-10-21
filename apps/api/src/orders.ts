@@ -1,7 +1,6 @@
 import {
   InvalidOrder,
   newId,
-  OrderEventData,
   OrderEventId,
   OrderId,
   OrderNotFound,
@@ -14,6 +13,7 @@ import {
 import type {
   EditOrder,
   ListOrders,
+  OrderEventData,
   OrderEventType,
   OrderSource,
   OrderStatus,
@@ -32,7 +32,6 @@ import {
 import { and, asc, desc, eq, gte, inArray, isNull, sum } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 
 // The rules behind every function here: docs/COMMERCE-RULES.md.
 const { customers, orderEvents, orderLines, orders, payments, products } = schema;
@@ -107,11 +106,11 @@ const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
   const db = yield* Database;
 
   const [row] = yield* db
-    .select({ paid: sum(payments.amount) })
+    .select({ paid: sum(payments.amount).mapWith(Number) })
     .from(payments)
     .where(eq(payments.orderId, orderId));
 
-  return Number(row?.paid ?? 0);
+  return row?.paid ?? 0;
 });
 
 const logEvent = Effect.fn("logEvent")(function* logEvent(
@@ -432,11 +431,11 @@ const summary = {
   createdAt: orders.createdAt,
   customerName: customers.name,
   customerPhone: customers.phone,
-  paid: sum(payments.amount),
+  paid: sum(payments.amount).mapWith(Number),
 };
 
-const withBalance = <Row extends { total: number; paid: string | null }>(row: Row) => {
-  const paid = Number(row.paid ?? 0);
+const withBalance = <Row extends { total: number; paid: number | null }>(row: Row) => {
+  const paid = row.paid ?? 0;
 
   return { ...row, paid, balance: row.total - paid };
 };
@@ -533,12 +532,8 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
     ...withBalance(order),
     lines,
     payments: paid,
-    // The rows are ours, so a shape the schema rejects is a bug, not input.
-    events: yield* Effect.forEach(events, ({ data, ...event }) =>
-      Schema.decodeUnknownEffect(OrderEventData)(data).pipe(
-        Effect.map((decoded) => ({ ...event, data: decoded })),
-        Effect.orDie,
-      ),
-    ),
+    // RpcServer encodes the result against `OrderEventData`, so a row the
+    // schema rejects still dies there instead of reaching the client.
+    events,
   };
 });
