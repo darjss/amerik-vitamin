@@ -7,7 +7,10 @@ import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 import { HttpBody, HttpServerRequest, HttpServerResponse } from "effect/http";
+
+import { webOrigin } from "../infra/stage";
 
 /**
  * Read in the Worker's Init. Alchemy binds each of these Config reads into
@@ -15,24 +18,20 @@ import { HttpBody, HttpServerRequest, HttpServerResponse } from "effect/http";
  * `DASHBOARD_EMAILS` is the allowlist: comma-separated Google emails, every
  * one an admin (GLOSSARY), no roles.
  */
-export const authConfig = Config.all({
+const authConfig = Config.all({
   secret: Config.Redacted("BETTER_AUTH_SECRET"),
   googleClientId: Config.String("GOOGLE_CLIENT_ID"),
   googleClientSecret: Config.Redacted("GOOGLE_CLIENT_SECRET"),
-  admins: Config.String("DASHBOARD_EMAILS").pipe(
-    Config.map(
-      (list) =>
-        new Set(
-          list
-            .split(",")
-            .map((email) => email.trim().toLowerCase())
-            .filter((email) => email.length > 0),
-        ),
-    ),
+  admins: Config.Array(Schema.Trim, "DASHBOARD_EMAILS").pipe(
+    Config.map((emails) => new Set(emails.map((email) => email.toLowerCase()))),
   ),
 });
 
-export type AuthSettings = Config.Success<typeof authConfig> & { readonly baseURL: string };
+export const authSettings = Effect.gen(function* authSettings() {
+  return { ...(yield* authConfig), baseURL: yield* webOrigin };
+});
+
+type AuthSettings = Effect.Success<typeof authSettings>;
 
 const DAY = 60 * 60 * 24;
 
@@ -101,19 +100,11 @@ const makeAuth = Effect.fn("Auth.make")(function* makeAuth(settings: AuthSetting
           }),
         ),
     },
-    // The allowlist gate. A Google account off the list gets no user row and no
-    // session; one taken off the list later gets no new session.
+    // The allowlist gate. A Google account off the list gets no user row. One
+    // taken off the list later still signs in, but every rpc answers
+    // Unauthorized (AuthenticatedLive).
     databaseHooks: {
       user: { create: { before: async (user) => isAdmin(settings, user) } },
-      session: {
-        create: {
-          before: async (session, context) => {
-            const user = await context?.context.internalAdapter.findUserById(session.userId);
-
-            return user !== null && user !== undefined && isAdmin(settings, user);
-          },
-        },
-      },
     },
   });
 });
@@ -123,25 +114,24 @@ const makeAuth = Effect.fn("Auth.make")(function* makeAuth(settings: AuthSetting
  * origin. better-auth answers API errors and redirects as responses and
  * rejects only on a fault.
  */
-export const authRoute = (settings: AuthSettings) =>
-  Effect.gen(function* authRoute() {
-    const request = yield* HttpServerRequest.toWeb(yield* HttpServerRequest.HttpServerRequest).pipe(
-      Effect.orDie,
-    );
+export const authRoute = Effect.fn("Auth.route")(function* authRoute(settings: AuthSettings) {
+  const request = yield* HttpServerRequest.toWeb(yield* HttpServerRequest.HttpServerRequest).pipe(
+    Effect.orDie,
+  );
 
-    const auth = yield* makeAuth(settings);
-    const response = yield* nativeCall(() => auth.handler(request));
-    // Buffered: a streamed body's last byte would wait for the request's
-    // cleanup, which closes the database connection (executor, auth.ts).
-    const body = new Uint8Array(yield* Effect.promise(() => response.arrayBuffer()));
+  const auth = yield* makeAuth(settings);
+  const response = yield* nativeCall(() => auth.handler(request));
+  // Buffered: a streamed body's last byte would wait for the request's
+  // cleanup, which closes the database connection (executor, auth.ts).
+  const body = new Uint8Array(yield* nativeCall(() => response.arrayBuffer()));
 
-    return HttpServerResponse.fromWeb(response).pipe(
-      HttpServerResponse.setBody(
-        HttpBody.uint8Array(body, response.headers.get("content-type") ?? undefined),
-      ),
-      HttpServerResponse.setHeader("cache-control", "no-store"),
-    );
-  });
+  return HttpServerResponse.fromWeb(response).pipe(
+    HttpServerResponse.setBody(
+      HttpBody.uint8Array(body, response.headers.get("content-type") ?? undefined),
+    ),
+    HttpServerResponse.setHeader("cache-control", "no-store"),
+  );
+});
 
 /**
  * The session cookie as a `CurrentUser`, checked against the allowlist on
