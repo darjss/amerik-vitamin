@@ -120,7 +120,7 @@ export const lockOrder = Effect.fn("lockOrder")(function* lockOrder(orderId: Ord
   return order;
 });
 
-export const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
+const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
   const db = yield* Database;
 
   const [row] = yield* db
@@ -130,6 +130,10 @@ export const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) 
 
   return Number(row?.paid ?? 0);
 });
+
+/** What the order still owes. Negative when it is overpaid. */
+export const owed = (order: { readonly id: OrderId; readonly total: number }) =>
+  Effect.map(paidSum(order.id), (paid) => order.total - paid);
 
 const logEvent = Effect.fn("logEvent")(function* logEvent(
   orderId: OrderId,

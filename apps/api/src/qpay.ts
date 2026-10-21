@@ -24,7 +24,7 @@ import {
   HttpServerResponse,
 } from "effect/http";
 
-import { paidSum, recordPayment } from "./orders";
+import { owed, recordPayment } from "./orders";
 
 const { orders, qpayInvoices } = schema;
 
@@ -189,7 +189,7 @@ export const createQPayInvoice = Effect.fn("createQPayInvoice")(function* create
     return yield* new WrongOrderStatus({ orderId, status: order.status });
   }
 
-  const amount = order.total - (yield* paidSum(order.id));
+  const amount = yield* owed(order);
 
   if (amount <= 0) return yield* new NothingOwed({ orderId });
 
@@ -265,15 +265,13 @@ export const sweepQPayInvoices = Effect.fn("sweepQPayInvoices")(function* sweepQ
   );
 
   const recent = yield* db
-    .selectDistinct({ orderId: qpayInvoices.orderId, total: orders.total })
+    .selectDistinct({ id: orders.id, total: orders.total })
     .from(qpayInvoices)
     .innerJoin(orders, eq(orders.id, qpayInvoices.orderId))
     .where(gt(qpayInvoices.createdAt, since));
 
   for (const order of recent) {
-    if (order.total - (yield* paidSum(order.orderId)) > 0) {
-      yield* checkQPayInvoices(order.orderId);
-    }
+    if ((yield* owed(order)) > 0) yield* checkQPayInvoices(order.id);
   }
 }, dieOnDatabaseError);
 

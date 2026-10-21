@@ -14,7 +14,7 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { Hex } from "effect/encoding";
 
-import { lockOrder, paidSum, recordPayment } from "./orders";
+import { lockOrder, owed, recordPayment } from "./orders";
 
 // The rules behind matching: docs/COMMERCE-RULES.md, Payments.
 const { bankTransactions, customers, orders, payments } = schema;
@@ -258,7 +258,7 @@ const apply = Effect.fn("apply")(function* apply(
   }
 
   // Re-read the balance under the lock: mom may have recorded a payment since the match.
-  if (order.total - (yield* paidSum(order.id)) !== transfer.amount) return false;
+  if ((yield* owed(order)) !== transfer.amount) return false;
 
   const { paymentId } = yield* recordPayment(
     {
