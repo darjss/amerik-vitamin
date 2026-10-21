@@ -1,6 +1,6 @@
 import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { createEffect, Show } from "solid-js";
+import { createEffect, For, Show } from "solid-js";
 import { css } from "styled-system/css";
 import HouseFillIcon from "~icons/ph/house-fill";
 import HouseIcon from "~icons/ph/house";
@@ -10,6 +10,7 @@ import ReceiptFillIcon from "~icons/ph/receipt-fill";
 import ReceiptIcon from "~icons/ph/receipt";
 
 import { press, title3 } from "./ui";
+import type { Icon } from "./ui";
 
 // The fixed frame around a screen: sheets, the bottom dock and the tab bar.
 
@@ -53,7 +54,7 @@ export function Sheet(props: {
         border: "none",
         borderRadius: "22px 22px 0 0",
         p: "0 20px calc(env(safe-area-inset-bottom) + 20px)",
-        "&::backdrop": { bg: "rgba(15,14,12,.45)" },
+        "&::backdrop": { bg: "scrim" },
       })}
     >
       <button
@@ -73,7 +74,7 @@ export function Sheet(props: {
             height: "5px",
             mx: "auto",
             borderRadius: "3px",
-            bg: "rgba(30,27,23,.18)",
+            bg: "ink/18",
           },
         })}
       />
@@ -98,9 +99,9 @@ export function Dock(props: { children: JSX.Element }) {
         px: "16px",
         pt: "14px",
         pb: "calc(env(safe-area-inset-bottom) + 16px)",
-        bg: "rgba(250,246,239,.92)",
+        bg: "page/92",
         backdropFilter: "blur(24px) saturate(180%)",
-        maskImage: "linear-gradient(transparent, #000 14px)",
+        maskImage: "linear-gradient(transparent, {colors.black} 14px)",
       })}
     >
       {props.children}
@@ -125,6 +126,12 @@ const tab = css.raw({
 
 const activeTab = css.raw({ bg: "selSoft", color: "sel" });
 
+const tabs = [
+  { href: "/", label: "Нүүр", Icon: HouseIcon, Active: HouseFillIcon },
+  { href: "/orders", label: "Захиалга", Icon: ReceiptIcon, Active: ReceiptFillIcon },
+  { href: "/products", label: "Бараа", Icon: PillIcon, Active: PillFillIcon },
+] satisfies ReadonlyArray<{ href: string; label: string; Icon: Icon; Active: Icon }>;
+
 /** One floating glass capsule over the page. */
 export function TabBar() {
   const location = useLocation();
@@ -144,30 +151,22 @@ export function TabBar() {
         borderRadius: "32px",
         display: "flex",
         p: "5px",
-        bg: "rgba(255,253,249,.88)",
+        bg: "surface/88",
         backdropFilter: "blur(24px) saturate(180%)",
         boxShadow:
-          "inset 0 1px 0 rgba(255,255,255,.85), 0 0 0 .5px rgba(30,27,23,.09), 0 14px 34px -12px rgba(30,27,23,.28)",
+          "inset 0 1px 0 {colors.white/85}, 0 0 0 .5px {colors.ink/9}, 0 14px 34px -12px {colors.ink/28}",
       })}
     >
-      <a href="/" class={css(press, tab, at("/") && activeTab)}>
-        <Show when={at("/")} fallback={<HouseIcon />}>
-          <HouseFillIcon />
-        </Show>
-        Нүүр
-      </a>
-      <a href="/orders" class={css(press, tab, at("/orders") && activeTab)}>
-        <Show when={at("/orders")} fallback={<ReceiptIcon />}>
-          <ReceiptFillIcon />
-        </Show>
-        Захиалга
-      </a>
-      <a href="/products" class={css(press, tab, at("/products") && activeTab)}>
-        <Show when={at("/products")} fallback={<PillIcon />}>
-          <PillFillIcon />
-        </Show>
-        Бараа
-      </a>
+      <For each={tabs}>
+        {(link) => (
+          <a href={link.href} class={css(press, tab, at(link.href) && activeTab)}>
+            <Show when={at(link.href)} fallback={<link.Icon />}>
+              <link.Active />
+            </Show>
+            {link.label}
+          </a>
+        )}
+      </For>
     </nav>
   );
 }

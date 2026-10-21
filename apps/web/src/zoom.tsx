@@ -1,4 +1,4 @@
-import { createContext, createEffect, createSignal, Show } from "solid-js";
+import { createContext, createSignal, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { css } from "styled-system/css";
 
@@ -12,16 +12,13 @@ export function ZoomProvider(props: { children: JSX.Element }) {
   const [shown, setShown] = createSignal<Product>();
   let dialog: HTMLDialogElement | undefined;
 
-  createEffect(
-    () => shown(),
-    (product) => {
-      if (product === undefined) dialog?.close();
-      else dialog?.showModal();
-    },
-  );
+  const show = (product: Product) => {
+    setShown(product);
+    dialog?.showModal();
+  };
 
   return (
-    <Zoom value={setShown}>
+    <Zoom value={show}>
       {props.children}
       <dialog
         ref={(element) => {
@@ -39,7 +36,7 @@ export function ZoomProvider(props: { children: JSX.Element }) {
           border: "none",
           p: "24px",
           "&[open]": { display: "grid", placeContent: "center", gap: "16px", textAlign: "center" },
-          "&::backdrop": { bg: "rgba(42, 29, 22, 0.4)" },
+          "&::backdrop": { bg: "scrim" },
         })}
       >
         <Show when={shown()}>

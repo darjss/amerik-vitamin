@@ -21,8 +21,17 @@ export default defineConfig({
           surface: { value: "#fffdf9" },
           ink: { value: "#1e1b17" },
           inkMuted: { value: "#665e54" },
+          // Placeholders and the label of an action that isn't ready yet.
+          inkFaint: { value: "#857d72" },
           line: { value: "#e9e3d8" },
           chip: { value: "#efeae0" },
+          // Empty progress: the tracker's connectors and the packing bars.
+          track: { value: "#e1d9cb" },
+          // Rings around what isn't done yet: a tracker dot, a packing tick box.
+          dot: { value: "#d9d1c3" },
+          tick: { value: "#c9c0b1" },
+          // Behind a sheet or the full-size photo.
+          scrim: { value: "rgba(15,14,12,.45)" },
           sel: { value: "#0f4c5c" },
           selSoft: { value: "#e1ecee" },
           paid: { value: "#2f6b3a" },
