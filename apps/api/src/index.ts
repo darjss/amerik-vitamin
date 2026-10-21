@@ -10,6 +10,7 @@ import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
 import { apiDevPort, apiDomain, apiOrigin } from "../infra/domain";
+import { AuthenticatedLive, authRoute, authSettings } from "./auth";
 import { pingDatabase } from "./health";
 import { Khaan, khaanConfig, syncKhaan } from "./khaan";
 import { dispatchOutbox, Telegram, telegramConfig } from "./outbox";
@@ -31,6 +32,7 @@ export default ApiWorker.make(
     // Drizzle handle connects on the first query and closes with the request.
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(yield* Postgres);
     const database = Layer.succeed(Database, yield* Drizzle.Postgres(hyperdrive.connectionString));
+    const auth = yield* authSettings;
 
     // Config read here is bound to the Worker as a secret at deploy time.
     // The QPay and Telegram layers are built per request or cron run, so a
@@ -83,13 +85,15 @@ export default ApiWorker.make(
         Effect.flatten(RpcServer.toHttpEffect(Api)).pipe(
           Effect.provide(
             Layer.mergeAll(
-              ApiHandlers.pipe(Layer.provide(database)),
+              ApiHandlers,
+              AuthenticatedLive(auth),
               HideDefectsLive,
               RpcSerialization.layerJson,
-            ),
+            ).pipe(Layer.provide(database)),
           ),
         ),
       ),
+      HttpRouter.add("*", "/api/auth/*", authRoute(auth).pipe(Effect.provide(database))),
       HttpRouter.add("GET", "/health", health.pipe(Effect.provide(database))),
       // A paid order queues an outbox row. The request scope closes through
       // waitUntil after the response is sent, so the row goes out then.

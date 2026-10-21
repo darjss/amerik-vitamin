@@ -9,7 +9,11 @@ const webFiles = ["apps/web/**"];
 
 const agentIgnores = [".agent/**", ".agents/**", ".claude/**", ".codex/**", ".opencode/**"];
 
-const generatedIgnores = ["**/file-routes.d.ts", "packages/db/migrations/**"];
+const generatedIgnores = [
+  "**/file-routes.d.ts",
+  "**/styled-system/**",
+  "packages/db/migrations/**",
+];
 
 // Vendored anti-slop stays as upstream wrote it. Our own rules in anti-slop/amerik are linted.
 const vendoredIgnores = [

@@ -12,11 +12,11 @@ import {
 } from "@amerik/contracts";
 import type {
   EditOrder,
+  OrderEventData,
   OrderEventType,
   OrderNumber,
   OrderSource,
   OrderStatus,
-  PaymentMethod,
   PlaceOrder,
   ProductId,
   RecordPayment,
@@ -35,23 +35,6 @@ const { orderEvents, orderLines, orders, payments, products } = schema;
 const SELF_SERVE = new Set<OrderSource>(["messenger_bot", "web", "brand_site"]);
 
 type Lines = PlaceOrder["lines"];
-
-type PricedLine = {
-  readonly productId: ProductId;
-  readonly quantity: number;
-  readonly unitPrice: number;
-};
-
-type OrderSnapshot = {
-  readonly lines: ReadonlyArray<PricedLine>;
-  readonly deliveryFee: number;
-  readonly total: number;
-};
-
-/** `order_events.data`: what the timeline shows and [undo] restores. */
-type EventData =
-  | { readonly paymentId: PaymentId; readonly amount: number; readonly method: PaymentMethod }
-  | { readonly before: OrderSnapshot; readonly after: OrderSnapshot };
 
 const now = DateTime.now.pipe(Effect.map(DateTime.toDateUtc));
 
@@ -118,11 +101,11 @@ const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
   const db = yield* Database;
 
   const [row] = yield* db
-    .select({ paid: sum(payments.amount) })
+    .select({ paid: sum(payments.amount).mapWith(Number) })
     .from(payments)
     .where(eq(payments.orderId, orderId));
 
-  return Number(row?.paid ?? 0);
+  return row?.paid ?? 0;
 });
 
 /** What the order still owes. Negative when it is overpaid. */
@@ -133,7 +116,8 @@ const logEvent = Effect.fn("logEvent")(function* logEvent(
   orderId: OrderId,
   type: OrderEventType,
   actor: string,
-  data?: EventData,
+  // What the timeline shows and [undo] restores.
+  data?: OrderEventData,
 ) {
   const db = yield* Database;
 

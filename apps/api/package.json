@@ -9,7 +9,9 @@
   "dependencies": {
     "@amerik/contracts": "workspace:*",
     "@amerik/db": "workspace:*",
+    "@better-auth/drizzle-adapter": "catalog:",
     "alchemy": "catalog:",
+    "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
     "khaan-client": "catalog:"
