@@ -9,23 +9,67 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
+import { apiDevPort, apiDomain, apiOrigin } from "../infra/domain";
 import { AuthenticatedLive, authRoute, authSettings } from "./auth";
 import { pingDatabase } from "./health";
+import { Khaan, khaanConfig, syncKhaan } from "./khaan";
+import { dispatchOutbox, Telegram, telegramConfig } from "./outbox";
+import { QPay, qpayCallback, qpayConfig, sweepQPayInvoices } from "./qpay";
 import { ApiHandlers, HideDefectsLive } from "./rpc";
 import { ApiWorker } from "./worker";
 
 export default ApiWorker.make(
-  {
-    compatibility: { date: "2026-09-08", flags: ["nodejs_compat"] },
-    dev: { port: 8788, strictPort: true },
-    main: import.meta.url,
-  },
+  apiDomain.pipe(
+    Effect.map((domain) => ({
+      compatibility: { date: "2026-09-08", flags: ["nodejs_compat"] },
+      dev: { port: apiDevPort, strictPort: true },
+      domain,
+      main: import.meta.url,
+    })),
+  ),
   Effect.gen(function* impl() {
     // This effect also runs at deploy time, when no binding exists. The
     // Drizzle handle connects on the first query and closes with the request.
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(yield* Postgres);
     const database = Layer.succeed(Database, yield* Drizzle.Postgres(hyperdrive.connectionString));
     const auth = yield* authSettings;
+
+    // Config read here is bound to the Worker as a secret at deploy time.
+    // The QPay and Telegram layers are built per request or cron run, so a
+    // QPay token never outlives one.
+    const services = Layer.mergeAll(
+      database,
+      QPay.layer(yield* qpayConfig, `${yield* apiOrigin}/qpay/callback`),
+      Khaan.layer(yield* khaanConfig),
+      Telegram.layer(yield* telegramConfig),
+    );
+
+    const logFailure = (job: string) =>
+      Effect.catchCause((cause) => Effect.logError(`${job} failed`, cause));
+
+    // Its own scope, so the run opens its own connection instead of reusing
+    // one the request is about to close.
+    const dispatch = Effect.scoped(dispatchOutbox()).pipe(
+      Effect.provide(services),
+      logFailure("outbox dispatch"),
+    );
+
+    // vit-store's cadence. Each job logs its own failure, so one never stops
+    // the next, and the dispatcher sends what the first two queued.
+    yield* Cloudflare.Workers.cron("*/5 * * * *", () =>
+      Effect.all(
+        [
+          syncKhaan().pipe(
+            Effect.tap((outcomes) => Effect.log("khaan sync", outcomes)),
+            Effect.provide(services),
+            logFailure("khaan sync"),
+          ),
+          sweepQPayInvoices().pipe(Effect.provide(services), logFailure("qpay sweep")),
+          dispatch,
+        ],
+        { discard: true },
+      ),
+    );
 
     const health = pingDatabase.pipe(
       Effect.as(HttpServerResponse.jsonUnsafe({ ok: true })),
@@ -51,10 +95,24 @@ export default ApiWorker.make(
       ),
       HttpRouter.add("*", "/api/auth/*", authRoute(auth).pipe(Effect.provide(database))),
       HttpRouter.add("GET", "/health", health.pipe(Effect.provide(database))),
+      // A paid order queues an outbox row. The request scope closes through
+      // waitUntil after the response is sent, so the row goes out then.
+      HttpRouter.add(
+        "*",
+        "/qpay/callback",
+        Effect.addFinalizer(() => dispatch).pipe(
+          Effect.andThen(qpayCallback),
+          Effect.provide(services),
+        ),
+      ),
     );
 
     return {
       fetch: yield* routes.pipe(Layer.provide(HttpServer.layerServices), HttpRouter.toHttpEffect),
     };
-  }).pipe(Effect.provide(Cloudflare.Hyperdrive.ConnectBinding)),
+  }).pipe(
+    Effect.provide(
+      Layer.mergeAll(Cloudflare.Hyperdrive.ConnectBinding, Cloudflare.Workers.CronEventSourceLive),
+    ),
+  ),
 );

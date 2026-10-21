@@ -30,6 +30,7 @@ catalog:
   effect: 4.0.3
   eslint-plugin-solid: 0.18.1
   filesystem-routing: 0.4.0
+  khaan-client: github:darjss/khaan-client#59061e6182c5698bc38c15401d99a2d20974c744
   oxlint: 1.87.0
   solid-js: 2.0.0-rc.15
   typescript: 7.0.2

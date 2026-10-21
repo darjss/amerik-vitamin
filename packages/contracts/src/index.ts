@@ -3,6 +3,7 @@ export { Api, DatabaseUnavailable, HideDefects } from "./api.ts";
 export { Authenticated, CurrentUser, Unauthorized } from "./auth.ts";
 
 export {
+  BankTransactionId,
   BrandId,
   CategoryId,
   CustomerId,
@@ -10,11 +11,15 @@ export {
   OrderEventId,
   OrderId,
   OrderNumber,
+  OutboxId,
   PaymentId,
   ProductId,
+  QPayInvoiceId,
   StockMoveId,
   UserId,
 } from "./ids.ts";
+
+export { AssignTransfer, NothingOwed, QPayUnavailable, TransferUnavailable } from "./payment.ts";
 
 export {
   Customer,

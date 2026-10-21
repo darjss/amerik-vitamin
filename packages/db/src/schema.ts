@@ -9,6 +9,7 @@ import {
   StockMoveReason,
 } from "@amerik/contracts";
 import type {
+  BankTransactionId,
   BrandId,
   CategoryId,
   CustomerId,
@@ -16,8 +17,10 @@ import type {
   OrderEventId,
   OrderId,
   OrderNumber,
+  OutboxId,
   PaymentId,
   ProductId,
+  QPayInvoiceId,
   StockMoveId,
   UserId,
 } from "@amerik/contracts";
@@ -61,6 +64,13 @@ export const paymentMethod = shop.enum("payment_method", PaymentMethod.literals)
 export const orderEventType = shop.enum("order_event_type", OrderEventType.literals);
 
 export const stockMoveReason = shop.enum("stock_move_reason", StockMoveReason.literals);
+
+export const outboxKind = shop.enum("outbox_kind", [
+  "order_placed",
+  "order_paid",
+  "unmatched_transfer",
+  "oversold",
+]);
 
 export const brands = shop.table("brands", {
   id: uuid("id").$type<BrandId>().primaryKey(),
@@ -330,4 +340,68 @@ export const stockMoves = shop.table(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => [index("stock_moves_product_idx").on(table.productId, table.createdAt)],
+);
+
+/** A QPay invoice made for an order's balance. The callback and the sweep re-check these. */
+export const qpayInvoices = shop.table(
+  "qpay_invoices",
+  {
+    id: text("id").$type<QPayInvoiceId>().primaryKey(),
+    orderId: uuid("order_id")
+      .$type<OrderId>()
+      .notNull()
+      .references(() => orders.id),
+    amount: integer("amount").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("qpay_invoices_order_idx").on(table.orderId)],
+);
+
+/**
+ * An incoming Khaan transfer, counted once by its fingerprint. `payment_id`
+ * is null while it sits in the unmatched inbox.
+ */
+export const bankTransactions = shop.table(
+  "bank_transactions",
+  {
+    id: uuid("id").$type<BankTransactionId>().primaryKey(),
+    fingerprint: text("fingerprint").notNull().unique(),
+    amount: integer("amount").notNull(),
+    description: text("description").notNull(),
+    account: text("account"),
+    happenedAt: timestamp("happened_at", { withTimezone: true }).notNull(),
+    paymentId: uuid("payment_id")
+      .$type<PaymentId>()
+      .unique()
+      .references(() => payments.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("bank_transactions_unmatched_idx")
+      .on(table.happenedAt)
+      .where(sql`payment_id is null`),
+  ],
+);
+
+/**
+ * Telegram messages for the admin chat, written in the same transaction as
+ * the change they report. The dispatcher claims a row until `claimed_until`,
+ * sends it, and sets `sent_at`.
+ */
+export const outbox = shop.table(
+  "outbox",
+  {
+    id: uuid("id").$type<OutboxId>().primaryKey(),
+    kind: outboxKind("kind").notNull(),
+    text: text("text").notNull(),
+    attempts: integer("attempts").notNull().default(0),
+    claimedUntil: timestamp("claimed_until", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index("outbox_pending_idx")
+      .on(table.createdAt)
+      .where(sql`sent_at is null`),
+  ],
 );

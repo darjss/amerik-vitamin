@@ -11,6 +11,8 @@ export {
   transaction,
 } from "./database.ts";
 
+export { claimOutbox, markFailed, markSent, notify } from "./outbox.ts";
+
 export * as schema from "./schema.ts";
 
 export { moveStock } from "./stock.ts";
