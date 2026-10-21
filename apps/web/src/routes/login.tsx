@@ -4,12 +4,14 @@ import { css } from "styled-system/css";
 
 import { act, button, large, largeTitle, muted } from "../ui";
 
+const authClient = createAuthClient();
+
 // A Google account off the allowlist lands on better-auth's error page.
 export default function Login() {
   const [failure, setFailure] = createSignal<string>();
 
   const signIn = async () => {
-    const { error } = await createAuthClient().signIn.social({
+    const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/",
     });

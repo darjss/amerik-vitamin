@@ -9,8 +9,7 @@ import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
-import { webOrigin } from "../infra/stage";
-import { authConfig, AuthenticatedLive, authRoute } from "./auth";
+import { AuthenticatedLive, authRoute, authSettings } from "./auth";
 import { pingDatabase } from "./health";
 import { ApiHandlers, HideDefectsLive } from "./rpc";
 import { ApiWorker } from "./worker";
@@ -26,7 +25,7 @@ export default ApiWorker.make(
     // Drizzle handle connects on the first query and closes with the request.
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(yield* Postgres);
     const database = Layer.succeed(Database, yield* Drizzle.Postgres(hyperdrive.connectionString));
-    const auth = { ...(yield* authConfig), baseURL: yield* webOrigin };
+    const auth = yield* authSettings;
 
     const health = pingDatabase.pipe(
       Effect.as(HttpServerResponse.jsonUnsafe({ ok: true })),

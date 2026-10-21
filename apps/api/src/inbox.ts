@@ -1,4 +1,4 @@
-import { OrderEventData, OrderNotFound } from "@amerik/contracts";
+import { OrderNotFound } from "@amerik/contracts";
 import type { ListOrders, OrderId, OrderLineView, OrderQueue } from "@amerik/contracts";
 import { Database, dieOnDatabaseError, schema } from "@amerik/db";
 import {
@@ -19,7 +19,6 @@ import {
 } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
 
 import { firstImage } from "./products";
 
@@ -170,13 +169,9 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
     ...withBalance(order),
     lines: lines.get(orderId) ?? [],
     payments: paid,
-    // The rows are ours, so a shape the schema rejects is a bug, not input.
-    events: yield* Effect.forEach(events, ({ data, ...event }) =>
-      Schema.decodeUnknownEffect(OrderEventData)(data).pipe(
-        Effect.map((decoded) => ({ ...event, data: decoded })),
-        Effect.orDie,
-      ),
-    ),
+    // RpcServer encodes the result against `OrderEventData`, so a row the
+    // schema rejects still dies there instead of reaching the client.
+    events,
   };
 });
 

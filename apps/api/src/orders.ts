@@ -1,7 +1,6 @@
 import {
   InvalidOrder,
   newId,
-  OrderEventData,
   OrderEventId,
   OrderId,
   OrderNotFound,
@@ -13,6 +12,7 @@ import {
 } from "@amerik/contracts";
 import type {
   EditOrder,
+  OrderEventData,
   OrderEventType,
   OrderSource,
   OrderStatus,
@@ -98,11 +98,11 @@ const paidSum = Effect.fn("paidSum")(function* paidSum(orderId: OrderId) {
   const db = yield* Database;
 
   const [row] = yield* db
-    .select({ paid: sum(payments.amount) })
+    .select({ paid: sum(payments.amount).mapWith(Number) })
     .from(payments)
     .where(eq(payments.orderId, orderId));
 
-  return Number(row?.paid ?? 0);
+  return row?.paid ?? 0;
 });
 
 const logEvent = Effect.fn("logEvent")(function* logEvent(

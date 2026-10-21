@@ -13,6 +13,7 @@ export {
   PaymentId,
   ProductId,
   StockMoveId,
+  UserId,
 } from "./ids.ts";
 
 export {
