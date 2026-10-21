@@ -4,6 +4,9 @@ import * as Effect from "effect/Effect";
 
 const { brands, products } = schema;
 
+/** The photo the dashboard shows: the first one, or none. */
+export const firstImage = (images: ReadonlyArray<string>) => images[0] ?? null;
+
 /** Every product, archived ones included, by brand and name. */
 export const listProducts = Effect.fn("listProducts")(function* listProducts() {
   const db = yield* Database;
@@ -24,5 +27,5 @@ export const listProducts = Effect.fn("listProducts")(function* listProducts() {
     .orderBy(asc(brands.name), asc(products.name))
     .pipe(dieOnDatabaseError);
 
-  return rows.map(({ images, ...product }) => ({ ...product, image: images[0] ?? null }));
+  return rows.map(({ images, ...product }) => ({ ...product, image: firstImage(images) }));
 });

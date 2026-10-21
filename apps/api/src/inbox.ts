@@ -21,6 +21,8 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
+import { firstImage } from "./products";
+
 // What mom reads: the order inbox, one order, and the home screen.
 const { brands, customers, orderEvents, orderLines, orders, payments, products } = schema;
 
@@ -36,11 +38,11 @@ const summary = {
   customerPhone: customers.phone,
   address: orders.address,
   notes: orders.notes,
-  paid: sum(payments.amount),
+  paid: sum(payments.amount).mapWith(Number),
 };
 
-const withBalance = <Row extends { total: number; paid: string | null }>(row: Row) => {
-  const paid = Number(row.paid ?? 0);
+const withBalance = <Row extends { total: number; paid: number | null }>(row: Row) => {
+  const paid = row.paid ?? 0;
 
   return { ...row, paid, balance: row.total - paid };
 };
@@ -60,12 +62,10 @@ const inQueue = (queue: OrderQueue) =>
     ? or(eq(orders.status, "paid"), and(eq(orders.status, "new"), eq(orders.terms, "cod")))
     : and(eq(orders.status, "new"), eq(orders.terms, "prepay"));
 
-const firstImage = (images: ReadonlyArray<string>) => images[0] ?? null;
-
 /** Each order's lines with brand, count and photo, by product name. */
 const lineViews = Effect.fn("lineViews")(function* lineViews(orderIds: ReadonlyArray<OrderId>) {
   const db = yield* Database;
-  const byOrder = new Map<OrderId, Array<typeof OrderLineView.Type>>();
+  const byOrder = new Map<OrderId, Array<OrderLineView>>();
 
   if (orderIds.length === 0) return byOrder;
 
@@ -180,6 +180,18 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
   };
 });
 
+/** The two queues behind home's numbers and the orders list's chips. */
+const queueCounts = Effect.fn("queueCounts")(function* queueCounts() {
+  const db = yield* Database;
+
+  const [[toShip], [awaitingPayment]] = yield* Effect.all([
+    db.select({ orders: count() }).from(orders).where(inQueue("to_ship")),
+    db.select({ orders: count() }).from(orders).where(inQueue("awaiting_payment")),
+  ]).pipe(dieOnDatabaseError);
+
+  return { toShip: toShip?.orders ?? 0, awaitingPayment: awaitingPayment?.orders ?? 0 };
+});
+
 /** At or below this many bottles, a product shows as running out. */
 const LOW_STOCK = 3;
 
@@ -195,21 +207,20 @@ export const home = Effect.fn("home")(function* home() {
   const db = yield* Database;
   const today = yield* startOfToday;
 
-  const [[paidToday], cod, [toShip], shelf, [awaiting], low] = yield* Effect.all([
+  const [[paidToday], cod, shelf, low] = yield* Effect.all([
     db
-      .select({ amount: sum(payments.amount) })
+      .select({ amount: sum(payments.amount).mapWith(Number) })
       .from(payments)
       .where(and(gte(payments.createdAt, today), gt(payments.amount, 0))),
     // COD money is still out until the courier hands it over.
     db
-      .select({ total: orders.total, paid: sum(payments.amount) })
+      .select({ total: orders.total, paid: sum(payments.amount).mapWith(Number) })
       .from(orders)
       .leftJoin(payments, eq(payments.orderId, orders.id))
       .where(and(eq(orders.terms, "cod"), inArray(orders.status, ["new", "shipped"])))
       .groupBy(orders.id),
-    db.select({ orders: count() }).from(orders).where(inQueue("to_ship")),
     db
-      .select({ ...card, quantity: sum(orderLines.quantity) })
+      .select({ ...card, quantity: sum(orderLines.quantity).mapWith(Number) })
       .from(orderLines)
       .innerJoin(orders, eq(orders.id, orderLines.orderId))
       .innerJoin(products, eq(products.id, orderLines.productId))
@@ -217,7 +228,6 @@ export const home = Effect.fn("home")(function* home() {
       .where(inQueue("to_ship"))
       .groupBy(products.id, brands.id)
       .orderBy(desc(sum(orderLines.quantity)), asc(products.name)),
-    db.select({ orders: count() }).from(orders).where(inQueue("awaiting_payment")),
     db
       .select({ ...card, stock: products.stock })
       .from(products)
@@ -229,21 +239,22 @@ export const home = Effect.fn("home")(function* home() {
       .limit(6),
   ]).pipe(dieOnDatabaseError);
 
+  const { toShip, awaitingPayment } = yield* queueCounts();
   const owed = cod.map(withBalance).filter((order) => order.balance > 0);
 
   const pulled = shelf.map(({ images, quantity, ...product }) => ({
     ...product,
     image: firstImage(images),
-    quantity: Number(quantity ?? 0),
+    quantity: quantity ?? 0,
   }));
 
   return {
-    paidToday: Number(paidToday?.amount ?? 0),
+    paidToday: paidToday?.amount ?? 0,
     codToCollect: owed.reduce((total, order) => total + order.balance, 0),
     codOrders: owed.length,
-    toShip: toShip?.orders ?? 0,
+    toShip,
     toShipPieces: pulled.reduce((total, product) => total + product.quantity, 0),
-    awaitingPayment: awaiting?.orders ?? 0,
+    awaitingPayment,
     shelf: pulled,
     lowStock: low.flatMap(({ images, stock, ...product }) =>
       stock === null ? [] : [{ ...product, image: firstImage(images), stock }],
@@ -255,15 +266,11 @@ export const home = Effect.fn("home")(function* home() {
 export const orderCounts = Effect.fn("orderCounts")(function* orderCounts() {
   const db = yield* Database;
 
-  const [[toShip], [awaitingPayment], [shipped]] = yield* Effect.all([
-    db.select({ orders: count() }).from(orders).where(inQueue("to_ship")),
-    db.select({ orders: count() }).from(orders).where(inQueue("awaiting_payment")),
-    db.select({ orders: count() }).from(orders).where(eq(orders.status, "shipped")),
-  ]).pipe(dieOnDatabaseError);
+  const [shipped] = yield* db
+    .select({ orders: count() })
+    .from(orders)
+    .where(eq(orders.status, "shipped"))
+    .pipe(dieOnDatabaseError);
 
-  return {
-    toShip: toShip?.orders ?? 0,
-    awaitingPayment: awaitingPayment?.orders ?? 0,
-    shipped: shipped?.orders ?? 0,
-  };
+  return { ...(yield* queueCounts()), shipped: shipped?.orders ?? 0 };
 });

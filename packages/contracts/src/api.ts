@@ -14,6 +14,7 @@ import {
   ListOrders,
   ManualPayment,
   OrderAction,
+  OrderCounts,
   OrderDetail,
   OrderNotFound,
   OrderStatus,
@@ -49,13 +50,7 @@ const Dashboard = RpcGroup.make(
     error: CustomerNotFound,
   }),
   Rpc.make("home", { success: Home }),
-  Rpc.make("orderCounts", {
-    success: Schema.Struct({
-      toShip: Schema.Int,
-      awaitingPayment: Schema.Int,
-      shipped: Schema.Int,
-    }),
-  }),
+  Rpc.make("orderCounts", { success: OrderCounts }),
   Rpc.make("listProducts", { success: Schema.Array(ProductRow) }),
   Rpc.make("placeOrder", {
     payload: PlaceOrder,

@@ -25,3 +25,5 @@ export const Home = Schema.Struct({
   shelf: Schema.Array(Schema.Struct({ ...ProductCard.fields, quantity: Schema.Int })),
   lowStock: Schema.Array(Schema.Struct({ ...ProductCard.fields, stock: Schema.Int })),
 });
+
+export type Home = typeof Home.Type;

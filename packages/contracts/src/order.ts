@@ -138,6 +138,8 @@ export const OrderLineView = Schema.Struct({
   unitPrice: Schema.Int,
 });
 
+export type OrderLineView = typeof OrderLineView.Type;
+
 /** Balance is `total - paid`: above 0 the customer owes, below 0 a refund is due. */
 export const OrderSummary = Schema.Struct({
   id: OrderId,
@@ -155,6 +157,17 @@ export const OrderSummary = Schema.Struct({
   lines: Schema.Array(OrderLineView),
   createdAt: Schema.Date,
 });
+
+export type OrderSummary = typeof OrderSummary.Type;
+
+/** How many orders sit behind each filter chip on the orders list. */
+export const OrderCounts = Schema.Struct({
+  toShip: Schema.Int,
+  awaitingPayment: Schema.Int,
+  shipped: Schema.Int,
+});
+
+export type OrderCounts = typeof OrderCounts.Type;
 
 const LineSnapshot = Schema.Struct({
   productId: ProductId,
@@ -206,6 +219,8 @@ export const OrderDetail = Schema.Struct({
   ),
 });
 
+export type OrderDetail = typeof OrderDetail.Type;
+
 /** A known customer, for the manual-order draft: "existing customer, 3 past orders". */
 export const Customer = Schema.Struct({
   id: CustomerId,
@@ -214,6 +229,8 @@ export const Customer = Schema.Struct({
   address: Schema.NullOr(Schema.String),
   orders: Schema.Int,
 });
+
+export type Customer = typeof Customer.Type;
 
 export class CustomerNotFound extends Schema.TaggedError<CustomerNotFound>()("CustomerNotFound", {
   phone: Phone,

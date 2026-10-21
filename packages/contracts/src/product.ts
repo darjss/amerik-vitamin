@@ -38,6 +38,8 @@ export const ProductRow = Schema.Struct({
   archivedAt: Schema.NullOr(Schema.Date),
 });
 
+export type ProductRow = typeof ProductRow.Type;
+
 /** The product doesn't exist, or it's archived and can't be added to an order. */
 export class ProductUnavailable extends Schema.TaggedError<ProductUnavailable>()(
   "ProductUnavailable",

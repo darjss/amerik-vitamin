@@ -24,6 +24,7 @@ export {
   ListOrders,
   ManualPayment,
   OrderAction,
+  OrderCounts,
   OrderDetail,
   OrderEventData,
   OrderEventType,
