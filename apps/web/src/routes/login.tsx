@@ -1,13 +1,15 @@
 import { createAuthClient } from "better-auth/client";
 import { createSignal, Show } from "solid-js";
 
+const authClient = createAuthClient();
+
 // Bare sign-in until the dashboard UI is decided. After Google, the browser
 // lands on the session JSON; a refused account lands on better-auth's error page.
 export default function Login() {
   const [failure, setFailure] = createSignal<string>();
 
   const signIn = async () => {
-    const { error } = await createAuthClient().signIn.social({
+    const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/api/auth/get-session",
     });
