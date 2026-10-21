@@ -37,7 +37,7 @@ Build in this order. Inside a tier, independent pieces run in parallel worktrees
 - **Payments.** QPay invoice, check and callback. Khaan via `khaan-client`, with the unmatched-transfer inbox. Done when a real QPay payment and a real transfer both land, and replaying either changes nothing.
 - **Telegram notifications** through the outbox: new order, paid order, unmatched transfer, oversold, chat order with [undo].
 - **Chat orders** from the main page. Done when a day of mom's real chats produces the orders she would have written, and every [undo] works.
-- **Dashboard v1.** Orders inbox with timeline and actions, products (price, stock, images, archive, catalog review), one-line manual order with COD, and Amazon cookies in Settings. Done when mom runs a real day on her phone.
+- **Dashboard v1.** Orders inbox with timeline and actions, products (price, stock, images, archive, catalog review), one-line manual order with COD, and Amazon cookies in Settings. Done when mom runs a real day on her phone. Google sign-in and the dashboard RPCs landed in PR #9; the screens follow `apps/web/PRODUCT.md`.
 - **Amazon tracker.** Daily cron, supplier orders and lines by ASIN, Telegram ping when the cookies expire. Done when the last 30 days of real orders show with an ASIN on every line.
 
 ### T3. Bot
