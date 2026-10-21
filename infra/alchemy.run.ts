@@ -10,7 +10,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
 import ApiWorkerLive from "../apps/api/src/index";
-import { deployStage, productionHost } from "../apps/api/infra/stage";
+import { deployStage, devWebPort, productionHost } from "../apps/api/infra/stage";
 import { localDatabase } from "../apps/api/infra/database";
 import { ApiWorker } from "../apps/api/src/worker";
 
@@ -74,7 +74,7 @@ export default Alchemy.Stack(
         date: "2026-09-08",
         flags: ["nodejs_compat"],
       },
-      dev: { port: 3001 },
+      dev: { port: devWebPort },
       // Only production owns the hostname, so a dev stage can't take it over.
       domain: stage === "production" ? productionHost : undefined,
       env: {
