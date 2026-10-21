@@ -3,7 +3,6 @@ import type { AssignTransfer, OrderId, OrderNumber, PaymentId } from "@amerik/co
 import { Database, notify, schema, transaction, tugrik } from "@amerik/db";
 import { and, eq, gte, isNull, lte, ne, sum } from "drizzle-orm";
 import { isIncoming, KhaanAuthError, KhaanClient, KhaanRateLimitError } from "khaan-client";
-import type { KhaanTransaction } from "khaan-client";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -13,6 +12,7 @@ import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
+import { Hex } from "effect/encoding";
 
 import { lockOrder, paidSum, recordPayment } from "./orders";
 
@@ -69,7 +69,13 @@ export class Khaan extends Context.Service<Khaan, ReturnType<typeof make>>()("am
     Layer.succeed(Khaan, Khaan.of(make(config)));
 }
 
-/** An incoming transfer as stored. Whole tugriks; interest credits in fractions are skipped. */
+/**
+ * An incoming transfer as stored. Whole tugriks; interest credits in fractions are skipped.
+ *
+ * Khaan's `tranDate` is the Ulaanbaatar calendar date, sent as UTC midnight,
+ * and `time` is UB wall-clock HH:MM. A missing time means the end of that UB
+ * day. A date that names no real moment fails the decode, like a bad amount.
+ */
 const Incoming = Schema.Struct({
   tranDate: Schema.String.check(Schema.isPattern(/^\d{4}-\d{2}-\d{2}/u)),
   time: Schema.optional(Schema.String),
@@ -77,7 +83,22 @@ const Incoming = Schema.Struct({
   description: Schema.optional(Schema.String),
   balance: Schema.optional(Schema.Number),
   relatedAccount: Schema.optional(Schema.String),
-});
+}).pipe(
+  Schema.extendTo(
+    { happenedAt: Schema.Date },
+    {
+      happenedAt: (tx) => {
+        const time = /^(\d{2}):(\d{2})/u.exec(tx.time?.trim().padStart(5, "0") ?? "");
+        const clock = time === null ? "23:59:59" : `${time[1]}:${time[2]}:00`;
+
+        return DateTime.makeZoned(`${tx.tranDate.slice(0, 10)}T${clock}`, {
+          timeZone: "Asia/Ulaanbaatar",
+          adjustForTimeZone: true,
+        }).pipe(Option.map(DateTime.toDateUtc));
+      },
+    },
+  ),
+);
 
 type Incoming = typeof Incoming.Type;
 
@@ -100,25 +121,7 @@ const fingerprintOf = (tx: Incoming) =>
         ].join("|"),
       ),
     ),
-  ).pipe(
-    Effect.map((digest) =>
-      Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join(""),
-    ),
-  );
-
-/**
- * Khaan's `tranDate` is the Ulaanbaatar calendar date, sent as UTC midnight,
- * and `time` is UB wall-clock HH:MM. UB is UTC+8 with no DST. A missing time
- * means the end of that UB day.
- */
-const happenedAt = (tx: Incoming) => {
-  const time = /^(\d{2}):(\d{2})/u.exec(tx.time?.trim().padStart(5, "0") ?? "");
-  const clock = time === null ? "23:59:59" : `${time[1]}:${time[2]}:00`;
-
-  return DateTime.make(`${tx.tranDate.slice(0, 10)}T${clock}+08:00`).pipe(
-    Option.map(DateTime.toDateUtc),
-  );
-};
+  ).pipe(Effect.map((digest) => Hex.encode(new Uint8Array(digest))));
 
 /** A transfer pays an order placed up to this long before it. */
 const WINDOW_DAYS = 14;
@@ -280,9 +283,6 @@ const apply = Effect.fn("apply")(function* apply(
 const storeTransfer = Effect.fn("storeTransfer")(function* storeTransfer(tx: Incoming) {
   const db = yield* Database;
   const fingerprint = yield* fingerprintOf(tx);
-  const at = happenedAt(tx);
-
-  if (Option.isNone(at)) return yield* Effect.die(`storeTransfer: unreadable date ${tx.tranDate}`);
 
   const [transfer] = yield* db
     .insert(bankTransactions)
@@ -292,7 +292,7 @@ const storeTransfer = Effect.fn("storeTransfer")(function* storeTransfer(tx: Inc
       amount: tx.amount,
       description: tx.description ?? "",
       account: tx.relatedAccount === "" ? undefined : tx.relatedAccount,
-      happenedAt: at.value,
+      happenedAt: tx.happenedAt,
       createdAt: DateTime.toDateUtc(yield* DateTime.now),
     })
     .onConflictDoNothing({ target: bankTransactions.fingerprint })
@@ -330,26 +330,20 @@ const storeTransfer = Effect.fn("storeTransfer")(function* storeTransfer(tx: Inc
 /** Fetches the latest Khaan transactions and stores each new incoming one. Safe to run any time. */
 export const syncKhaan = Effect.fn("syncKhaan")(function* syncKhaan() {
   const khaan = yield* Khaan;
-  const recent: ReadonlyArray<KhaanTransaction> = yield* khaan.recent;
-  const outcomes = { seen: 0, counted: 0, matched: 0, unmatched: 0, skipped: 0 };
+  const recent = yield* khaan.recent;
 
-  const incoming = yield* Effect.forEach(recent.filter(isIncoming), (tx) =>
+  const [incoming, skipped] = yield* Effect.partition(recent.filter(isIncoming), (tx) =>
     Schema.decodeUnknownEffect(Incoming)(tx).pipe(
       Effect.tapError((error) =>
         Effect.logWarning("khaan transfer skipped", { error: error.message }),
       ),
-      Effect.option,
     ),
   );
 
-  // Oldest first, so two transfers for one order pay it in the order they came.
-  const ordered = incoming
-    .flatMap((tx) => (Option.isSome(tx) ? [tx.value] : []))
-    .toSorted((a, b) =>
-      `${a.tranDate}${a.time ?? ""}`.localeCompare(`${b.tranDate}${b.time ?? ""}`),
-    );
+  const outcomes = { seen: 0, counted: 0, matched: 0, unmatched: 0, skipped: skipped.length };
 
-  outcomes.skipped = incoming.length - ordered.length;
+  // Oldest first, so two transfers for one order pay it in the order they came.
+  const ordered = incoming.toSorted((a, b) => a.happenedAt.getTime() - b.happenedAt.getTime());
 
   for (const tx of ordered) {
     outcomes[yield* storeTransfer(tx)] += 1;
