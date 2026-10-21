@@ -74,6 +74,25 @@ Alchemy ships `src` and `lib` but no docs. Read `apps/api/node_modules/alchemy/s
 - `Axiom.providers()` reads credentials when the stack builds and fails every `alchemy plan` that has no Axiom profile. Add it only for the stages that ship telemetry.
 - A failed Vite build under Alchemy beta.81 ends as `BundleError: Vite build child exited with code 1:` with no cause. Reproduce with `vp run --filter @amerik/web build` and read its output.
 
+## better-auth
+
+Source is in `apps/api/node_modules/better-auth/dist`. Docs are at https://www.better-auth.com/llms.txt. `apps/api/src/auth.ts` is the only file that touches it. (PR #9)
+
+- A drizzle error carries every bound value, session tokens and PKCE verifiers included. Keep `onAPIError: { throw: true }` so faults reject instead of being logged, and log only the logger's message and error names. better-auth passes errors and where-clauses, values included, as the logger's args.
+- `advanced.database.generateId: "uuid"` leaves the id to a Postgres column default. Pass `() => crypto.randomUUID()`.
+- `auth.handler` returns a streamed body. Buffer it before responding, or its last byte waits for the request's cleanup, which closes the database connection.
+- `getSession` from an RPC can't set a refreshed cookie on the response, so call it with `disableRefresh` and let the browser's own `/api/auth/get-session` refresh the session.
+- Server rendering calls the API over the service binding, which carries no cookie of its own. `apps/web/src/api/binding.ts` copies the page request's cookie onto every SSR call, so dashboard reads render on the server as the signed-in admin. (PR #11)
+
+## Panda CSS
+
+Source is in `apps/web/node_modules/@pandacss/dev`. Docs are at https://panda-css.com/llms.txt. `apps/web/panda.config.ts` holds the PRODUCT.md tokens, and `vp run prepare` writes `styled-system`. (PR #11)
+
+- Panda 2 adds no presets on its own. Without `presets: [presetBase, pandaPreset]`, shorthands like `bg` and `px` fail to typecheck.
+- Every value is its own atomic class, so `cx(a, b)` with the same property in both lets stylesheet order pick the winner. Share styles as `css.raw` and compose with `css(a, b)`, which merges the objects so the later one wins.
+- A `border` or `borderTop` shorthand resets the color, and `borderColor` beside it can lose. Put the token in the shorthand: `"1px solid {colors.line}"`.
+- unplugin-icons' bundled Solid types predate Solid 2 and type every icon's props as `never`. `apps/web/src/icons.d.ts` declares `~icons/*` instead.
+
 ## drizzle
 
 Source is in `packages/db/node_modules/drizzle-orm`; the Effect driver is `drizzle-orm/effect-postgres`, its errors are in `drizzle-orm/effect-core`. Docs are at https://orm.drizzle.team/llms.txt.

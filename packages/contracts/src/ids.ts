@@ -54,6 +54,11 @@ export const OrderEventId = uuidV7("OrderEventId");
 
 export type OrderEventId = typeof OrderEventId.Type;
 
+/** A dashboard user. better-auth makes it, a UUIDv4 (apps/api/src/auth.ts). */
+export const UserId = Schema.String.check(Schema.isUUID(4)).pipe(Schema.brand("UserId"));
+
+export type UserId = typeof UserId.Type;
+
 /** The digits a person says for an order, `#10234`. Postgres assigns them. */
 export const OrderNumber = Schema.Int.check(Schema.isGreaterThan(0)).pipe(
   Schema.brand("OrderNumber"),
