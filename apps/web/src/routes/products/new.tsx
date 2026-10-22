@@ -31,6 +31,7 @@ import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { failureText } from "../../format";
 import { blank, DraftForm, input } from "../../product-form";
+import { FormSkeleton } from "../../skeletons";
 import {
   act,
   button,
@@ -186,7 +187,7 @@ export default function NewProductPage() {
                 </div>
               }
             >
-              <Loading fallback={<div class={css(panel, { m: "20px 16px", height: "400px" })} />}>
+              <Loading fallback={<FormSkeleton />}>
                 <DraftForm initial={blank} existing={null} options={options()} />
               </Loading>
             </Show>

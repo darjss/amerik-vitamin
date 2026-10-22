@@ -19,7 +19,7 @@ import CloseIcon from "~icons/ph/x-bold";
 import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
 import { Dock } from "./chrome";
-import { failureText, money, thousands } from "./format";
+import { failureText, money, sized, srcset, thousands } from "./format";
 import { formText } from "./product-parts";
 import {
   act,
@@ -234,7 +234,7 @@ export function DraftForm(props: {
                   "& img": { width: "100%", height: "100%", objectFit: "contain" },
                 })}
               >
-                <img src={src} alt="" />
+                <img src={sized(src, 264)} srcset={srcset(src, 132)} alt="" decoding="async" />
                 <button
                   type="button"
                   aria-label={`Зураг ${index() + 1} хасах`}

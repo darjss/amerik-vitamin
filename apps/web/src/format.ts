@@ -1,3 +1,4 @@
+import { IMAGE_HOST } from "@amerik/contracts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Match from "effect/Match";
@@ -21,6 +22,22 @@ export const thousands = (amount: number) => amount.toLocaleString("en-US");
 
 /** 155000 → "155,000₮" */
 export const money = (amount: number) => `${thousands(amount)}₮`;
+
+const imageOrigin = `https://${IMAGE_HOST}/`;
+
+/**
+ * A photo resized by Cloudflare at the photo domain's edge, as AVIF or WebP
+ * where the phone takes it: a 1500px bottle is ~75 KB, a 200px one ~5 KB.
+ * Dev paths (`/img/...`) aren't on that domain and pass through whole.
+ */
+export const sized = (url: string, width: number) =>
+  url.startsWith(imageOrigin)
+    ? `${imageOrigin}cdn-cgi/image/width=${width},format=auto,quality=80/${url.slice(imageOrigin.length)}`
+    : url;
+
+/** `srcset` for a photo drawn `width` CSS pixels wide, at 1x to 3x screens. */
+export const srcset = (url: string, width: number) =>
+  [1, 2, 3].map((density) => `${sized(url, width * density)} ${density}x`).join(", ");
 
 /** "88551290" → "8855 1290" */
 export const phone = (digits: string) => digits.replace(/^(\d{4})(\d{4})$/u, "$1 $2");

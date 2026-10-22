@@ -15,6 +15,18 @@ export default defineConfig({
   presets: [presetBase, pandaPreset],
   theme: {
     extend: {
+      keyframes: {
+        // Content that just loaded rises a few pixels into place.
+        appear: {
+          from: { opacity: 0, transform: "translateY(4px)" },
+          to: { opacity: 1, transform: "none" },
+        },
+        // A skeleton's light sweeping left to right.
+        shimmer: {
+          from: { backgroundPosition: "100% 0" },
+          to: { backgroundPosition: "-100% 0" },
+        },
+      },
       tokens: {
         colors: {
           page: { value: "#f8f4ec" },

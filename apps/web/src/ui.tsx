@@ -7,7 +7,7 @@ import CheckIcon from "~icons/ph/check-circle-fill";
 import TruckIcon from "~icons/ph/truck-bold";
 import WarningIcon from "~icons/ph/warning-circle-fill";
 
-import { money } from "./format";
+import { money, sized, srcset } from "./format";
 import { HeldSteps, nextStep } from "./steps";
 import { Zoom } from "./zoom";
 import type { Product } from "./zoom";
@@ -59,6 +59,12 @@ export const sectionHead = css.raw({
   alignItems: "baseline",
   justifyContent: "space-between",
   mb: "14px",
+});
+
+/** Content that just loaded fades and rises into place, replacing its skeleton. */
+export const appear = css.raw({
+  animation: "appear .25s ease-out both",
+  _motionReduce: { animation: "none" },
 });
 
 /** A raised surface: something she handles, standing up off the cream. */
@@ -340,7 +346,14 @@ export function Tile(props: {
     <>
       <Show when={props.product.image}>
         {(src) => (
-          <img src={src()} alt={`${props.product.brand} ${props.product.name}`} loading="lazy" />
+          // A tile without a size fills a grid cell, about 120px on her phone.
+          <img
+            src={sized(src(), (props.size ?? 120) * 2)}
+            srcset={srcset(src(), props.size ?? 120)}
+            alt={`${props.product.brand} ${props.product.name}`}
+            loading="lazy"
+            decoding="async"
+          />
         )}
       </Show>
       <Show when={props.quantity}>

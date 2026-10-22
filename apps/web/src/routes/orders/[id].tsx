@@ -40,6 +40,7 @@ import { clock, failureText, money, offline, phone, when } from "../../format";
 import { EditSheet, History, PaySheet, Tracker } from "../../order-parts";
 import { HeldSteps, nextStep } from "../../steps";
 import {
+  appear,
   button,
   Failed,
   glass,
@@ -59,6 +60,7 @@ import {
   Tile,
   title2,
 } from "../../ui";
+import { DetailSkeleton } from "../../skeletons";
 
 const headlineOf = (order: OrderDetail) => {
   if (order.status === "cancelled") return "Цуцалсан";
@@ -192,182 +194,214 @@ export default function OrderPage() {
   return (
     <main class={css({ pb: "130px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(panel, { m: "80px 16px 0", height: "400px" })} />}>
-          <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-            <a href="/orders" aria-label="Хаах" class={css(round, glass)}>
-              <CloseIcon />
-            </a>
-            <b
-              class={css(headline, {
-                flex: 1,
-                textAlign: "center",
-                fontVariantNumeric: "tabular-nums",
-              })}
-            >
-              #{order().number}
-            </b>
-            <button
-              type="button"
-              aria-label="Бусад үйлдэл"
-              onClick={() => open("menu")}
-              class={css(round, glass)}
-            >
-              <MoreIcon />
-            </button>
-          </header>
-
-          <div class={css({ px: "20px", pt: "14px" })}>
-            <h1 class={css(largeTitle)}>{headlineOf(order())}</h1>
-            <p class={css(sub, { mt: "6px" })}>
-              {payText(order())} · {when(order().createdAt, now())} · {sourceText[order().source]}
-            </p>
-          </div>
-
-          <Show when={order().status !== "cancelled"}>
-            <Tracker order={order()} />
-          </Show>
-
-          <section class={css(section)}>
-            <div class={css(sectionHead)}>
-              <h2 class={css(title2)}>Бараа</h2>
-              <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
-                {order().lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
-              </span>
-            </div>
-            <div class={css({ display: "grid", gap: "16px" })}>
-              <For each={order().lines} keyed={(line) => line.productId}>
-                {(line) => (
-                  <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
-                    <Tile product={line()} size={64} quantity={line().quantity} soft />
-                    <div class={css({ flex: 1, minWidth: 0 })}>
-                      <div class={css(headline)}>{line().name}</div>
-                      <div class={css(sub)}>
-                        {line().brand} · {line().count} ш
-                      </div>
-                    </div>
-                    <span
-                      class={css({
-                        fontSize: "17px",
-                        fontWeight: "600",
-                        fontVariantNumeric: "tabular-nums",
-                      })}
-                    >
-                      {money(line().unitPrice * line().quantity)}
-                    </span>
-                  </div>
-                )}
-              </For>
-            </div>
-          </section>
-
-          <section class={css(section)}>
-            <div class={css(sectionHead)}>
-              <h2 class={css(title2)}>Захиалагч</h2>
-            </div>
-            <Show when={order().customerPhone}>
-              {(digits) => (
-                <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
-                  <div class={css({ flex: 1 })}>
-                    <div
-                      class={css({
-                        fontSize: "24px",
-                        lineHeight: "30px",
-                        fontWeight: "700",
-                        letterSpacing: "-0.01em",
-                        fontVariantNumeric: "tabular-nums",
-                      })}
-                    >
-                      {phone(digits())}
-                    </div>
-                    <Loading fallback={null}>
-                      <History phone={digits()} />
-                    </Loading>
-                  </div>
-                  <a href={`tel:${digits()}`} aria-label="Залгах" class={css(round, roundAct)}>
-                    <PhoneIcon />
-                  </a>
-                </div>
-              )}
-            </Show>
-            <div class={css({ display: "flex", alignItems: "center", gap: "12px", mt: "18px" })}>
-              <span
-                class={css({
-                  width: "44px",
-                  flex: "none",
-                  display: "grid",
-                  placeItems: "center",
-                  fontSize: "22px",
-                  color: "inkMuted",
+        <Loading fallback={<DetailSkeleton />}>
+          <div class={css(appear)}>
+            <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
+              <a href="/orders" aria-label="Хаах" class={css(round, glass)}>
+                <CloseIcon />
+              </a>
+              <b
+                class={css(headline, {
+                  flex: 1,
+                  textAlign: "center",
+                  fontVariantNumeric: "tabular-nums",
                 })}
               >
-                <MapPinIcon />
-              </span>
+                #{order().number}
+              </b>
               <button
                 type="button"
-                disabled={!editable(order())}
-                onClick={() => open("edit")}
-                class={css({
-                  flex: 1,
-                  textAlign: "left",
-                  fontSize: "17px",
-                  lineHeight: "23px",
-                  fontWeight: "500",
-                  cursor: "pointer",
-                  _disabled: { cursor: "default" },
-                })}
+                aria-label="Бусад үйлдэл"
+                onClick={() => open("menu")}
+                class={css(round, glass)}
               >
-                {order().address ?? "Хаяггүй"}
+                <MoreIcon />
               </button>
-              <Show when={order().address}>
-                {(address) => (
-                  <button
-                    type="button"
-                    aria-label="Хаяг хуулах"
-                    onClick={() => copy(address())}
-                    class={css(round, copied() && { bg: "paidBg", color: "paid" })}
-                  >
-                    <CopyIcon />
-                  </button>
+            </header>
+
+            <div class={css({ px: "20px", pt: "14px" })}>
+              <h1 class={css(largeTitle)}>{headlineOf(order())}</h1>
+              <p class={css(sub, { mt: "6px" })}>
+                {payText(order())} · {when(order().createdAt, now())} · {sourceText[order().source]}
+              </p>
+            </div>
+
+            <Show when={order().status !== "cancelled"}>
+              <Tracker order={order()} />
+            </Show>
+
+            <section class={css(section)}>
+              <div class={css(sectionHead)}>
+                <h2 class={css(title2)}>Бараа</h2>
+                <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
+                  {order().lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
+                </span>
+              </div>
+              <div class={css({ display: "grid", gap: "16px" })}>
+                <For each={order().lines} keyed={(line) => line.productId}>
+                  {(line) => (
+                    <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
+                      <Tile product={line()} size={64} quantity={line().quantity} soft />
+                      <div class={css({ flex: 1, minWidth: 0 })}>
+                        <div class={css(headline)}>{line().name}</div>
+                        <div class={css(sub)}>
+                          {line().brand} · {line().count} ш
+                        </div>
+                      </div>
+                      <span
+                        class={css({
+                          fontSize: "17px",
+                          fontWeight: "600",
+                          fontVariantNumeric: "tabular-nums",
+                        })}
+                      >
+                        {money(line().unitPrice * line().quantity)}
+                      </span>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </section>
+
+            <section class={css(section)}>
+              <div class={css(sectionHead)}>
+                <h2 class={css(title2)}>Захиалагч</h2>
+              </div>
+              <Show when={order().customerPhone}>
+                {(digits) => (
+                  <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
+                    <div class={css({ flex: 1 })}>
+                      <div
+                        class={css({
+                          fontSize: "24px",
+                          lineHeight: "30px",
+                          fontWeight: "700",
+                          letterSpacing: "-0.01em",
+                          fontVariantNumeric: "tabular-nums",
+                        })}
+                      >
+                        {phone(digits())}
+                      </div>
+                      <Loading fallback={null}>
+                        <History phone={digits()} />
+                      </Loading>
+                    </div>
+                    <a href={`tel:${digits()}`} aria-label="Залгах" class={css(round, roundAct)}>
+                      <PhoneIcon />
+                    </a>
+                  </div>
                 )}
               </Show>
-            </div>
-            <Show when={order().notes}>
-              {(notes) => (
+              <div class={css({ display: "flex", alignItems: "center", gap: "12px", mt: "18px" })}>
+                <span
+                  class={css({
+                    width: "44px",
+                    flex: "none",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: "22px",
+                    color: "inkMuted",
+                  })}
+                >
+                  <MapPinIcon />
+                </span>
                 <button
                   type="button"
                   disabled={!editable(order())}
                   onClick={() => open("edit")}
-                  class={css({ display: "block", width: "100%", mt: "14px", cursor: "pointer" })}
+                  class={css({
+                    flex: 1,
+                    textAlign: "left",
+                    fontSize: "17px",
+                    lineHeight: "23px",
+                    fontWeight: "500",
+                    cursor: "pointer",
+                    _disabled: { cursor: "default" },
+                  })}
                 >
-                  <Note>{notes()}</Note>
+                  {order().address ?? "Хаяггүй"}
                 </button>
-              )}
-            </Show>
-          </section>
-
-          <section class={css(section)}>
-            <div class={css(sectionHead)}>
-              <h2 class={css(title2)}>Төлбөр</h2>
-            </div>
-            <div class={css(panel, { overflow: "hidden" })}>
-              <div class={css({ px: "20px", py: "16px" })}>
-                <div class={css(receiptRow)}>
-                  <span>Бараа</span>
-                  <span class={css({ fontWeight: "600" })}>
-                    {money(order().total - order().deliveryFee)}
-                  </span>
-                </div>
-                <div class={css(receiptRow)}>
-                  <span>Хүргэлт</span>
-                  <span class={css({ fontWeight: "600" })}>{money(order().deliveryFee)}</span>
-                </div>
-                <div class={css(receiptRow, { fontSize: "20px", fontWeight: "700" })}>
-                  <span>Нийт</span>
-                  <span>{money(order().total)}</span>
-                </div>
+                <Show when={order().address}>
+                  {(address) => (
+                    <button
+                      type="button"
+                      aria-label="Хаяг хуулах"
+                      onClick={() => copy(address())}
+                      class={css(round, copied() && { bg: "paidBg", color: "paid" })}
+                    >
+                      <CopyIcon />
+                    </button>
+                  )}
+                </Show>
               </div>
-              <For each={order().payments} keyed={(payment) => payment.id}>
-                {(payment) => (
+              <Show when={order().notes}>
+                {(notes) => (
+                  <button
+                    type="button"
+                    disabled={!editable(order())}
+                    onClick={() => open("edit")}
+                    class={css({ display: "block", width: "100%", mt: "14px", cursor: "pointer" })}
+                  >
+                    <Note>{notes()}</Note>
+                  </button>
+                )}
+              </Show>
+            </section>
+
+            <section class={css(section)}>
+              <div class={css(sectionHead)}>
+                <h2 class={css(title2)}>Төлбөр</h2>
+              </div>
+              <div class={css(panel, { overflow: "hidden" })}>
+                <div class={css({ px: "20px", py: "16px" })}>
+                  <div class={css(receiptRow)}>
+                    <span>Бараа</span>
+                    <span class={css({ fontWeight: "600" })}>
+                      {money(order().total - order().deliveryFee)}
+                    </span>
+                  </div>
+                  <div class={css(receiptRow)}>
+                    <span>Хүргэлт</span>
+                    <span class={css({ fontWeight: "600" })}>{money(order().deliveryFee)}</span>
+                  </div>
+                  <div class={css(receiptRow, { fontSize: "20px", fontWeight: "700" })}>
+                    <span>Нийт</span>
+                    <span>{money(order().total)}</span>
+                  </div>
+                </div>
+                <For each={order().payments} keyed={(payment) => payment.id}>
+                  {(payment) => (
+                    <div
+                      class={css({
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        px: "20px",
+                        py: "14px",
+                        bg: "paidBg",
+                        color: "paid",
+                        fontSize: "17px",
+                        fontWeight: "650",
+                        fontVariantNumeric: "tabular-nums",
+                        "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
+                      })}
+                    >
+                      <span class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
+                        <CheckCircleIcon />
+                        <span>
+                          Төлсөн
+                          <small
+                            class={css({ display: "block", fontSize: "15px", fontWeight: "500" })}
+                          >
+                            {methodText[payment().method]} · {clock(payment().createdAt)}
+                          </small>
+                        </span>
+                      </span>
+                      {money(payment().amount)}
+                    </div>
+                  )}
+                </For>
+                <Show when={order().balance > 0 && order().status !== "cancelled"}>
                   <div
                     class={css({
                       display: "flex",
@@ -375,135 +409,105 @@ export default function OrderPage() {
                       justifyContent: "space-between",
                       px: "20px",
                       py: "14px",
-                      bg: "paidBg",
-                      color: "paid",
+                      bg: "owesBg",
+                      color: "owes",
                       fontSize: "17px",
                       fontWeight: "650",
                       fontVariantNumeric: "tabular-nums",
-                      "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
                     })}
                   >
-                    <span class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                      <CheckCircleIcon />
-                      <span>
-                        Төлсөн
-                        <small
-                          class={css({ display: "block", fontSize: "15px", fontWeight: "500" })}
-                        >
-                          {methodText[payment().method]} · {clock(payment().createdAt)}
-                        </small>
-                      </span>
-                    </span>
-                    {money(payment().amount)}
+                    <span>{order().terms === "cod" ? "Хүргэлтээр авах" : "Төлбөр хүлээж"}</span>
+                    {money(order().balance)}
                   </div>
-                )}
-              </For>
+                </Show>
+              </div>
               <Show when={order().balance > 0 && order().status !== "cancelled"}>
-                <div
-                  class={css({
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    px: "20px",
-                    py: "14px",
-                    bg: "owesBg",
-                    color: "owes",
-                    fontSize: "17px",
-                    fontWeight: "650",
-                    fontVariantNumeric: "tabular-nums",
-                  })}
-                >
-                  <span>{order().terms === "cod" ? "Хүргэлтээр авах" : "Төлбөр хүлээж"}</span>
-                  {money(order().balance)}
-                </div>
-              </Show>
-            </div>
-            <Show when={order().balance > 0 && order().status !== "cancelled"}>
-              <button
-                type="button"
-                onClick={() => open("pay")}
-                class={css(button, { width: "100%", mt: "14px" })}
-              >
-                Мөнгө авсан
-              </button>
-            </Show>
-          </section>
-
-          {/* A failed step keeps the dock even when the order has no next step left. */}
-          <Show when={nextStep(order()) !== undefined || failure(order().id) !== undefined}>
-            <Dock>
-              <Failed text={failure(order().id)} />
-              <StepButton order={order()} reload={reload} wide />
-            </Dock>
-          </Show>
-
-          <Sheet open={sheet() === "menu"} title="Захиалга" onClose={() => open(undefined)}>
-            <div class={css({ display: "grid", gap: "10px" })}>
-              <button
-                type="button"
-                disabled={!editable(order())}
-                onClick={() => open("edit")}
-                class={css(button, large, { width: "100%" })}
-              >
-                Хаяг, тэмдэглэл засах
-              </button>
-              <Show when={editable(order())}>
                 <button
                   type="button"
-                  onClick={() => open("cancel")}
-                  class={css(button, large, { width: "100%", color: "owes" })}
+                  onClick={() => open("pay")}
+                  class={css(button, { width: "100%", mt: "14px" })}
                 >
-                  Захиалга цуцлах
+                  Мөнгө авсан
                 </button>
               </Show>
-            </div>
-          </Sheet>
+            </section>
 
-          <PaySheet
-            open={sheet() === "pay"}
-            balance={order().balance}
-            busy={busy()}
-            failed={failed()}
-            onClose={() => open(undefined)}
-            onSave={pay}
-          />
+            {/* A failed step keeps the dock even when the order has no next step left. */}
+            <Show when={nextStep(order()) !== undefined || failure(order().id) !== undefined}>
+              <Dock>
+                <Failed text={failure(order().id)} />
+                <StepButton order={order()} reload={reload} wide />
+              </Dock>
+            </Show>
 
-          <EditSheet
-            open={sheet() === "edit"}
-            order={order()}
-            busy={busy()}
-            failed={failed()}
-            onClose={() => open(undefined)}
-            onSave={edit}
-          />
+            <Sheet open={sheet() === "menu"} title="Захиалга" onClose={() => open(undefined)}>
+              <div class={css({ display: "grid", gap: "10px" })}>
+                <button
+                  type="button"
+                  disabled={!editable(order())}
+                  onClick={() => open("edit")}
+                  class={css(button, large, { width: "100%" })}
+                >
+                  Хаяг, тэмдэглэл засах
+                </button>
+                <Show when={editable(order())}>
+                  <button
+                    type="button"
+                    onClick={() => open("cancel")}
+                    class={css(button, large, { width: "100%", color: "owes" })}
+                  >
+                    Захиалга цуцлах
+                  </button>
+                </Show>
+              </div>
+            </Sheet>
 
-          <Sheet
-            open={sheet() === "cancel"}
-            title="Захиалга цуцлах уу?"
-            onClose={() => open(undefined)}
-          >
-            <p class={css(sub, { pb: "18px" })}>
-              Цуцалсан захиалгыг буцааж сэргээх боломжгүй. Төлсөн мөнгийг өөрөө буцааж өгнө.
-            </p>
-            <Failed text={failed()} />
-            <div class={css({ display: "flex", gap: "10px" })}>
-              <button
-                type="button"
-                onClick={() => open(undefined)}
-                class={css(button, large, { flex: 1 })}
-              >
-                Үгүй
-              </button>
-              <button
-                type="button"
-                disabled={busy()}
-                onClick={cancel}
-                class={css(button, large, { flex: 1, bg: "owes", color: "white" })}
-              >
-                Цуцлах
-              </button>
-            </div>
-          </Sheet>
+            <PaySheet
+              open={sheet() === "pay"}
+              balance={order().balance}
+              busy={busy()}
+              failed={failed()}
+              onClose={() => open(undefined)}
+              onSave={pay}
+            />
+
+            <EditSheet
+              open={sheet() === "edit"}
+              order={order()}
+              busy={busy()}
+              failed={failed()}
+              onClose={() => open(undefined)}
+              onSave={edit}
+            />
+
+            <Sheet
+              open={sheet() === "cancel"}
+              title="Захиалга цуцлах уу?"
+              onClose={() => open(undefined)}
+            >
+              <p class={css(sub, { pb: "18px" })}>
+                Цуцалсан захиалгыг буцааж сэргээх боломжгүй. Төлсөн мөнгийг өөрөө буцааж өгнө.
+              </p>
+              <Failed text={failed()} />
+              <div class={css({ display: "flex", gap: "10px" })}>
+                <button
+                  type="button"
+                  onClick={() => open(undefined)}
+                  class={css(button, large, { flex: 1 })}
+                >
+                  Үгүй
+                </button>
+                <button
+                  type="button"
+                  disabled={busy()}
+                  onClick={cancel}
+                  class={css(button, large, { flex: 1, bg: "owes", color: "white" })}
+                >
+                  Цуцлах
+                </button>
+              </div>
+            </Sheet>
+          </div>
         </Loading>
       </Errored>
     </main>

@@ -65,6 +65,7 @@ export {
   DraftSource,
   DraftState,
   DuplicateProduct,
+  IMAGE_HOST,
   NewProduct,
   PhotoSource,
   priceFromAmazon,
