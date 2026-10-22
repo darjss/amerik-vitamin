@@ -334,16 +334,22 @@ export const syncKhaan = Effect.fn("syncKhaan")(function* syncKhaan() {
     ),
   );
 
-  const outcomes = { seen: 0, counted: 0, matched: 0, unmatched: 0, skipped: skipped.length };
+  // Oldest first, one at a time, so two transfers for one order pay it in the order they came.
+  const stored = yield* Effect.forEach(
+    incoming.toSorted((a, b) => a.happenedAt.getTime() - b.happenedAt.getTime()),
+    (tx) => storeTransfer(tx),
+  );
 
-  // Oldest first, so two transfers for one order pay it in the order they came.
-  const ordered = incoming.toSorted((a, b) => a.happenedAt.getTime() - b.happenedAt.getTime());
+  const tally = (outcome: (typeof stored)[number]) =>
+    stored.filter((each) => each === outcome).length;
 
-  for (const tx of ordered) {
-    outcomes[yield* storeTransfer(tx)] += 1;
-  }
-
-  return outcomes;
+  return {
+    seen: tally("seen"),
+    counted: tally("counted"),
+    matched: tally("matched"),
+    unmatched: tally("unmatched"),
+    skipped: skipped.length,
+  };
 });
 
 /**
