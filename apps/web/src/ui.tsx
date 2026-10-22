@@ -145,6 +145,41 @@ export const glassBar = css.raw({
   backdropFilter: "blur(22px) saturate(180%)",
 });
 
+/** A filter chip with an optional count in <b>; teal when on. */
+export const chip = css.raw(press, {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "7px",
+  flex: "none",
+  height: "40px",
+  px: "15px",
+  borderRadius: "20px",
+  bg: "surface",
+  boxShadow: "raiseSm",
+  fontSize: "15px",
+  fontWeight: "600",
+  whiteSpace: "nowrap",
+  transition: "background .2s ease, color .2s ease",
+  "& b": { fontWeight: "700", color: "inkMuted", fontVariantNumeric: "tabular-nums" },
+});
+
+export const chipOn = css.raw({
+  bg: "sel",
+  color: "white",
+  boxShadow: "0 1px 2px {colors.sel/25}",
+  "& b": { color: "white/78" },
+});
+
+/** A row of chips that scrolls sideways past the screen edge. */
+export const chipRow = css.raw({
+  display: "flex",
+  gap: "8px",
+  px: "16px",
+  py: "4px",
+  overflowX: "auto",
+  scrollbarWidth: "none",
+});
+
 export const field = css.raw({
   width: "100%",
   bg: "surface",

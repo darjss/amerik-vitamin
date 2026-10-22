@@ -19,13 +19,14 @@ import { HeldSteps, nextStep } from "../../steps";
 import {
   act,
   button,
+  chip,
+  chipOn,
   headline,
   largeTitle,
   Money,
   Note,
   panel,
   Pill,
-  press,
   Problem,
   round,
   roundAct,
@@ -68,30 +69,6 @@ const searchOf = (query: string): ListOrders | undefined => {
 
   return /^\d{3,8}$/u.test(digits) ? { phone: digits } : undefined;
 };
-
-const chip = css.raw(press, {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "7px",
-  flex: "none",
-  height: "40px",
-  px: "15px",
-  borderRadius: "20px",
-  bg: "surface",
-  boxShadow: "raiseSm",
-  fontSize: "15px",
-  fontWeight: "600",
-  whiteSpace: "nowrap",
-  transition: "background .2s ease, color .2s ease",
-  "& b": { fontWeight: "700", color: "inkMuted", fontVariantNumeric: "tabular-nums" },
-});
-
-const chipOn = css.raw({
-  bg: "sel",
-  color: "white",
-  boxShadow: "0 1px 2px {colors.sel/25}",
-  "& b": { color: "white/78" },
-});
 
 // Shown where there is no next step to take.
 const statusText = {

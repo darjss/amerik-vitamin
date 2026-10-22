@@ -6,7 +6,7 @@ import PlusIcon from "~icons/ph/plus-bold";
 
 import { Sheet } from "./chrome";
 import { money, thousands } from "./format";
-import { act, button, Failed, field, round, sub, wide } from "./ui";
+import { act, button, Failed, field, round, Segmented, sub, wide } from "./ui";
 
 // Pieces the products list and the product page share: stock wording and the number sheets.
 
@@ -26,7 +26,23 @@ export const stockTone = (stock: number | null) => {
   return stock <= LOW_STOCK ? ("wait" as const) : undefined;
 };
 
+/** The stock number as a button: teal when fine, then amber, red and grey by tone. */
+export const stockButton = (stock: number | null) => {
+  const tone = stockTone(stock);
+
+  if (tone === "owes") return css.raw({ bg: "owesBg", color: "owes", boxShadow: "none" });
+
+  if (tone === "wait") return css.raw({ bg: "waitBg", color: "wait", boxShadow: "none" });
+
+  if (tone === "neutral") return css.raw({ bg: "chip", color: "inkMuted", boxShadow: "none" });
+
+  return css.raw({ bg: "selSoft", color: "sel", boxShadow: "none" });
+};
+
 const digits = (text: string) => Number(text.replaceAll(/\D/gu, ""));
+
+/** Prices move in steps of 5,000₮. */
+const PRICE_STEP = 5000;
 
 const bigNumber = css.raw(field, {
   flex: 1,
@@ -38,19 +54,16 @@ const bigNumber = css.raw(field, {
 
 const stepButton = css.raw(round, { width: "56px", height: "56px", fontSize: "22px" });
 
-type NumberSheetProps = {
-  open: boolean;
-  title: string;
-  prompt: string;
-  busy: boolean;
-  failed: string | undefined;
-  onClose: () => void;
-};
+type Form = { prompt: string; busy: boolean; failed: string | undefined };
+
+type SheetFrame = { open: boolean; title: string; onClose: () => void };
+
+type StepperProps = Form & { start: number; min: number; onSave: (value: number) => void };
+
+type PriceProps = Form & { price: number; onSave: (price: number) => void };
 
 /** − number +, for a count (from 0) or a shipment (from 1). Opens fresh at `start` each time. */
-export function StepperSheet(
-  props: NumberSheetProps & { start: number; min: number; onSave: (value: number) => void },
-) {
+export function StepperSheet(props: SheetFrame & StepperProps) {
   return (
     <Sheet open={props.open} title={props.title} onClose={props.onClose}>
       <Show when={props.open}>
@@ -60,9 +73,68 @@ export function StepperSheet(
   );
 }
 
-function Stepper(
-  props: NumberSheetProps & { start: number; min: number; onSave: (value: number) => void },
-) {
+type StockMode = "count" | "receive";
+
+/**
+ * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
+ * shelf, Ирсэн adds a shipment. Switching resets the number for that job.
+ */
+export function StockSheet(props: {
+  product: { name: string; brand: string; count: number; stock: number | null } | undefined;
+  busy: boolean;
+  failed: string | undefined;
+  onClose: () => void;
+  onCount: (counted: number) => void;
+  onReceive: (received: number) => void;
+}) {
+  const [mode, setMode] = createSignal<StockMode>("count");
+
+  return (
+    <Sheet
+      open={props.product !== undefined}
+      title={props.product?.name ?? ""}
+      onClose={() => {
+        setMode("count");
+        props.onClose();
+      }}
+    >
+      <Show when={props.product}>
+        {(product) => (
+          <>
+            <div class={css({ pb: "16px", mt: "-6px" })}>
+              <Segmented
+                options={[
+                  ["count", "Тоолсон"],
+                  ["receive", "Ирсэн"],
+                ]}
+                value={mode()}
+                onChange={setMode}
+              />
+            </div>
+            <Show when={mode()} keyed>
+              {(current) => (
+                <Stepper
+                  prompt={
+                    current === "count"
+                      ? `${product().brand} · ${product().count} ш. Тавиур дээр хэд байна?`
+                      : `Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(product().stock)}.`
+                  }
+                  start={current === "count" ? (product().stock ?? 0) : 1}
+                  min={current === "count" ? 0 : 1}
+                  busy={props.busy}
+                  failed={props.failed}
+                  onSave={current === "count" ? props.onCount : props.onReceive}
+                />
+              )}
+            </Show>
+          </>
+        )}
+      </Show>
+    </Sheet>
+  );
+}
+
+function Stepper(props: StepperProps) {
   const [value, setValue] = createSignal(untrack(() => props.start));
 
   return (
@@ -107,9 +179,7 @@ function Stepper(
 }
 
 /** A new shelf price, typed with thousands separators. */
-export function PriceSheet(
-  props: NumberSheetProps & { price: number; onSave: (price: number) => void },
-) {
+export function PriceSheet(props: SheetFrame & PriceProps) {
   return (
     <Sheet open={props.open} title={props.title} onClose={props.onClose}>
       <Show when={props.open}>
@@ -119,22 +189,38 @@ export function PriceSheet(
   );
 }
 
-function PriceInput(props: NumberSheetProps & { price: number; onSave: (price: number) => void }) {
+function PriceInput(props: PriceProps) {
   const [price, setPrice] = createSignal(untrack(() => props.price));
 
   return (
     <>
       <p class={css(sub, { pb: "18px", mt: "-10px" })}>{props.prompt}</p>
-      <label class={css({ display: "flex", alignItems: "center", gap: "8px", pb: "20px" })}>
+      <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
+        <button
+          type="button"
+          aria-label={`${thousands(PRICE_STEP)}₮ хасах`}
+          disabled={price() <= PRICE_STEP}
+          onClick={() => setPrice((current) => Math.max(PRICE_STEP, current - PRICE_STEP))}
+          class={css(stepButton)}
+        >
+          <MinusIcon />
+        </button>
         <input
           inputmode="numeric"
           aria-label="Үнэ"
-          value={price() === 0 ? "" : thousands(price())}
+          value={price() === 0 ? "" : `${thousands(price())}₮`}
           onInput={(event) => setPrice(digits(event.currentTarget.value))}
-          class={css(bigNumber)}
+          class={css(bigNumber, { minWidth: 0 })}
         />
-        <span class={css({ fontSize: "30px", fontWeight: "700" })}>₮</span>
-      </label>
+        <button
+          type="button"
+          aria-label={`${thousands(PRICE_STEP)}₮ нэмэх`}
+          onClick={() => setPrice((current) => current + PRICE_STEP)}
+          class={css(stepButton)}
+        >
+          <PlusIcon />
+        </button>
+      </div>
       <Failed text={props.failed} />
       <button
         type="button"
