@@ -228,7 +228,11 @@ function DraftRun(props: { id: DraftId; options: CatalogOptions }) {
         ),
         failed: (failure) => (
           <div class={css({ px: "16px", pt: "12px", display: "grid", gap: "14px" })}>
-            <Note large>Уншиж чадсангүй. {failure.reason}</Note>
+            <Note large>
+              {failure.reason === "not_a_product_page"
+                ? "Энэ холбоос Amazon-ий барааны хуудас биш байна."
+                : "Уншиж чадсангүй."}
+            </Note>
             <button
               type="button"
               onClick={() => setParams({ draft: undefined })}

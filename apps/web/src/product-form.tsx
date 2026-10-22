@@ -66,6 +66,8 @@ export const blank: ProductDraft = {
   amazonUrl: null,
   amazonTitle: null,
   amazonCents: null,
+  photoOnly: false,
+  bannedWords: [],
   note: "",
 };
 
@@ -201,7 +203,17 @@ export function DraftForm(props: {
           </div>
         )}
       </Show>
-      <Show when={form.note}>
+      <Show
+        when={[
+          form.photoOnly ? "Amazon-оос олдсонгүй, зөвхөн зургаас уншив." : "",
+          form.bannedWords.length > 0
+            ? `Тайлбарт хориотой үг байна: ${form.bannedWords.join(", ")}`
+            : "",
+          form.note,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+      >
         {(note) => (
           <div class={css({ px: "16px", pt: "8px" })}>
             <Note>{note()}</Note>

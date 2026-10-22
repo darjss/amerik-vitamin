@@ -99,9 +99,11 @@ Return the shop's catalog fields as JSON:
 Use "kids" only for a product made for children.`;
 
 // Health claims are the line this shop never crosses (AGENTS.md). Any of
-// these sends the copy back once; a second hit goes to her as a note.
+// these sends the copy back once; a second hit goes to her form as `bannedWords`.
 const claims =
   /дэмж|сайжруул|хамгаал|эмчил|урьдчилан сэргийл|дархлаа|эрүүл мэнд|үр дүн|тайвшруул|бэхжүүл|нөхөн сэргээ|—|–|[“”‘’]|!/giu;
+
+const bannedIn = (description: string) => [...new Set(description.match(claims) ?? [])];
 
 const copyPrompt = (
   facts: string,
@@ -199,17 +201,13 @@ const findOnAmazon = (label: Label) =>
 const writeCopy = (facts: string) =>
   Effect.gen(function* () {
     const model = yield* Model;
-    let copy = yield* model.json(Copy, copyPrompt(facts, []), WRITER);
-    let hits = [...new Set(copy.description.match(claims) ?? [])];
+    const first = yield* model.json(Copy, copyPrompt(facts, []), WRITER);
+    const hits = bannedIn(first.description);
 
-    if (hits.length > 0) {
-      copy = yield* model.json(Copy, copyPrompt(facts, hits), WRITER);
-      hits = [...new Set(copy.description.match(claims) ?? [])];
-    }
+    const copy =
+      hits.length === 0 ? first : yield* model.json(Copy, copyPrompt(facts, hits), WRITER);
 
-    const note = hits.length > 0 ? `Тайлбарт хориотой үг байна: ${hits.join(", ")}` : copy.note;
-
-    return { description: copy.description, note };
+    return { ...copy, bannedWords: bannedIn(copy.description) };
   });
 
 /** The model keeps the product shots; each is copied into the shop's own bucket. */
@@ -320,7 +318,13 @@ export const getDraft = Effect.fn("getDraft")(function* getDraft(draftId: DraftI
   }
 
   if (status.status === "errored" || status.status === "terminated") {
-    return { _tag: "failed" as const, reason: status.error?.message ?? "Болсонгүй." };
+    return {
+      _tag: "failed" as const,
+      reason:
+        status.error?.message === "not_a_product_page"
+          ? ("not_a_product_page" as const)
+          : ("failed" as const),
+    };
   }
 
   return { _tag: "running" as const };
@@ -359,8 +363,10 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
         retried,
       );
 
+      // A run's error reaches `getDraft` as only a name and a message, so the
+      // message carries the reason.
       if (page === null && label === null) {
-        return yield* Effect.die("Энэ холбоос Amazon-ий барааны хуудас биш байна.");
+        return yield* Effect.die(new Error("not_a_product_page"));
       }
 
       const facts = factsText(label, page);
@@ -385,17 +391,15 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
               retried,
             );
 
-      const notFound = page === null ? "Amazon-оос олдсонгүй, зөвхөн зургаас уншив." : "";
-
       const draft: ProductDraft = {
         ...fields,
-        description: copy.description,
+        ...copy,
         images,
         asin: page?.asin ?? null,
         amazonUrl: page?.url ?? null,
         amazonTitle: page?.title ?? null,
         amazonCents: page?.cents ?? null,
-        note: [notFound, copy.note].filter(Boolean).join(" "),
+        photoOnly: page === null,
       };
 
       return draft;

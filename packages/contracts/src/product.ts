@@ -173,7 +173,11 @@ export const ProductDraft = Schema.Struct({
   amazonTitle: Schema.NullOr(Schema.String),
   /** Amazon's price in US cents, a hint for her own price. */
   amazonCents: Schema.NullOr(Schema.Int),
-  /** A doubt for her, in Mongolian: a count that disagrees, a photo it couldn't read. */
+  /** Amazon had no listing for her photo, so the draft is read off the photo alone. */
+  photoOnly: Schema.Boolean,
+  /** Health-claim words the description still has after one rewrite. */
+  bannedWords: Schema.Array(Schema.String),
+  /** The writer's own doubt for her, in Mongolian, e.g. a count that disagrees. */
   note: Schema.String,
 });
 
@@ -195,7 +199,7 @@ export const priceFromAmazon = (cents: number) => {
 export const DraftState = Schema.Union([
   Schema.TaggedStruct("running", {}),
   Schema.TaggedStruct("ready", { draft: ProductDraft, existing: Schema.NullOr(ProductId) }),
-  Schema.TaggedStruct("failed", { reason: Schema.String }),
+  Schema.TaggedStruct("failed", { reason: Schema.Literals(["not_a_product_page", "failed"]) }),
 ]);
 
 export type DraftState = typeof DraftState.Type;
