@@ -2,9 +2,6 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import pandaPreset from "@pandacss/preset-panda";
 
-// The dashboard's look is decided in PRODUCT.md: "Native, two-tone". Warm ink
-// does things, petrol teal shows what is selected or done, and the other
-// colours are statuses. Photos, depth and type carry the rest.
 export default defineConfig({
   include: ["./src/**/*.{ts,tsx}"],
   jsxFramework: "solid",
@@ -15,22 +12,67 @@ export default defineConfig({
   presets: [presetBase, pandaPreset],
   theme: {
     extend: {
+      textStyles: {
+        largeTitle: {
+          value: {
+            fontSize: "34px",
+            lineHeight: "40px",
+            fontWeight: "700",
+            letterSpacing: "-0.025em",
+            textWrap: "balance",
+          },
+        },
+        title2: {
+          value: {
+            fontSize: "22px",
+            lineHeight: "28px",
+            fontWeight: "700",
+            letterSpacing: "-0.02em",
+          },
+        },
+        title3: {
+          value: {
+            fontSize: "20px",
+            lineHeight: "25px",
+            fontWeight: "650",
+            letterSpacing: "-0.015em",
+          },
+        },
+        headline: {
+          value: {
+            fontSize: "17px",
+            lineHeight: "22px",
+            fontWeight: "600",
+            letterSpacing: "-0.01em",
+          },
+        },
+        body: { value: { fontSize: "17px", lineHeight: "1.3" } },
+        callout: { value: { fontSize: "16px", lineHeight: "20px" } },
+        subhead: { value: { fontSize: "15px", lineHeight: "20px" } },
+        footnote: { value: { fontSize: "13px", lineHeight: "17px" } },
+      },
+      keyframes: {
+        appear: {
+          from: { opacity: 0, transform: "translateY(4px)" },
+          to: { opacity: 1, transform: "none" },
+        },
+        shimmer: {
+          from: { backgroundPosition: "100% 0" },
+          to: { backgroundPosition: "-100% 0" },
+        },
+      },
       tokens: {
         colors: {
           page: { value: "#f8f4ec" },
           surface: { value: "#fffdf9" },
           ink: { value: "#1e1b17" },
           inkMuted: { value: "#665e54" },
-          // Placeholders and the label of an action that isn't ready yet.
           inkFaint: { value: "#857d72" },
           line: { value: "#e9e3d8" },
           chip: { value: "#efeae0" },
-          // Empty progress: the tracker's connectors and the packing bars.
           track: { value: "#e1d9cb" },
-          // Rings around what isn't done yet: a tracker dot, a packing tick box.
           dot: { value: "#d9d1c3" },
           tick: { value: "#c9c0b1" },
-          // Behind a sheet or the full-size photo.
           scrim: { value: "rgba(15,14,12,.45)" },
           sel: { value: "#0f4c5c" },
           selSoft: { value: "#e1ecee" },
@@ -43,7 +85,6 @@ export default defineConfig({
           waitInk: { value: "#4d3400" },
         },
         fonts: {
-          // Inter has Mongolian's Ө and Ү; its optical sizes draw large titles as Inter Display.
           sans: { value: "'Inter Variable', -apple-system, system-ui, sans-serif" },
         },
         shadows: {

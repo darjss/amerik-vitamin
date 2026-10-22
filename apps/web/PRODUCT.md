@@ -49,14 +49,18 @@ Two tones do the work. Warm ink fills every action. Petrol teal marks what's sel
 | surface   | `#fffdf9`              | Raised panels, buttons, chips, search fields                                        |
 | ink       | `#1e1b17`              | Text, and every filled action: TU-д өгөх, Савлах, +, call, Захиалга үүсгэх          |
 | ink-muted | `#665e54`              | Secondary text                                                                      |
+| ink-faint | `#857d72`              | Placeholders, the label of an action that isn't ready yet                           |
 | chip      | `#efeae0`              | Segmented control track, an action that isn't ready yet                             |
+| track     | `#e1d9cb`              | Empty progress: the tracker's connectors, the packing bars                          |
+| dot, tick | `#d9d1c3`, `#c9c0b1`   | Rings around what isn't done yet: a tracker dot, a packing tick box                 |
+| scrim     | `rgba(15,14,12,.45)`   | Behind a sheet or the full-size photo                                               |
 | sel       | `#0f4c5c`              | Active filter, done tracker steps, ticks, packing progress, ×N badges, picked tiles |
 | sel-soft  | `#e1ecee`              | Active tab, ×N on the order page, "2 дахь захиалга", a held row                     |
 | paid      | `#2f6b3a` on `#e5efe2` | Paid                                                                                |
 | owes      | `#b4233c` on `#fbe6e8` | Money to collect, payment waiting, sold out                                         |
 | wait      | `#8a5a00` on `#f8ecce` | Notes she must not miss, "3 хоног", low stock                                       |
 
-Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only.
+Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only. The type scale is iOS's, as Panda text styles in `panda.config.ts`: largeTitle 34/40, title2 22/28, title3 20/25, headline 17/22 semibold, body 17, callout 16/20, subhead 15/20, footnote 13/17. Big numerals for money, stock and counts are one-offs on their page.
 
 Rules:
 
@@ -92,7 +96,9 @@ Screens:
 
 - **Савлах** is one parcel at a time as a checklist. Progress segments fill as she ticks. The parcel header has the phone, money, address and note. Each row is the whole tap target: a 112px photo, the name, brand and count, a big ×N, and a square tick that fills teal. Алгасах and Савласан stay docked. After the last parcel come the packed list, the COD total and "N илгээмжийг TU-д өгөх".
 - **Шинэ захиалга** has Болих, then the source (Чат, Утас, Дэлгүүр) and one grouped panel for phone, address and note. A known phone shows "N дахь захиалга", fills the last address and lists Өмнө авсан to add again. Below that is a 3-column photo grid: a tap adds one, the tile gets a teal ring and ×N, and sold-out items fade to the end. Then Сагс with steppers and sums, prepay or COD, and a docked "Захиалга үүсгэх · total" that names what's missing until it's ready. A walk-in order has no delivery fee and needs no phone.
-- **Бараа** has a large title, search, and rows with photo, name, brand, count and price. The stock number is a button that opens a counter sheet.
+- **Бараа** has a large title, search, then one row of chips: Бүгд, the stock views that have products (Дууссан with a red dot, Дуусаж байна amber, Тоолоогүй, Архив), and every brand with its count. Filters live in the URL, so coming back from a product keeps them. Each row has photo, name, brand and count, a raised price chip that opens the price pad (±5,000₮ steps), and the stock number as a button tinted by stock: teal, amber when low, red when out, grey when uncounted. The stock button opens one sheet with Тоолсон (set the count) and Ирсэн (add a shipment). A ⋯ chip next to the price opens the row's actions: Захиалга үүсгэх, Ирсэн бараа нэмэх, Тоолох, Үнэ өөрчлөх, Нэр, үнэ хуулах, Дэлгэрэнгүй, Архивлах. Tapping the name opens the product. A round + by the title opens Шинэ бараа.
+- **Шинэ бараа** asks what to read from: a photo of the bottle (the phone camera opens), an Amazon link, or Гараар бөглөх for an empty form. The AI run shows its steps with a seconds counter and keeps going if she leaves; its id stays in the URL. Then comes the filled form: the photos (× drops one), brand with the shop's brands to pick from, name, strength, count, form and category as chips, price (Amazon's dollar price as a hint), stock, and the Mongolian description, with line, flavor and serving numbers under Бусад мэдээлэл. A note box says what the AI doubted, or that the product is already in the shop with a link to it. The docked "Бараа нэмэх · price" names the missing field until the form is ready.
+- **Product** has a frosted bar with ×, the brand and ⋯, then the photos side by side (a tap enlarges one), the name, and the price, which opens a number pad. A raised panel shows what's left and what sold in 30 days. Four quick actions sit under it: Тоолох sets the count, Ирсэн adds a shipment, Үнэ changes the price, and Захиалах opens a new order with the bottle in the cart. "Нэр, үнэ хуулах" copies the name and price for a chat reply. Then the label facts, the Mongolian description and the last 30 stock moves, each sale linking to its order. ⋯ archives or restores it.
 
 Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button, hairline-strip lists, stacked rounded order cards, a loud banner at the top.
 

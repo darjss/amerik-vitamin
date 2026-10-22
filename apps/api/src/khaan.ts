@@ -194,28 +194,21 @@ const candidatesFor = Effect.fn("candidatesFor")(function* candidatesFor(transfe
       ),
     );
 
-  const byOrder = new Map<OrderId, Candidate>();
-
-  for (const order of open) {
-    if (
-      order.total - Number(order.paid ?? 0) === transfer.amount &&
-      mentionsOrder(transfer.description, order)
-    ) {
-      byOrder.set(order.orderId, { kind: "open", orderId: order.orderId });
-    }
-  }
-
   // An order that both owes the amount and holds a manual payment of it: the
-  // bank line is the manual payment's, never a second payment.
-  for (const payment of manual) {
-    if (mentionsOrder(transfer.description, payment)) {
-      byOrder.set(payment.orderId, {
-        kind: "manual",
-        orderId: payment.orderId,
-        paymentId: payment.paymentId,
-      });
-    }
-  }
+  // bank line is the manual payment's, never a second payment. The manual
+  // entries come last so the Map keeps them.
+  const byOrder = new Map<OrderId, Candidate>([
+    ...open
+      .filter(
+        (order) =>
+          order.total - Number(order.paid ?? 0) === transfer.amount &&
+          mentionsOrder(transfer.description, order),
+      )
+      .map((order) => [order.orderId, { kind: "open", orderId: order.orderId }] as const),
+    ...manual
+      .filter((payment) => mentionsOrder(transfer.description, payment))
+      .map(({ orderId, paymentId }) => [orderId, { kind: "manual", orderId, paymentId }] as const),
+  ]);
 
   return [...byOrder.values()];
 });
@@ -341,16 +334,22 @@ export const syncKhaan = Effect.fn("syncKhaan")(function* syncKhaan() {
     ),
   );
 
-  const outcomes = { seen: 0, counted: 0, matched: 0, unmatched: 0, skipped: skipped.length };
+  // Oldest first, one at a time, so two transfers for one order pay it in the order they came.
+  const stored = yield* Effect.forEach(
+    incoming.toSorted((a, b) => a.happenedAt.getTime() - b.happenedAt.getTime()),
+    (tx) => storeTransfer(tx),
+  );
 
-  // Oldest first, so two transfers for one order pay it in the order they came.
-  const ordered = incoming.toSorted((a, b) => a.happenedAt.getTime() - b.happenedAt.getTime());
+  const tally = (outcome: (typeof stored)[number]) =>
+    stored.filter((each) => each === outcome).length;
 
-  for (const tx of ordered) {
-    outcomes[yield* storeTransfer(tx)] += 1;
-  }
-
-  return outcomes;
+  return {
+    seen: tally("seen"),
+    counted: tally("counted"),
+    matched: tally("matched"),
+    unmatched: tally("unmatched"),
+    skipped: skipped.length,
+  };
 });
 
 /**

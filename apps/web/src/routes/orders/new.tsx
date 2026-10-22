@@ -1,18 +1,12 @@
-import type {
-  OrderSource,
-  PaymentTerms,
-  PlaceOrder,
-  ProductId,
-  ProductRow,
-} from "@amerik/contracts";
-import { useNavigate } from "@solidjs/router";
+import { ProductId } from "@amerik/contracts";
+import type { OrderSource, PaymentTerms, PlaceOrder, ProductRow } from "@amerik/contracts";
+import { useNavigate, useSearchParams } from "@solidjs/router";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
-  action,
   createMemo,
-  createOptimistic,
   createSignal,
   createStore,
   Errored,
@@ -20,7 +14,7 @@ import {
   latest,
   Loading,
   Show,
-  useContext,
+  untrack,
 } from "solid-js";
 import { css } from "styled-system/css";
 import BankIcon from "~icons/ph/bank";
@@ -34,60 +28,38 @@ import PlusIcon from "~icons/ph/plus-bold";
 import StoreIcon from "~icons/ph/storefront";
 
 import { ApiClient } from "../../api/client";
-import { runEffect, RuntimeContext } from "../../api/solid-effect";
+import { createWrite, runEffect } from "../../api/solid-effect";
 import { Cart } from "../../cart";
-import { Dock } from "../../chrome";
-import { failureText, matches, money } from "../../format";
+import { digits, matches, money } from "../../format";
+import { Tile } from "../../photos";
+import { GridSkeleton } from "../../skeletons";
+import { press } from "../../styles";
 import {
-  act,
-  button,
-  Failed,
+  appear,
+  Dock,
   glassBar,
-  headline,
   panel,
   Pill,
-  press,
   Problem,
+  SaveButton,
   searchBox,
   section,
   Segmented,
+  spinner,
   sub,
-  Tile,
-  title3,
-  wide,
 } from "../../ui";
 import type { Icon } from "../../ui";
+import { sourceText } from "../../words";
 
 const FEE = 6000;
 
 const sources = [
-  ["messenger_human", "Чат", ChatIcon],
-  ["phone", "Утас", PhoneIcon],
-  ["walk_in", "Дэлгүүр", StoreIcon],
+  ["messenger_human", sourceText.messenger_human, ChatIcon],
+  ["phone", sourceText.phone, PhoneIcon],
+  ["walk_in", sourceText.walk_in, StoreIcon],
 ] satisfies ReadonlyArray<readonly [OrderSource, string, Icon]>;
 
-/** One line of the grouped contact fields: an icon, then the input. */
-const fieldRow = css.raw({
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  minHeight: "56px",
-  px: "16px",
-  "& + &": { boxShadow: "inset 50px 0 0 {colors.surface}, inset 0 .5px 0 {colors.line}" },
-  "& > svg": { fontSize: "21px", color: "inkMuted", flex: "none", width: "22px" },
-  "& input, & textarea": {
-    flex: 1,
-    minWidth: 0,
-    py: "16px",
-    bg: "transparent",
-    outline: "none",
-    fontSize: "17px",
-    lineHeight: "22px",
-    color: "ink",
-    resize: "none",
-    _placeholder: { color: "inkFaint" },
-  },
-});
+type Quantities = Record<ProductId, number>;
 
 /**
  * An order she writes by hand from a chat, a call or the counter (PRODUCT.md,
@@ -96,7 +68,6 @@ const fieldRow = css.raw({
  */
 export default function NewOrder() {
   const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
-  const runtime = useContext(RuntimeContext);
   const navigate = useNavigate();
 
   const [phone, setPhone] = createSignal("");
@@ -105,21 +76,30 @@ export default function NewOrder() {
   const [source, setSource] = createSignal<OrderSource>("messenger_human");
   const [terms, setTerms] = createSignal<PaymentTerms>("prepay");
   const [query, setQuery] = createSignal("");
-  const [cart, setCart] = createStore<Record<ProductId, number>>({});
-  const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal<string>();
+  const [params] = useSearchParams<{ add?: string }>();
+
+  // The product page's Захиалах opens here with that product already in the cart.
+  const added = untrack(() =>
+    Option.getOrUndefined(Schema.decodeUnknownOption(ProductId)(params.add)),
+  );
+
+  const [cart, setCart] = createStore<Quantities>(added === undefined ? {} : { [added]: 1 });
+
+  const { write, busy, failed } = createWrite({
+    fallback: "Хадгалж чадсангүй. Дахин оролдоно уу.",
+  });
 
   // A full phone looks up the customer: how many orders, and the last address.
   const customer = createMemo(() => {
-    const digits = phone();
+    const typed = phone();
 
     return runEffect(
       Effect.gen(function* () {
-        if (digits.length !== 8) return undefined;
+        if (typed.length !== 8) return undefined;
 
         const api = yield* ApiClient;
 
-        return yield* api.findCustomer({ phone: digits }).pipe(
+        return yield* api.findCustomer({ phone: typed }).pipe(
           // A new phone has no customer yet; any other failure reaches Errored.
           Effect.catchTag("CustomerNotFound", () => Effect.succeed(undefined)),
         );
@@ -127,17 +107,16 @@ export default function NewOrder() {
     );
   });
 
-  // The phone's past orders, for Өмнө авсан.
   const pastOrders = createMemo(() => {
-    const digits = phone();
+    const typed = phone();
 
     return runEffect(
       Effect.gen(function* () {
-        if (digits.length !== 8) return [];
+        if (typed.length !== 8) return [];
 
         const api = yield* ApiClient;
 
-        return yield* api.listOrders({ phone: digits });
+        return yield* api.listOrders({ phone: typed });
       }),
     );
   });
@@ -154,14 +133,12 @@ export default function NewOrder() {
       return quantity > 0 ? [{ product, quantity }] : [];
     });
 
-  // Sold out goes last; a search narrows by brand or name.
   const shown = createMemo(() =>
     live()
       .filter((product) => matches(product, query()))
       .toSorted((a, b) => Number(a.stock === 0) - Number(b.stock === 0)),
   );
 
-  // What this phone bought before, most recent first.
   const before = () => {
     const ids = new Set(pastOrders().flatMap((order) => order.lines.map((line) => line.productId)));
 
@@ -182,8 +159,7 @@ export default function NewOrder() {
     return walkIn() || phone().length === 8 ? undefined : "Утасны дугаар оруулна уу";
   };
 
-  // A failure keeps the draft and says why above the button.
-  const place = action(async function* place() {
+  const place = () => {
     const lines = picked().map(({ product, quantity }) => ({ productId: product.id, quantity }));
 
     if (!Arr.isArrayNonEmpty(lines)) return;
@@ -200,18 +176,11 @@ export default function NewOrder() {
       lines,
     } satisfies PlaceOrder;
 
-    setBusy(true);
-    const exit = await runtime.runPromiseExit(ApiClient.use((api) => api.placeOrder(input)));
-    yield;
-
-    if (Exit.isFailure(exit)) {
-      setFailed(failureText(exit.cause, "Хадгалж чадсангүй. Дахин оролдоно уу."));
-
-      return;
-    }
-
-    navigate(`/orders/${exit.value.orderId}`, { replace: true });
-  });
+    void write(
+      ApiClient.use((api) => api.placeOrder(input)),
+      (placed) => navigate(`/orders/${placed.orderId}`, { replace: true }),
+    );
+  };
 
   return (
     <main class={css({ pb: "140px" })}>
@@ -230,261 +199,355 @@ export default function NewOrder() {
             px: "6px",
             display: "grid",
             placeItems: "center",
-            fontSize: "17px",
+            textStyle: "body",
             fontWeight: "600",
           })}
         >
           Болих
         </a>
-        <b class={css(headline)}>Шинэ захиалга</b>
+        <b class={css({ textStyle: "headline" })}>Шинэ захиалга</b>
       </header>
 
       {/* A failed customer lookup lands here too, not in a quiet empty pill. */}
       <Errored fallback={(error) => <Problem error={error()} />}>
         <div class={css({ px: "20px", pt: "12px" })}>
           <Segmented options={sources} value={source()} onChange={setSource} />
-
-          <div class={css(panel, { mt: "16px", borderRadius: "20px", overflow: "hidden" })}>
-            <label class={css(fieldRow)}>
-              <PhoneIcon />
-              <input
-                inputmode="numeric"
-                autocomplete="off"
-                aria-label="Утас"
-                placeholder={walkIn() ? "Утас, заавал биш" : "Утас"}
-                value={phone()}
-                onInput={(event) =>
-                  setPhone(event.currentTarget.value.replaceAll(/\D/gu, "").slice(-8))
-                }
-                class={css({
-                  fontWeight: "650",
-                  letterSpacing: "0.01em",
-                  fontVariantNumeric: "tabular-nums",
-                })}
-              />
-              <Show when={customer()?.orders}>
-                {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
-              </Show>
-            </label>
-            <Show when={!walkIn()}>
-              <label class={css(fieldRow)}>
-                <MapPinIcon />
-                <textarea
-                  rows={2}
-                  aria-label="Хаяг"
-                  placeholder="Хаяг"
-                  value={address()}
-                  onInput={(event) => setAddress(event.currentTarget.value)}
-                />
-              </label>
-            </Show>
-            <label class={css(fieldRow)}>
-              <NoteIcon />
-              <input
-                aria-label="Тэмдэглэл"
-                placeholder="Тэмдэглэл: орцны код, залгах"
-                value={notes()}
-                onInput={(event) => setNotes(event.currentTarget.value)}
-              />
-            </label>
-          </div>
+          <ContactFields
+            walkIn={walkIn()}
+            phone={phone()}
+            address={address()}
+            notes={notes()}
+            orders={customer()?.orders}
+            onPhone={setPhone}
+            onAddress={setAddress}
+            onNotes={setNotes}
+          />
         </div>
 
-        <Loading fallback={<div class={css(panel, { m: "28px 16px", height: "320px" })} />}>
-          <Show when={before().length > 0}>
-            <section class={css(section, { mt: "28px" })}>
-              <h2 class={css(title3, { mb: "10px" })}>Өмнө авсан</h2>
-              <div
-                class={css({
-                  display: "flex",
-                  gap: "10px",
-                  overflowX: "auto",
-                  scrollbarWidth: "none",
-                  mx: "-20px",
-                  px: "20px",
-                  pt: "4px",
-                  pb: "8px",
-                })}
-              >
-                <For each={before()} keyed={(product) => product.id}>
-                  {(product) => (
-                    <button
-                      type="button"
-                      onClick={() => add(product(), 1)}
-                      class={css(press, panel, {
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        flex: "none",
-                        p: "8px 10px 8px 8px",
-                        borderRadius: "20px",
-                        textAlign: "left",
-                      })}
-                    >
-                      <Tile
-                        product={product()}
-                        size={48}
-                        quantity={cart[product().id] || undefined}
-                        ring="surface"
-                        still
-                      />
-                      <span>
-                        <span
-                          class={css({
-                            display: "block",
-                            fontSize: "15px",
-                            lineHeight: "19px",
-                            fontWeight: "600",
-                          })}
-                        >
-                          {product().name}
-                        </span>
-                        <span class={css(sub, { fontSize: "13px" })}>{money(product().price)}</span>
-                      </span>
-                      <span
-                        class={css({
-                          width: "36px",
-                          height: "36px",
-                          borderRadius: "50%",
-                          display: "grid",
-                          placeItems: "center",
-                          bg: "chip",
-                          fontSize: "17px",
-                        })}
-                      >
-                        <PlusIcon />
-                      </span>
-                    </button>
-                  )}
-                </For>
-              </div>
-            </section>
-          </Show>
+        <Loading fallback={<GridSkeleton />}>
+          <div class={css(appear)}>
+            <Loading on={phone()} fallback={null}>
+              <PastBuys products={before()} cart={cart} onAdd={(product) => add(product, 1)} />
+            </Loading>
 
-          <section class={css(section, { mt: "22px" })}>
-            <h2 class={css(title3)}>Бараа</h2>
-            <label class={css(searchBox, { mt: "12px" })}>
-              <SearchIcon />
-              <input
-                type="search"
-                placeholder="Бараа хайх"
-                value={query()}
-                onInput={(event) => setQuery(event.currentTarget.value)}
-              />
-            </label>
-            <div
-              class={css({
-                display: "grid",
-                gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                gap: "20px 12px",
-                mt: "14px",
-              })}
-            >
-              <For each={shown()} keyed={(product) => product.id}>
-                {(product) => (
-                  <button
-                    type="button"
-                    onClick={() => add(product(), 1)}
-                    class={css(
-                      {
-                        display: "block",
-                        minWidth: 0,
-                        textAlign: "left",
-                        cursor: "pointer",
-                        transition: "transform .5s {easings.spring}",
-                        _active: { transform: "scale(.95)", transition: "transform .1s ease-out" },
-                      },
-                      product().stock === 0 && { opacity: 0.42 },
-                    )}
-                  >
-                    <span
-                      class={css(
-                        {
-                          display: "block",
-                          borderRadius: "20px",
-                          transition: "box-shadow .2s ease",
-                        },
-                        (cart[product().id] ?? 0) > 0 && {
-                          boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px {colors.sel/50}",
-                        },
-                      )}
-                    >
-                      <Tile product={product()} quantity={cart[product().id] || undefined} still />
-                    </span>
-                    <span
-                      class={css({
-                        display: "block",
-                        mt: "9px",
-                        minHeight: "38px",
-                        fontSize: "15px",
-                        lineHeight: "19px",
-                        fontWeight: "600",
-                        letterSpacing: "-0.01em",
-                        lineClamp: 3,
-                      })}
-                    >
-                      {product().name}
-                    </span>
-                    <span
-                      class={css(sub, {
-                        display: "block",
-                        mt: "2px",
-                        fontSize: "13px",
-                        lineHeight: "17px",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      })}
-                    >
-                      {product().count} ш · {product().brand}
-                    </span>
-                    <span
-                      class={css({
-                        display: "block",
-                        mt: "3px",
-                        fontSize: "15px",
-                        fontWeight: "650",
-                        fontVariantNumeric: "tabular-nums",
-                      })}
-                    >
-                      {product().stock === 0 ? "Дууссан" : money(product().price)}
-                    </span>
-                  </button>
-                )}
-              </For>
-            </div>
-            <Show when={shown().length === 0}>
-              <p class={css(sub, { py: "20px", textAlign: "center" })}>Ийм бараа алга</p>
-            </Show>
-          </section>
-
-          <Cart lines={picked()} subtotal={subtotal()} fee={fee()} walkIn={walkIn()} onAdd={add} />
-
-          <section class={css(section, { mt: "26px" })}>
-            <h2 class={css(title3, { mb: "10px" })}>Төлбөр</h2>
-            <Segmented
-              options={[
-                ["prepay", "Урьдчилсан", BankIcon],
-                ["cod", "Хүргэлтээр", CoinsIcon],
-              ]}
-              value={terms()}
-              onChange={setTerms}
+            <ProductGrid
+              products={shown()}
+              cart={cart}
+              query={query()}
+              onQuery={setQuery}
+              onAdd={(product) => add(product, 1)}
             />
-          </section>
 
-          <Dock>
-            <Failed text={failed()} />
-            <button
-              type="button"
-              disabled={missing() !== undefined || busy()}
-              onClick={() => place()}
-              class={css(button, act, wide)}
-            >
-              {missing() ?? `Захиалга үүсгэх · ${money(subtotal() + fee())}`}
-            </button>
-          </Dock>
+            <Cart
+              lines={picked()}
+              subtotal={subtotal()}
+              fee={fee()}
+              walkIn={walkIn()}
+              onAdd={add}
+            />
+
+            <section class={css(section, { mt: "26px" })}>
+              <h2 class={css({ textStyle: "title3", mb: "10px" })}>Төлбөр</h2>
+              <Segmented
+                options={[
+                  ["prepay", "Урьдчилсан", BankIcon],
+                  ["cod", "Хүргэлтээр", CoinsIcon],
+                ]}
+                value={terms()}
+                onChange={setTerms}
+              />
+            </section>
+
+            <Dock>
+              <SaveButton
+                failed={failed()}
+                disabled={missing() !== undefined || busy()}
+                onClick={place}
+              >
+                {missing() ?? `Захиалга үүсгэх · ${money(subtotal() + fee())}`}
+              </SaveButton>
+            </Dock>
+          </div>
         </Loading>
       </Errored>
     </main>
+  );
+}
+
+const fieldRow = css.raw({
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  minHeight: "56px",
+  px: "16px",
+  "& + &": { boxShadow: "inset 50px 0 0 {colors.surface}, inset 0 .5px 0 {colors.line}" },
+  "& > svg": { fontSize: "21px", color: "inkMuted", flex: "none", width: "22px" },
+  "& input, & textarea": {
+    flex: 1,
+    minWidth: 0,
+    py: "16px",
+    bg: "transparent",
+    outline: "none",
+    textStyle: "body",
+    color: "ink",
+    resize: "none",
+    _placeholder: { color: "inkFaint" },
+  },
+});
+
+/** Phone, address and note. `address` and `orders` read the phone's lookup. */
+function ContactFields(props: {
+  walkIn: boolean;
+  phone: string;
+  address: string;
+  notes: string;
+  orders: number | undefined;
+  onPhone: (phone: string) => void;
+  onAddress: (address: string) => void;
+  onNotes: (notes: string) => void;
+}) {
+  return (
+    <div class={css(panel, { mt: "16px", borderRadius: "20px", overflow: "hidden" })}>
+      <label class={css(fieldRow)}>
+        <PhoneIcon />
+        <input
+          inputmode="numeric"
+          autocomplete="off"
+          aria-label="Утас"
+          placeholder={props.walkIn ? "Утас, заавал биш" : "Утас"}
+          value={props.phone}
+          onInput={(event) => props.onPhone(digits(event.currentTarget.value).slice(-8))}
+          class={css({
+            fontWeight: "650",
+            letterSpacing: "0.01em",
+            fontVariantNumeric: "tabular-nums",
+          })}
+        />
+        {/* A new phone shows the spinner, not the last phone's customer, until its lookup lands. */}
+        <Loading
+          on={props.phone}
+          fallback={
+            <span aria-label="Хайж байна" class={css(spinner, { width: "18px", height: "18px" })} />
+          }
+        >
+          <Show when={props.orders}>
+            {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
+          </Show>
+        </Loading>
+      </label>
+      <Show when={!props.walkIn}>
+        <label class={css(fieldRow)}>
+          <MapPinIcon />
+          <Loading
+            on={props.phone}
+            fallback={<span class={css(sub, { flex: 1, py: "2px" })}>Хаяг хайж байна…</span>}
+          >
+            <textarea
+              rows={2}
+              aria-label="Хаяг"
+              placeholder="Хаяг"
+              value={props.address}
+              onInput={(event) => props.onAddress(event.currentTarget.value)}
+            />
+          </Loading>
+        </label>
+      </Show>
+      <label class={css(fieldRow)}>
+        <NoteIcon />
+        <input
+          aria-label="Тэмдэглэл"
+          placeholder="Тэмдэглэл: орцны код, залгах"
+          value={props.notes}
+          onInput={(event) => props.onNotes(event.currentTarget.value)}
+        />
+      </label>
+    </div>
+  );
+}
+
+function PastBuys(props: {
+  products: ReadonlyArray<ProductRow>;
+  cart: Quantities;
+  onAdd: (product: ProductRow) => void;
+}) {
+  return (
+    <Show when={props.products.length > 0}>
+      <section class={css(section, { mt: "28px" })}>
+        <h2 class={css({ textStyle: "title3", mb: "10px" })}>Өмнө авсан</h2>
+        <div
+          class={css({
+            display: "flex",
+            gap: "10px",
+            overflowX: "auto",
+            scrollbarWidth: "none",
+            mx: "-20px",
+            px: "20px",
+            pt: "4px",
+            pb: "8px",
+          })}
+        >
+          <For each={props.products} keyed={(product) => product.id}>
+            {(product) => (
+              <button
+                type="button"
+                onClick={() => props.onAdd(product())}
+                class={css(press, panel, {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  flex: "none",
+                  p: "8px 10px 8px 8px",
+                  borderRadius: "20px",
+                  textAlign: "left",
+                })}
+              >
+                <Tile
+                  product={product()}
+                  size={48}
+                  quantity={props.cart[product().id] || undefined}
+                  ring="surface"
+                  still
+                />
+                <span>
+                  <span
+                    class={css({
+                      display: "block",
+                      fontSize: "15px",
+                      lineHeight: "19px",
+                      fontWeight: "600",
+                    })}
+                  >
+                    {product().name}
+                  </span>
+                  <span class={css(sub, { fontSize: "13px" })}>{money(product().price)}</span>
+                </span>
+                <span
+                  class={css({
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    bg: "chip",
+                    fontSize: "17px",
+                  })}
+                >
+                  <PlusIcon />
+                </span>
+              </button>
+            )}
+          </For>
+        </div>
+      </section>
+    </Show>
+  );
+}
+
+function ProductGrid(props: {
+  products: ReadonlyArray<ProductRow>;
+  cart: Quantities;
+  query: string;
+  onQuery: (query: string) => void;
+  onAdd: (product: ProductRow) => void;
+}) {
+  return (
+    <section class={css(section, { mt: "22px" })}>
+      <h2 class={css({ textStyle: "title3" })}>Бараа</h2>
+      <label class={css(searchBox, { mt: "12px" })}>
+        <SearchIcon />
+        <input
+          type="search"
+          placeholder="Бараа хайх"
+          value={props.query}
+          onInput={(event) => props.onQuery(event.currentTarget.value)}
+        />
+      </label>
+      <div
+        class={css({
+          display: "grid",
+          gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+          gap: "20px 12px",
+          mt: "14px",
+        })}
+      >
+        <For each={props.products} keyed={(product) => product.id}>
+          {(product) => (
+            <button
+              type="button"
+              onClick={() => props.onAdd(product())}
+              class={css(
+                {
+                  display: "block",
+                  minWidth: 0,
+                  textAlign: "left",
+                  cursor: "pointer",
+                  transition: "transform .5s {easings.spring}",
+                  _active: {
+                    transform: "scale(.95)",
+                    transition: "transform .1s ease-out",
+                  },
+                },
+                product().stock === 0 && { opacity: 0.42 },
+              )}
+            >
+              <span
+                class={css(
+                  {
+                    display: "block",
+                    borderRadius: "20px",
+                    transition: "box-shadow .2s ease",
+                  },
+                  (props.cart[product().id] ?? 0) > 0 && {
+                    boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px {colors.sel/50}",
+                  },
+                )}
+              >
+                <Tile product={product()} quantity={props.cart[product().id] || undefined} still />
+              </span>
+              <span
+                class={css({
+                  display: "block",
+                  mt: "9px",
+                  minHeight: "38px",
+                  fontSize: "15px",
+                  lineHeight: "19px",
+                  fontWeight: "600",
+                  letterSpacing: "-0.01em",
+                  lineClamp: 3,
+                })}
+              >
+                {product().name}
+              </span>
+              <span
+                class={css(sub, {
+                  display: "block",
+                  mt: "2px",
+                  textStyle: "footnote",
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                })}
+              >
+                {product().count} ш · {product().brand}
+              </span>
+              <span
+                class={css({
+                  display: "block",
+                  mt: "3px",
+                  textStyle: "subhead",
+                  fontWeight: "650",
+                  fontVariantNumeric: "tabular-nums",
+                })}
+              >
+                {product().stock === 0 ? "Дууссан" : money(product().price)}
+              </span>
+            </button>
+          )}
+        </For>
+      </div>
+      <Show when={props.products.length === 0}>
+        <p class={css(sub, { py: "20px", textAlign: "center" })}>Ийм бараа алга</p>
+      </Show>
+    </section>
   );
 }

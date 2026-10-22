@@ -1,0 +1,423 @@
+import { stockLevel } from "@amerik/contracts";
+import type { ProductRow } from "@amerik/contracts";
+import { useLocation, useSearchParams } from "@solidjs/router";
+import { createMemo, createSignal, Errored, For, Loading, Show } from "solid-js";
+import { css } from "styled-system/css";
+import ArchiveIcon from "~icons/ph/archive";
+import CopyIcon from "~icons/ph/copy-bold";
+import MoreIcon from "~icons/ph/dots-three-bold";
+import HashIcon from "~icons/ph/hash";
+import InfoIcon from "~icons/ph/info";
+import SearchIcon from "~icons/ph/magnifying-glass";
+import PackageIcon from "~icons/ph/package";
+import PlusIcon from "~icons/ph/plus-bold";
+import BagIcon from "~icons/ph/shopping-bag-open";
+import TagIcon from "~icons/ph/tag";
+
+import { ApiClient } from "../../api/client";
+import { createWrite, runEffect } from "../../api/solid-effect";
+import { matches, money } from "../../format";
+import { Tile } from "../../photos";
+import { NumberSheet, StockSheet, stockText, stockTone } from "../../products";
+import type { StockMode } from "../../products";
+import { button, chip, press, round } from "../../styles";
+import {
+  appear,
+  chipRow,
+  createCopied,
+  Failed,
+  Problem,
+  searchBox,
+  Sheet,
+  sub,
+  TabBar,
+  tones,
+  top,
+} from "../../ui";
+import { copyText } from "../../words";
+import { ListSkeleton } from "../../skeletons";
+
+/** The stock views, keyed by stock level. Each one but Бүгд shows only when it has products. */
+const views = [
+  { key: "all", label: "Бүгд", dot: undefined },
+  { key: "out", label: "Дууссан", dot: "owes" },
+  { key: "low", label: "Дуусаж байна", dot: "wait" },
+  { key: "unknown", label: "Тоолоогүй", dot: "inkFaint" },
+  { key: "archived", label: "Архив", dot: undefined },
+] as const;
+
+type View = (typeof views)[number]["key"];
+
+const inView = (view: View, product: ProductRow) =>
+  view === "archived"
+    ? product.archivedAt !== null
+    : product.archivedAt === null && (view === "all" || stockLevel(product.stock) === view);
+
+const rowChip = css.raw(press, {
+  display: "inline-grid",
+  placeItems: "center",
+  px: "10px",
+  height: "30px",
+  borderRadius: "15px",
+  bg: "surface",
+  boxShadow: "raiseSm",
+  textStyle: "subhead",
+  fontWeight: "650",
+});
+
+const actionRow = css.raw(button.raw(), {
+  justifyContent: "flex-start",
+  gap: "14px",
+  width: "100%",
+  height: "54px",
+  borderRadius: "16px",
+  "& svg": { fontSize: "22px" },
+});
+
+const dots = {
+  owes: css.raw({ bg: "owes" }),
+  wait: css.raw({ bg: "wait" }),
+  inkFaint: css.raw({ bg: "inkFaint" }),
+};
+
+export default function Products() {
+  const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
+  // In the URL, so coming back from a product keeps the filters.
+  const [params, setParams] = useSearchParams<{ view?: string; brand?: string; q?: string }>();
+  const location = useLocation();
+  const [stocking, setStocking] = createSignal<ProductRow>();
+  const [stockMode, setStockMode] = createSignal<StockMode>("count");
+  const [pricing, setPricing] = createSignal<ProductRow>();
+  const [acting, setActing] = createSignal<ProductRow>();
+  const { copied, copy } = createCopied();
+  const { write, busy, failed, setFailed } = createWrite({ source: products });
+
+  const view = () => views.find((candidate) => candidate.key === params.view)?.key ?? "all";
+  const query = () => params.q ?? "";
+
+  const counts = createMemo(() =>
+    Object.fromEntries(
+      views.map(({ key }) => [key, products().filter((product) => inView(key, product)).length]),
+    ),
+  );
+
+  // A selected brand keeps its chip at 0, so an empty list still says why.
+  const brands = createMemo(() => {
+    const tally = [
+      ...Map.groupBy(
+        products().filter((product) => inView(view(), product)),
+        (product) => product.brand,
+      ),
+    ].map(([name, list]) => ({ name, count: list.length }));
+
+    const selected = params.brand;
+
+    return selected === undefined || tally.some((brand) => brand.name === selected)
+      ? tally
+      : [...tally, { name: selected, count: 0 }];
+  });
+
+  // The product page's × comes back here with the same filters.
+  const back = () => JSON.stringify({ back: `/products${location.search}` });
+
+  const shown = createMemo(() =>
+    products().filter(
+      (product) =>
+        inView(view(), product) &&
+        (params.brand === undefined || product.brand === params.brand) &&
+        matches(product, query()),
+    ),
+  );
+
+  const close = () => {
+    setStocking(undefined);
+    setPricing(undefined);
+    setActing(undefined);
+  };
+
+  const openStock = (product: ProductRow, mode: StockMode = "count") => {
+    close();
+    setFailed(undefined);
+    setStockMode(mode);
+    setStocking(product);
+  };
+
+  const openPrice = (product: ProductRow) => {
+    close();
+    setFailed(undefined);
+    setPricing(product);
+  };
+
+  const openActions = (product: ProductRow) => {
+    setFailed(undefined);
+    setActing(product);
+  };
+
+  return (
+    <main class={css(top, { pb: "120px" })}>
+      <div
+        class={css({
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          px: "20px",
+          pt: "52px",
+        })}
+      >
+        <h1 class={css({ textStyle: "largeTitle" })}>Бараа</h1>
+        <a href="/products/new" aria-label="Шинэ бараа" class={round({ tone: "ink" })}>
+          <PlusIcon />
+        </a>
+      </div>
+      <label class={css(searchBox, { mx: "16px", mt: "16px" })}>
+        <SearchIcon />
+        <input
+          type="search"
+          placeholder="Бараа хайх"
+          value={query()}
+          onInput={(event) => setParams({ q: event.currentTarget.value || undefined })}
+        />
+      </label>
+
+      <Errored fallback={(error) => <Problem error={error()} />}>
+        <Loading fallback={<ListSkeleton />}>
+          <div class={css(appear)}>
+            <nav class={css(chipRow, { pt: "14px" })}>
+              <For
+                each={views.filter(
+                  ({ key }) => key === "all" || counts()[key] > 0 || view() === key,
+                )}
+              >
+                {(candidate) => (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setParams({
+                        view: candidate.key === "all" ? undefined : candidate.key,
+                        brand: undefined,
+                      })
+                    }
+                    class={chip({
+                      on:
+                        view() === candidate.key &&
+                        (candidate.key !== "all" || params.brand === undefined),
+                    })}
+                  >
+                    <Show when={candidate.dot}>
+                      {(dot) => (
+                        <span
+                          class={css(
+                            { width: "9px", height: "9px", borderRadius: "50%" },
+                            dots[dot()],
+                          )}
+                        />
+                      )}
+                    </Show>
+                    {candidate.label}
+                    <b>{counts()[candidate.key]}</b>
+                  </button>
+                )}
+              </For>
+              <span
+                aria-hidden="true"
+                class={css({ flex: "none", width: "1px", my: "8px", bg: "ink/12" })}
+              />
+              <For each={brands()} keyed={(brand) => brand.name}>
+                {(brand) => (
+                  <button
+                    type="button"
+                    aria-pressed={params.brand === brand().name ? "true" : "false"}
+                    onClick={() =>
+                      setParams({ brand: params.brand === brand().name ? undefined : brand().name })
+                    }
+                    class={chip({ on: params.brand === brand().name })}
+                  >
+                    {brand().name}
+                    <b>{brand().count}</b>
+                  </button>
+                )}
+              </For>
+            </nav>
+
+            <div class={css({ display: "grid", gap: "4px", px: "16px", pt: "14px" })}>
+              <Show
+                when={shown().length > 0}
+                fallback={
+                  <p class={css(sub, { py: "24px", textAlign: "center" })}>Бараа олдсонгүй.</p>
+                }
+              >
+                <For each={shown()} keyed={(product) => product.id}>
+                  {(product) => (
+                    <div
+                      class={css({ display: "flex", gap: "14px", alignItems: "center", py: "8px" })}
+                    >
+                      <Tile product={product()} size={68} />
+                      <div class={css({ flex: 1, minWidth: 0 })}>
+                        <a
+                          href={`/products/${product().id}`}
+                          state={back()}
+                          class={css({ display: "block" })}
+                        >
+                          <div class={css({ textStyle: "headline" })}>{product().name}</div>
+                          <div class={css(sub)}>
+                            {product().brand} · {product().count} ш
+                          </div>
+                        </a>
+                        <div class={css({ display: "flex", gap: "8px", mt: "4px" })}>
+                          <button
+                            type="button"
+                            aria-label={`${product().name} үнэ өөрчлөх`}
+                            onClick={() => openPrice(product())}
+                            class={css(rowChip, { fontVariantNumeric: "tabular-nums" })}
+                          >
+                            {money(product().price)}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${product().name} үйлдэл`}
+                            onClick={() => openActions(product())}
+                            class={css(rowChip, { width: "40px", px: 0, fontSize: "18px" })}
+                          >
+                            <MoreIcon />
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`${product().name} үлдэгдэл`}
+                        onClick={() => openStock(product())}
+                        class={css(
+                          button.raw({ size: "sm" }),
+                          { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
+                          tones[stockTone[stockLevel(product().stock)]],
+                          { boxShadow: "none" },
+                        )}
+                      >
+                        {stockText(product().stock)}
+                      </button>
+                    </div>
+                  )}
+                </For>
+              </Show>
+            </div>
+          </div>
+        </Loading>
+      </Errored>
+
+      <Sheet
+        open={acting() !== undefined}
+        title={acting()?.name ?? ""}
+        onClose={() => setActing(undefined)}
+      >
+        <Show when={acting()}>
+          {(product) => (
+            <div class={css({ display: "grid", gap: "8px" })}>
+              <Show when={product().archivedAt === null}>
+                <a href={`/orders/new?add=${product().id}`} class={css(actionRow)}>
+                  <BagIcon />
+                  Захиалга үүсгэх
+                </a>
+              </Show>
+              <button
+                type="button"
+                class={css(actionRow)}
+                onClick={() => openStock(product(), "receive")}
+              >
+                <PackageIcon />
+                Ирсэн бараа нэмэх
+              </button>
+              <button type="button" class={css(actionRow)} onClick={() => openStock(product())}>
+                <HashIcon />
+                Тоолох
+              </button>
+              <button type="button" class={css(actionRow)} onClick={() => openPrice(product())}>
+                <TagIcon />
+                Үнэ өөрчлөх
+              </button>
+              <button
+                type="button"
+                class={css(actionRow, copied() === "copied" && { bg: "paidBg", color: "paid" })}
+                onClick={() =>
+                  void copy(`${product().brand} ${product().name}\n${money(product().price)}`)
+                }
+              >
+                <CopyIcon />
+                {copyText[copied() ?? "idle"]}
+              </button>
+              <a href={`/products/${product().id}`} class={css(actionRow)}>
+                <InfoIcon />
+                Дэлгэрэнгүй
+              </a>
+              <Failed text={failed()} />
+              <button
+                type="button"
+                disabled={busy()}
+                class={css(actionRow, product().archivedAt === null && { color: "owes" })}
+                onClick={() => {
+                  const productId = product().id;
+                  const archived = product().archivedAt === null;
+
+                  void write(
+                    ApiClient.use((api) => api.archiveProduct({ productId, archived })),
+                    close,
+                  );
+                }}
+              >
+                <ArchiveIcon />
+                {product().archivedAt === null ? "Архивлах" : "Сэргээх"}
+              </button>
+            </div>
+          )}
+        </Show>
+      </Sheet>
+      <StockSheet
+        product={stocking()}
+        mode={stockMode()}
+        busy={busy()}
+        failed={failed()}
+        onClose={close}
+        onCount={(counted) => {
+          const product = stocking();
+
+          if (product !== undefined) {
+            void write(
+              ApiClient.use((api) => api.countStock({ productId: product.id, counted })),
+              close,
+            );
+          }
+        }}
+        onReceive={(received) => {
+          const product = stocking();
+
+          if (product !== undefined) {
+            void write(
+              ApiClient.use((api) => api.receiveStock({ productId: product.id, received })),
+              close,
+            );
+          }
+        }}
+      />
+      <NumberSheet
+        open={pricing() !== undefined}
+        title={pricing()?.name ?? ""}
+        prompt={`Одоо ${money(pricing()?.price ?? 0)}. Хуучин захиалгын үнэ өөрчлөгдөхгүй.`}
+        start={pricing()?.price ?? 0}
+        price
+        busy={busy()}
+        failed={failed()}
+        onClose={close}
+        onSave={(price) => {
+          const product = pricing();
+
+          if (product !== undefined) {
+            void write(
+              ApiClient.use((api) => api.setPrice({ productId: product.id, price })),
+              close,
+            );
+          }
+        }}
+      />
+      <TabBar />
+    </main>
+  );
+}

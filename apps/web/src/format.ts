@@ -1,3 +1,4 @@
+import { IMAGE_HOST } from "@amerik/contracts";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Match from "effect/Match";
@@ -8,7 +9,7 @@ import * as Predicate from "effect/Predicate";
 // shown to mom goes through this zone.
 const zone = "Asia/Ulaanbaatar";
 
-const clockOf = new Intl.DateTimeFormat("en-GB", {
+export const clock = new Intl.DateTimeFormat("en-GB", {
   timeZone: zone,
   hour: "2-digit",
   minute: "2-digit",
@@ -22,10 +23,28 @@ export const thousands = (amount: number) => amount.toLocaleString("en-US");
 /** 155000 → "155,000₮" */
 export const money = (amount: number) => `${thousands(amount)}₮`;
 
+const imageOrigin = `https://${IMAGE_HOST}/`;
+
+/**
+ * A photo resized by Cloudflare at the photo domain's edge, as AVIF or WebP
+ * where the phone takes it: a 1500px bottle is ~75 KB, a 200px one ~5 KB.
+ * Dev paths (`/img/...`) aren't on that domain and pass through whole.
+ */
+export const sized = (url: string, width: number) =>
+  url.startsWith(imageOrigin)
+    ? `${imageOrigin}cdn-cgi/image/width=${width},format=auto,quality=80/${url.slice(imageOrigin.length)}`
+    : url;
+
+/** `srcset` for a photo drawn `width` CSS pixels wide, at 1x to 3x screens. */
+export const srcset = (url: string, width: number) =>
+  [1, 2, 3].map((density) => `${sized(url, width * density)} ${density}x`).join(", ");
+
 /** "88551290" → "8855 1290" */
 export const phone = (digits: string) => digits.replace(/^(\d{4})(\d{4})$/u, "$1 $2");
 
-/** A search over brand and name, as she types it. */
+/** "8855-1290" → "88551290" */
+export const digits = (text: string) => text.replaceAll(/\D/gu, "");
+
 export const matches = (product: { brand: string; name: string }, query: string) =>
   `${product.brand} ${product.name}`.toLowerCase().includes(query.trim().toLowerCase());
 
@@ -44,7 +63,7 @@ export const daysBetween = (date: Date, now: Date) => (day(now).utc - day(date).
 export const when = (date: Date, now: Date) => {
   const gap = daysBetween(date, now);
 
-  if (gap === 0) return clockOf.format(date);
+  if (gap === 0) return clock.format(date);
 
   if (gap === 1) return "Өчигдөр";
 
@@ -59,8 +78,6 @@ export const longDate = (date: Date) => {
 
   return { weekday: WEEKDAYS[weekDay], date: `${month}-р сарын ${dayOfMonth}` };
 };
-
-export const clock = (date: Date) => clockOf.format(date);
 
 /** A failed write as one line for her, by error tag. */
 export const failureText = (

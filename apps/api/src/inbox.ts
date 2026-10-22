@@ -1,5 +1,5 @@
-import { OrderNotFound } from "@amerik/contracts";
-import type { ListOrders, OrderId, OrderLineView, OrderQueue } from "@amerik/contracts";
+import { LOW_STOCK, OrderNotFound } from "@amerik/contracts";
+import type { ListOrders, OrderId, OrderQueue } from "@amerik/contracts";
 import { Database, dieOnDatabaseError, schema } from "@amerik/db";
 import {
   and,
@@ -19,8 +19,6 @@ import {
 } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-
-import { firstImage } from "./products";
 
 // What mom reads: the order inbox, one order, and the home screen.
 const { brands, customers, orderEvents, orderLines, orders, payments, products } = schema;
@@ -64,35 +62,32 @@ const inQueue = (queue: OrderQueue) =>
 /** Each order's lines with brand, count and photo, by product name. */
 const lineViews = Effect.fn("lineViews")(function* lineViews(orderIds: ReadonlyArray<OrderId>) {
   const db = yield* Database;
-  const byOrder = new Map<OrderId, Array<OrderLineView>>();
 
-  if (orderIds.length === 0) return byOrder;
+  const rows =
+    orderIds.length === 0
+      ? []
+      : yield* db
+          .select({
+            orderId: orderLines.orderId,
+            productId: orderLines.productId,
+            name: products.name,
+            brand: brands.name,
+            count: products.count,
+            images: products.images,
+            quantity: orderLines.quantity,
+            unitPrice: orderLines.unitPrice,
+          })
+          .from(orderLines)
+          .innerJoin(products, eq(products.id, orderLines.productId))
+          .innerJoin(brands, eq(brands.id, products.brandId))
+          .where(inArray(orderLines.orderId, orderIds))
+          .orderBy(asc(products.name))
+          .pipe(dieOnDatabaseError);
 
-  const rows = yield* db
-    .select({
-      orderId: orderLines.orderId,
-      productId: orderLines.productId,
-      name: products.name,
-      brand: brands.name,
-      count: products.count,
-      images: products.images,
-      quantity: orderLines.quantity,
-      unitPrice: orderLines.unitPrice,
-    })
-    .from(orderLines)
-    .innerJoin(products, eq(products.id, orderLines.productId))
-    .innerJoin(brands, eq(brands.id, products.brandId))
-    .where(inArray(orderLines.orderId, orderIds))
-    .orderBy(asc(products.name))
-    .pipe(dieOnDatabaseError);
-
-  for (const { orderId, images, ...line } of rows) {
-    const lines = byOrder.get(orderId) ?? [];
-    lines.push({ ...line, image: firstImage(images) });
-    byOrder.set(orderId, lines);
-  }
-
-  return byOrder;
+  return Map.groupBy(
+    rows.map(({ images, ...line }) => ({ ...line, image: images[0] ?? null })),
+    (line) => line.orderId,
+  );
 });
 
 export const listOrders = Effect.fn("listOrders")(function* listOrders(input: ListOrders) {
@@ -165,10 +160,22 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
 
   if (order === undefined) return yield* new OrderNotFound({ orderId });
 
+  // The customer's order count rides along, so the page needs no second round
+  // trip from her phone. (A subquery inside inArray renders empty here.)
+  const [history] =
+    order.customerId === null
+      ? [{ orders: 0 }]
+      : yield* db
+          .select({ orders: count() })
+          .from(orders)
+          .where(eq(orders.customerId, order.customerId))
+          .pipe(dieOnDatabaseError);
+
   return {
     ...withBalance(order),
     lines: lines.get(orderId) ?? [],
     payments: paid,
+    customerOrders: history?.orders ?? 0,
     // RpcServer encodes the result against `OrderEventData`, so a row the
     // schema rejects still dies there instead of reaching the client.
     events,
@@ -186,9 +193,6 @@ const queueCounts = Effect.fn("queueCounts")(function* queueCounts() {
 
   return { toShip: toShip?.orders ?? 0, awaitingPayment: awaitingPayment?.orders ?? 0 };
 });
-
-/** At or below this many bottles, a product shows as running out. */
-const LOW_STOCK = 3;
 
 const card = {
   productId: products.id,
@@ -239,7 +243,7 @@ export const home = Effect.fn("home")(function* home() {
 
   const pulled = shelf.map(({ images, quantity, ...product }) => ({
     ...product,
-    image: firstImage(images),
+    image: images[0] ?? null,
     quantity: quantity ?? 0,
   }));
 
@@ -252,12 +256,11 @@ export const home = Effect.fn("home")(function* home() {
     awaitingPayment,
     shelf: pulled,
     lowStock: low.flatMap(({ images, stock, ...product }) =>
-      stock === null ? [] : [{ ...product, image: firstImage(images), stock }],
+      stock === null ? [] : [{ ...product, image: images[0] ?? null, stock }],
     ),
   };
 });
 
-/** How many orders sit behind each filter chip on the orders list. */
 export const orderCounts = Effect.fn("orderCounts")(function* orderCounts() {
   const db = yield* Database;
 

@@ -199,6 +199,8 @@ export const OrderDetail = Schema.Struct({
   ...OrderSummary.fields,
   customerId: Schema.NullOr(CustomerId),
   deliveryFee: Schema.Int,
+  /** Every order the same customer placed, this one included. */
+  customerOrders: Schema.Int,
   payments: Schema.Array(
     Schema.Struct({
       id: PaymentId,

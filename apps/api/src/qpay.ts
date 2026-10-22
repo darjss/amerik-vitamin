@@ -233,22 +233,25 @@ export const checkQPayInvoices = Effect.fn("checkQPayInvoices")(function* checkQ
   const checks = yield* Effect.forEach(invoices, (invoice) => qpay.checkInvoice(invoice.id));
   const paid = checks.flatMap((check) => check.rows).filter((row) => row.payment_status === "PAID");
 
-  for (const row of paid) {
-    yield* recordPayment(
-      { orderId, amount: row.payment_amount, method: "qpay", providerRef: row.payment_id },
-      "qpay",
-    ).pipe(
-      // The same QPay payment id on another order or for another amount: a human looks.
-      Effect.catchTag("PaymentConflict", (error) =>
-        Effect.logError("qpay payment conflicts with a recorded one", {
-          providerRef: error.providerRef,
-          orderId,
-        }),
+  yield* Effect.forEach(
+    paid,
+    (row) =>
+      recordPayment(
+        { orderId, amount: row.payment_amount, method: "qpay", providerRef: row.payment_id },
+        "qpay",
+      ).pipe(
+        // The same QPay payment id on another order or for another amount: a human looks.
+        Effect.catchTag("PaymentConflict", (error) =>
+          Effect.logError("qpay payment conflicts with a recorded one", {
+            providerRef: error.providerRef,
+            orderId,
+          }),
+        ),
+        // The invoice row's foreign key keeps the order, and a QPay payment is positive.
+        Effect.catchTags({ OrderNotFound: Effect.die, RefundExceedsPaid: Effect.die }),
       ),
-      // The invoice row's foreign key keeps the order, and a QPay payment is positive.
-      Effect.catchTags({ OrderNotFound: Effect.die, RefundExceedsPaid: Effect.die }),
-    );
-  }
+    { discard: true },
+  );
 
   return { invoices: invoices.length, paid: paid.length };
 }, dieOnDatabaseError);
@@ -270,9 +273,12 @@ export const sweepQPayInvoices = Effect.fn("sweepQPayInvoices")(function* sweepQ
     .innerJoin(orders, eq(orders.id, qpayInvoices.orderId))
     .where(gt(qpayInvoices.createdAt, since));
 
-  for (const order of recent) {
-    if ((yield* owed(order)) > 0) yield* checkQPayInvoices(order.id);
-  }
+  yield* Effect.forEach(
+    recent,
+    (order) =>
+      checkQPayInvoices(order.id).pipe(Effect.when(Effect.map(owed(order), (due) => due > 0))),
+    { discard: true },
+  );
 }, dieOnDatabaseError);
 
 /**

@@ -30,6 +30,14 @@ infra                Alchemy stack `amerik-vitamin`
 ## Images (decided)
 
 - **Product photos live in v2's own R2 bucket, `ProductImages`, served at `img.amerikvitamin.mn`** (`apps/api/infra/images.ts`). Nothing is copied from vit-store's bucket or `cdn.amerikvitamin.mn`. The hostname has no "v2" in it, so the URLs stored in `products.images` outlive the cutover. Only production attaches the domain, and the bucket is retained on destroy.
+- **A dev bucket has no domain.** Dev photo URLs are `/img/<key>` paths; the web Worker forwards them to the API's `/img/*` route, which reads the bucket binding.
+
+## New products (decided)
+
+- **An Amazon link or a bottle photo becomes a filled-in form through the `ProductDraft` Cloudflare Workflow** (`apps/api/src/drafts.ts`). Each step is a Workflow step, so Cloudflare stores its result and retries it: read the photo, find the Amazon listing, fill the fields, write the Mongolian copy, keep the product photos. The run's output is the draft; Cloudflare keeps it 30 days. The run touches no database, so the alchemy beta's missing per-step database scope doesn't matter. Only `createProduct`, after she confirms, writes.
+- **Firecrawl v2 REST, not its SDK.** The SDK pulls in axios and zod 3. `apps/api/src/firecrawl.ts` calls `/v2/scrape` through Effect's `HttpClient`: the `product` format (1 credit) gives title, brand, price and the full-size gallery, and a `json` format reads the supplement facts. Amazon's own search page, read with a `json` format, finds listings for a photo.
+- **The models are gpt-6-luna (fields, photo picks) and gpt-6-sol (Mongolian copy)** on the owner's CLIProxyAPI behind a Cloudflare tunnel, with a key of its own. Secrets: `MODEL_BASE_URL`, `MODEL_API_KEY`, `FIRECRAWL_API_KEY`.
+- **The copy can't make health claims.** A banned-word check sends it back once; a second hit reaches her as a note on the form.
 
 ## Now
 

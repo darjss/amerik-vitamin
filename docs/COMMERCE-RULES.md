@@ -71,6 +71,7 @@ Telegram's admin chat hears about a new order, an order turning paid, an unmatch
 - **Prices are integers in ₮.** Supplier prices are integers in USD cents, and the exchange rate is stored on the supplier order.
 - **A line keeps the price it was ordered at.** Changing a product's price later never touches old orders.
 - **Line prices are editable on manual orders.** That's the whole discount system.
+- **A new product's price starts from Amazon's.** `priceFromAmazon` in `packages/contracts/src/product.ts`: 4,587₮ per dollar plus 16,929₮ (vit-store's fitted line), kept between 40,000₮ and 500,000₮, rounded to 5,000₮, plus a flat 5,000₮. The form fills it in; she changes it before saving if it's wrong.
 - **Checkout reads prices and stock from Postgres**, never from cache.
 - **The delivery fee is stored on the order.** The real default is unconfirmed: the code says 6,000₮ and mom's posts say 5,000₮. See OPERATING_CONTEXT §6.
 

@@ -159,23 +159,30 @@ const moveLines = Effect.fn("moveLines")(function* moveLines(
     .where(eq(orderLines.orderId, orderId))
     .orderBy(orderLines.productId);
 
-  for (const line of lines) {
-    const product = yield* moveStock({
-      productId: line.productId,
-      change: reason === "sale" ? -line.quantity : line.quantity,
-      reason,
-      orderId,
-      actor,
-    });
-
-    // A sold line records the product's cost at the moment stock moves.
-    if (reason === "sale") {
-      yield* db
-        .update(orderLines)
-        .set({ unitCost: product.cost })
-        .where(and(eq(orderLines.orderId, orderId), eq(orderLines.productId, line.productId)));
-    }
-  }
+  yield* Effect.forEach(
+    lines,
+    (line) =>
+      moveStock({
+        productId: line.productId,
+        change: reason === "sale" ? -line.quantity : line.quantity,
+        reason,
+        orderId,
+        actor,
+      }).pipe(
+        // A sold line records the product's cost at the moment stock moves.
+        Effect.flatMap((product) =>
+          reason === "sale"
+            ? db
+                .update(orderLines)
+                .set({ unitCost: product.cost })
+                .where(
+                  and(eq(orderLines.orderId, orderId), eq(orderLines.productId, line.productId)),
+                )
+            : Effect.void,
+        ),
+      ),
+    { discard: true },
+  );
 });
 
 /** Stock goes down the first time an order leaves `new`, to `paid` or `shipped`. */
@@ -272,28 +279,30 @@ export const editOrder = Effect.fn("editOrder")(function* editOrder(
     new Map(before.map((line) => [line.productId, line.unitPrice])),
   );
 
-  const costs = new Map(before.map((line) => [line.productId, line.unitCost]));
+  const was = new Map(before.map((line) => [line.productId, line.quantity]));
+  const will = new Map(lines.map((line) => [line.productId, line.quantity]));
 
-  if (order.status === "paid") {
-    const was = new Map(before.map((line) => [line.productId, line.quantity]));
-    const will = new Map(lines.map((line) => [line.productId, line.quantity]));
+  // Product-id order, so concurrent writes lock stock rows the same way.
+  const changes = [...new Set([...was.keys(), ...will.keys()])].toSorted().flatMap((productId) => {
+    const change = (was.get(productId) ?? 0) - (will.get(productId) ?? 0);
 
-    for (const productId of [...new Set([...was.keys(), ...will.keys()])].toSorted()) {
-      const change = (was.get(productId) ?? 0) - (will.get(productId) ?? 0);
+    return change === 0 ? [] : [{ productId, change }];
+  });
 
-      if (change !== 0) {
-        const product = yield* moveStock({
-          productId,
-          change,
-          reason: "edit",
-          orderId: order.id,
-          actor,
-        });
+  const moved =
+    order.status === "paid"
+      ? yield* Effect.forEach(changes, ({ productId, change }) =>
+          moveStock({ productId, change, reason: "edit", orderId: order.id, actor }).pipe(
+            Effect.map((product) => [productId, product.cost] as const),
+          ),
+        )
+      : [];
 
-        if (!costs.has(productId)) costs.set(productId, product.cost);
-      }
-    }
-  }
+  // A kept line keeps its cost; an added one takes the product's current cost.
+  const costs = new Map([
+    ...moved,
+    ...before.map((line) => [line.productId, line.unitCost] as const),
+  ]);
 
   const total = totalOf(lines, input.deliveryFee);
 

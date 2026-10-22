@@ -6,7 +6,6 @@ import * as Layer from "effect/Layer";
 import { Database } from "./database.ts";
 import { applyMigrations } from "./migrations.ts";
 
-// Script entry: applies the migrations to DATABASE_URL.
 await Effect.runPromise(
   applyMigrations.pipe(
     Effect.provide(

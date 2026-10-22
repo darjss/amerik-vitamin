@@ -13,11 +13,23 @@ import {
   placeOrder,
   recordPayment,
 } from "./orders";
-import { listProducts } from "./products";
-import { countStock } from "./stock";
+import { getDraft, startDraft } from "./drafts";
+import {
+  archiveProduct,
+  catalogOptions,
+  createProduct,
+  getProduct,
+  listProducts,
+  setPrice,
+} from "./products";
+import { countStock, receiveStock } from "./stock";
 
 /** Every write's actor is the signed-in admin, never a value from the client. */
-const actor = CurrentUser.useSync((user) => user.email);
+const withActor = <A, E, R>(write: (actor: string) => Effect.Effect<A, E, R>) =>
+  Effect.flatMap(
+    CurrentUser.useSync((user) => user.email),
+    write,
+  );
 
 export const ApiHandlers = Api.toLayer({
   health: () => Effect.as(pingDatabase, { database: "ok" as const }),
@@ -27,13 +39,21 @@ export const ApiHandlers = Api.toLayer({
   home: () => home(),
   orderCounts: () => orderCounts(),
   listProducts: () => listProducts(),
-  placeOrder: (input) => Effect.flatMap(actor, (email) => placeOrder(input, email)),
-  editOrder: (input) => Effect.flatMap(actor, (email) => editOrder(input, email)),
-  recordPayment: (input) => Effect.flatMap(actor, (email) => recordPayment(input, email)),
-  markShipped: ({ orderId }) => Effect.flatMap(actor, (email) => markShipped(orderId, email)),
-  markDelivered: ({ orderId }) => Effect.flatMap(actor, (email) => markDelivered(orderId, email)),
-  cancelOrder: ({ orderId }) => Effect.flatMap(actor, (email) => cancelOrder(orderId, email)),
-  countStock: (input) => Effect.flatMap(actor, (email) => countStock(input, email)),
+  placeOrder: (input) => withActor((actor) => placeOrder(input, actor)),
+  editOrder: (input) => withActor((actor) => editOrder(input, actor)),
+  recordPayment: (input) => withActor((actor) => recordPayment(input, actor)),
+  markShipped: ({ orderId }) => withActor((actor) => markShipped(orderId, actor)),
+  markDelivered: ({ orderId }) => withActor((actor) => markDelivered(orderId, actor)),
+  cancelOrder: ({ orderId }) => withActor((actor) => cancelOrder(orderId, actor)),
+  countStock: (input) => withActor((actor) => countStock(input, actor)),
+  getProduct: ({ productId }) => getProduct(productId),
+  receiveStock: (input) => withActor((actor) => receiveStock(input, actor)),
+  setPrice: (input) => setPrice(input),
+  catalogOptions: () => catalogOptions(),
+  startDraft: ({ source }) => startDraft(source),
+  getDraft: ({ draftId }) => getDraft(draftId),
+  createProduct: (input) => withActor((actor) => createProduct(input, actor)),
+  archiveProduct: (input) => archiveProduct(input),
 });
 
 export const HideDefectsLive = Layer.succeed(

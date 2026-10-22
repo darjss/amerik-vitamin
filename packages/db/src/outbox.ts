@@ -3,7 +3,7 @@ import { and, asc, eq, inArray, isNull, lt, or, sql } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-import { Database, dieOnDatabaseError } from "./database.ts";
+import { Database, dieOnDatabaseError, transaction } from "./database.ts";
 import { outbox, outboxKind } from "./schema.ts";
 
 /** Failed sends: about four hours of 5-minute cron runs. A row past this stays unsent, for SQL to find. */
@@ -26,8 +26,9 @@ export const notify = Effect.fn("notify")(function* notify(
 
 /**
  * Claims up to `limit` unsent rows until `until`, oldest first, in one
- * statement. `SKIP LOCKED` and the lease keep two dispatchers off the same
- * row, so only a crash between sending and `markSent` sends a row twice.
+ * transaction so the row locks hold until the lease is written. `SKIP LOCKED`
+ * and the lease keep two dispatchers off the same row, so only a crash
+ * between sending and `markSent` sends a row twice.
  */
 export const claimOutbox = Effect.fn("claimOutbox")(function* claimOutbox(
   until: Date,
@@ -36,7 +37,7 @@ export const claimOutbox = Effect.fn("claimOutbox")(function* claimOutbox(
   const db = yield* Database;
   const now = DateTime.toDateUtc(yield* DateTime.now);
 
-  const due = db
+  const due = yield* db
     .select({ id: outbox.id })
     .from(outbox)
     .where(
@@ -50,15 +51,23 @@ export const claimOutbox = Effect.fn("claimOutbox")(function* claimOutbox(
     .limit(limit)
     .for("update", { skipLocked: true });
 
-  const rows = yield* db
-    .update(outbox)
-    .set({ claimedUntil: until })
-    .where(inArray(outbox.id, due))
-    .returning({ id: outbox.id, text: outbox.text });
+  const rows =
+    due.length === 0
+      ? []
+      : yield* db
+          .update(outbox)
+          .set({ claimedUntil: until })
+          .where(
+            inArray(
+              outbox.id,
+              due.map((row) => row.id),
+            ),
+          )
+          .returning({ id: outbox.id, text: outbox.text });
 
   // RETURNING has no order. UUIDv7 ids sort by creation time.
   return rows.toSorted((a, b) => a.id.localeCompare(b.id));
-}, dieOnDatabaseError);
+}, transaction);
 
 export const markSent = Effect.fn("markSent")(function* markSent(id: OutboxId) {
   const db = yield* Database;

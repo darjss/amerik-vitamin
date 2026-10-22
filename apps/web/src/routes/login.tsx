@@ -2,7 +2,8 @@ import { createAuthClient } from "better-auth/client";
 import { createSignal, Show } from "solid-js";
 import { css } from "styled-system/css";
 
-import { act, button, large, largeTitle, muted } from "../ui";
+import { button } from "../styles";
+import { muted } from "../ui";
 
 const authClient = createAuthClient();
 
@@ -30,8 +31,12 @@ export default function Login() {
         textAlign: "center",
       })}
     >
-      <h1 class={css(largeTitle)}>Америк Хүнс Бараа</h1>
-      <button type="button" onClick={signIn} class={css(button, act, large, { px: "32px" })}>
+      <h1 class={css({ textStyle: "largeTitle" })}>Америк Хүнс Бараа</h1>
+      <button
+        type="button"
+        onClick={signIn}
+        class={css(button.raw({ tone: "ink", size: "lg" }), { px: "32px" })}
+      >
         Google-ээр нэвтрэх
       </button>
       <Show when={failure()}>{(message) => <p class={css(muted)}>{message()}</p>}</Show>

@@ -108,6 +108,8 @@ Source is in `apps/web/node_modules/@pandacss/dev`. Docs are at https://panda-cs
 
 - Panda 2 adds no presets on its own. Without `presets: [presetBase, pandaPreset]`, shorthands like `bg` and `px` fail to typecheck.
 - Every value is its own atomic class, so `cx(a, b)` with the same property in both lets stylesheet order pick the winner. Share styles as `css.raw` and compose with `css(a, b)`, which merges the objects so the later one wins.
+- Components with variants are `cva` recipes in `apps/web/src/styles.ts`, which stay atomic. Override one with `css(button.raw({ size: "lg" }), { flex: 1 })`; `cx(button(), css(...))` has the same stylesheet-order problem. Config recipes would land in `@layer recipes`, where any page style beats their `_disabled` state.
+- A `textStyle` lands in `@layer utilities.compositions`, so a plain `fontSize` or `fontWeight` next to it always wins, whatever the object order.
 - A `border` or `borderTop` shorthand resets the color, and `borderColor` beside it can lose. Put the token in the shorthand: `"1px solid {colors.line}"`.
 - unplugin-icons' bundled Solid types predate Solid 2 and type every icon's props as `never`. `apps/web/src/icons.d.ts` declares `~icons/*` instead.
 
