@@ -132,6 +132,23 @@ export function HomeSkeleton() {
   );
 }
 
+/** The new-order photo grid: a search field, then three tiles a row. */
+export function GridSkeleton() {
+  return (
+    <div
+      class={css(delayed, { px: "16px", pt: "28px", display: "grid", gap: "14px" })}
+      aria-busy="true"
+    >
+      <Bone width="100%" height="46px" round />
+      <div class={css({ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "12px" })}>
+        <Repeat count={9}>
+          {() => <span class={css(bone, { borderRadius: "20px", aspectRatio: "1" })} />}
+        </Repeat>
+      </div>
+    </div>
+  );
+}
+
 /** A form: label and field pairs. */
 export function FormSkeleton(props: { fields?: number }) {
   return (

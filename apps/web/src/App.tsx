@@ -1,5 +1,5 @@
 import { isServer } from "@solidjs/web";
-import { createRouter } from "@solidjs/router";
+import { createRouter, intentPreload } from "@solidjs/router";
 import { fileRoutes } from "@solidjs/router/fs";
 import { pageRoutes } from "virtual:file-routes";
 import { Loading } from "solid-js";
@@ -13,7 +13,9 @@ import { ZoomProvider } from "./zoom";
 import "@fontsource-variable/inter/opsz.css";
 import "./app.css";
 
-const Router = createRouter({ routes: fileRoutes(pageRoutes) });
+// Pages are separate chunks. A touch, hover or focus on a link fetches the
+// chunk before the tap lands, so a first visit doesn't wait on code, then data.
+const Router = createRouter({ routes: fileRoutes(pageRoutes), preloadLinks: intentPreload() });
 
 export default function App() {
   return (

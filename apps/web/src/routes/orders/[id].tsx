@@ -282,9 +282,7 @@ export default function OrderPage() {
                       >
                         {phone(digits())}
                       </div>
-                      <Loading fallback={null}>
-                        <History phone={digits()} />
-                      </Loading>
+                      <History phone={digits()} orders={order().customerOrders} />
                     </div>
                     <a href={`tel:${digits()}`} aria-label="Залгах" class={css(round, roundAct)}>
                       <PhoneIcon />

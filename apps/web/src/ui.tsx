@@ -67,6 +67,18 @@ export const appear = css.raw({
   _motionReduce: { animation: "none" },
 });
 
+/** A small teal ring that turns while something loads. */
+export const spinner = css.raw({
+  flex: "none",
+  width: "22px",
+  height: "22px",
+  borderRadius: "50%",
+  border: "3px solid {colors.selSoft}",
+  borderTopColor: "sel",
+  animation: "spin 0.9s linear infinite",
+  _motionReduce: { animation: "none" },
+});
+
 /** A raised surface: something she handles, standing up off the cream. */
 export const panel = css.raw({
   bg: "surface",

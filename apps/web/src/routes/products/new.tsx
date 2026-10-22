@@ -44,6 +44,7 @@ import {
   panel,
   Problem,
   round,
+  spinner,
   sub,
   wide,
 } from "../../ui";
@@ -264,16 +265,7 @@ function Progress() {
     <div class={css({ px: "16px", pt: "12px" })}>
       <div class={css(panel, { p: "22px", display: "grid", gap: "16px" })}>
         <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
-          <span
-            class={css({
-              width: "22px",
-              height: "22px",
-              borderRadius: "50%",
-              border: "3px solid {colors.selSoft}",
-              borderTopColor: "sel",
-              animation: "spin 0.9s linear infinite",
-            })}
-          />
+          <span class={css(spinner)} />
           <b class={css(headline, { flex: 1 })}>{steps[step()]}</b>
           <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>{seconds()} сек</span>
         </div>

@@ -165,10 +165,22 @@ export const getOrder = Effect.fn("getOrder")(function* getOrder(orderId: OrderI
 
   if (order === undefined) return yield* new OrderNotFound({ orderId });
 
+  // The customer's order count rides along, so the page needs no second round
+  // trip from her phone. (A subquery inside inArray renders empty here.)
+  const [history] =
+    order.customerId === null
+      ? [{ orders: 0 }]
+      : yield* db
+          .select({ orders: count() })
+          .from(orders)
+          .where(eq(orders.customerId, order.customerId))
+          .pipe(dieOnDatabaseError);
+
   return {
     ...withBalance(order),
     lines: lines.get(orderId) ?? [],
     payments: paid,
+    customerOrders: history?.orders ?? 0,
     // RpcServer encodes the result against `OrderEventData`, so a row the
     // schema rejects still dies there instead of reaching the client.
     events,

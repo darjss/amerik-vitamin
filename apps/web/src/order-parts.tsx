@@ -1,13 +1,10 @@
 import type { ManualPayment, OrderDetail } from "@amerik/contracts";
-import * as Effect from "effect/Effect";
-import { createMemo, createSignal, For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { css } from "styled-system/css";
 import BankIcon from "~icons/ph/bank";
 import CheckIcon from "~icons/ph/check-bold";
 import MoneyIcon from "~icons/ph/money";
 
-import { ApiClient } from "./api/client";
-import { runEffect } from "./api/solid-effect";
 import { Sheet } from "./chrome";
 import { money, thousands } from "./format";
 import { act, button, Failed, field, Pill, Segmented, sub, wide } from "./ui";
@@ -113,27 +110,15 @@ export function Tracker(props: { order: OrderDetail }) {
   );
 }
 
-/** How many orders this phone has placed; a tap lists them. */
-export function History(props: { phone: string }) {
-  const orders = createMemo(() => {
-    const digits = props.phone;
-
-    return runEffect(
-      ApiClient.use((api) => api.findCustomer({ phone: digits })).pipe(
-        Effect.map((customer) => customer.orders),
-        // A phone with no customer row yet has no orders; anything else is a real failure.
-        Effect.catchTag("CustomerNotFound", () => Effect.succeed(0)),
-      ),
-    );
-  });
-
+/** How many orders this phone has placed (from getOrder); a tap lists them. */
+export function History(props: { phone: string; orders: number }) {
   return (
-    <Show when={orders() > 1}>
+    <Show when={props.orders > 1}>
       <a
         href={`/orders?view=all&q=${props.phone}`}
         class={css({ display: "inline-block", mt: "6px" })}
       >
-        <Pill tone="soft">Нийт {orders()} захиалга</Pill>
+        <Pill tone="soft">Нийт {props.orders} захиалга</Pill>
       </a>
     </Show>
   );

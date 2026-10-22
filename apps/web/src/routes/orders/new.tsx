@@ -50,12 +50,13 @@ import {
   searchBox,
   section,
   Segmented,
+  spinner,
   sub,
   Tile,
   title3,
   wide,
 } from "../../ui";
-import { FormSkeleton } from "../../skeletons";
+import { GridSkeleton } from "../../skeletons";
 import type { Icon } from "../../ui";
 
 const FEE = 6000;
@@ -272,20 +273,36 @@ export default function NewOrder() {
                   fontVariantNumeric: "tabular-nums",
                 })}
               />
-              <Show when={customer()?.orders}>
-                {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
-              </Show>
+              {/* A new phone shows the spinner, not the last phone's customer, until its lookup lands. */}
+              <Loading
+                on={phone()}
+                fallback={
+                  <span
+                    aria-label="Хайж байна"
+                    class={css(spinner, { width: "18px", height: "18px" })}
+                  />
+                }
+              >
+                <Show when={customer()?.orders}>
+                  {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
+                </Show>
+              </Loading>
             </label>
             <Show when={!walkIn()}>
               <label class={css(fieldRow)}>
                 <MapPinIcon />
-                <textarea
-                  rows={2}
-                  aria-label="Хаяг"
-                  placeholder="Хаяг"
-                  value={address()}
-                  onInput={(event) => setAddress(event.currentTarget.value)}
-                />
+                <Loading
+                  on={phone()}
+                  fallback={<span class={css(sub, { flex: 1, py: "2px" })}>Хаяг хайж байна…</span>}
+                >
+                  <textarea
+                    rows={2}
+                    aria-label="Хаяг"
+                    placeholder="Хаяг"
+                    value={address()}
+                    onInput={(event) => setAddress(event.currentTarget.value)}
+                  />
+                </Loading>
               </label>
             </Show>
             <label class={css(fieldRow)}>
@@ -300,79 +317,81 @@ export default function NewOrder() {
           </div>
         </div>
 
-        <Loading fallback={<FormSkeleton fields={4} />}>
+        <Loading fallback={<GridSkeleton />}>
           <div class={css(appear)}>
-            <Show when={before().length > 0}>
-              <section class={css(section, { mt: "28px" })}>
-                <h2 class={css(title3, { mb: "10px" })}>Өмнө авсан</h2>
-                <div
-                  class={css({
-                    display: "flex",
-                    gap: "10px",
-                    overflowX: "auto",
-                    scrollbarWidth: "none",
-                    mx: "-20px",
-                    px: "20px",
-                    pt: "4px",
-                    pb: "8px",
-                  })}
-                >
-                  <For each={before()} keyed={(product) => product.id}>
-                    {(product) => (
-                      <button
-                        type="button"
-                        onClick={() => add(product(), 1)}
-                        class={css(press, panel, {
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          flex: "none",
-                          p: "8px 10px 8px 8px",
-                          borderRadius: "20px",
-                          textAlign: "left",
-                        })}
-                      >
-                        <Tile
-                          product={product()}
-                          size={48}
-                          quantity={cart[product().id] || undefined}
-                          ring="surface"
-                          still
-                        />
-                        <span>
-                          <span
-                            class={css({
-                              display: "block",
-                              fontSize: "15px",
-                              lineHeight: "19px",
-                              fontWeight: "600",
-                            })}
-                          >
-                            {product().name}
-                          </span>
-                          <span class={css(sub, { fontSize: "13px" })}>
-                            {money(product().price)}
-                          </span>
-                        </span>
-                        <span
-                          class={css({
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            display: "grid",
-                            placeItems: "center",
-                            bg: "chip",
-                            fontSize: "17px",
+            <Loading on={phone()} fallback={null}>
+              <Show when={before().length > 0}>
+                <section class={css(section, { mt: "28px" })}>
+                  <h2 class={css(title3, { mb: "10px" })}>Өмнө авсан</h2>
+                  <div
+                    class={css({
+                      display: "flex",
+                      gap: "10px",
+                      overflowX: "auto",
+                      scrollbarWidth: "none",
+                      mx: "-20px",
+                      px: "20px",
+                      pt: "4px",
+                      pb: "8px",
+                    })}
+                  >
+                    <For each={before()} keyed={(product) => product.id}>
+                      {(product) => (
+                        <button
+                          type="button"
+                          onClick={() => add(product(), 1)}
+                          class={css(press, panel, {
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            flex: "none",
+                            p: "8px 10px 8px 8px",
+                            borderRadius: "20px",
+                            textAlign: "left",
                           })}
                         >
-                          <PlusIcon />
-                        </span>
-                      </button>
-                    )}
-                  </For>
-                </div>
-              </section>
-            </Show>
+                          <Tile
+                            product={product()}
+                            size={48}
+                            quantity={cart[product().id] || undefined}
+                            ring="surface"
+                            still
+                          />
+                          <span>
+                            <span
+                              class={css({
+                                display: "block",
+                                fontSize: "15px",
+                                lineHeight: "19px",
+                                fontWeight: "600",
+                              })}
+                            >
+                              {product().name}
+                            </span>
+                            <span class={css(sub, { fontSize: "13px" })}>
+                              {money(product().price)}
+                            </span>
+                          </span>
+                          <span
+                            class={css({
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              display: "grid",
+                              placeItems: "center",
+                              bg: "chip",
+                              fontSize: "17px",
+                            })}
+                          >
+                            <PlusIcon />
+                          </span>
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </section>
+              </Show>
+            </Loading>
 
             <section class={css(section, { mt: "22px" })}>
               <h2 class={css(title3)}>Бараа</h2>
