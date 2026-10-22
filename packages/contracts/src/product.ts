@@ -1,3 +1,4 @@
+import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 
 import { OrderId, OrderNumber, ProductId, StockMoveId } from "./ids.ts";
@@ -174,9 +175,10 @@ export const ProductDraft = Schema.Struct({
   /** Amazon's price in US cents, a hint for her own price. */
   amazonCents: Schema.NullOr(Schema.Int),
   /** Amazon had no listing for her photo, so the draft is read off the photo alone. */
-  photoOnly: Schema.Boolean,
+  // Drafts finished before these two fields existed decode with the defaults.
+  photoOnly: Schema.Boolean.pipe(Schema.withDecodingDefaultKey(Effect.succeed(false))),
   /** Health-claim words the description still has after one rewrite. */
-  bannedWords: Schema.Array(Schema.String),
+  bannedWords: Schema.Array(Schema.String).pipe(Schema.withDecodingDefaultKey(Effect.succeed([]))),
   /** The writer's own doubt for her, in Mongolian, e.g. a count that disagrees. */
   note: Schema.String,
 });

@@ -60,7 +60,9 @@ export function ListSkeleton(props: { rows?: number; chips?: boolean }) {
   return (
     <div class={css(delayed)} aria-busy="true">
       <Show when={props.chips ?? true}>
-        <div class={css({ display: "flex", gap: "8px", px: "16px", pt: "14px" })}>
+        <div
+          class={css({ display: "flex", gap: "8px", px: "16px", pt: "14px", overflow: "hidden" })}
+        >
           <Bone width="76px" height="40px" round />
           <Bone width="96px" height="40px" round />
           <Bone width="120px" height="40px" round />

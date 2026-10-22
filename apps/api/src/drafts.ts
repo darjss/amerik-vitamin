@@ -379,17 +379,18 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
 
       const copy = yield* task("copy", writeCopy(facts), retried);
 
-      // Her own photo stands in when Amazon has no listing for the bottle.
-      const images =
+      const fromAmazon =
         page === null
-          ? photo === null
-            ? []
-            : [`${origin}/${photo.key}`]
+          ? []
           : yield* task(
               "photos",
               keepPhotos(bucket, origin, page, `products/${page.asin}/${event.instanceId}`),
               retried,
             );
+
+      // Her own photo stands in when Amazon has no listing, or no usable photo.
+      const images =
+        fromAmazon.length > 0 || photo === null ? fromAmazon : [`${origin}/${photo.key}`];
 
       const draft: ProductDraft = {
         ...fields,

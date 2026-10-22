@@ -175,10 +175,15 @@ export const createProduct = Effect.fn("createProduct")(function* createProduct(
       slug: slugify(input.brand),
       createdAt: now,
     })
-    .onConflictDoNothing({ target: brands.name });
+    .onConflictDoNothing();
 
+  // "Now Foods" and "NOW Foods" share a slug: either spelling reuses the brand.
   const [[brand], [category]] = yield* Effect.all([
-    db.select({ id: brands.id }).from(brands).where(eq(brands.name, input.brand)),
+    db
+      .select({ id: brands.id })
+      .from(brands)
+      .where(or(eq(brands.name, input.brand), eq(brands.slug, slugify(input.brand))))
+      .limit(1),
     db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.category)),
   ]);
 

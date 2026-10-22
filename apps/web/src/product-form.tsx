@@ -62,7 +62,29 @@ export function DraftForm(props: {
   });
 
   const { write, busy, failed } = createWrite();
-  const [duplicate, setDuplicate] = createSignal<ProductId | null>(untrack(() => props.existing));
+
+  // "Already in the shop" holds for the fields it was said about. Changing
+  // any identity field (or the ASIN) clears it, so a corrected product saves.
+  const identity = () =>
+    [
+      draft.brand,
+      draft.line,
+      draft.potency,
+      draft.count,
+      draft.form,
+      draft.flavor,
+      draft.asin,
+    ].join("|");
+
+  const [verdict, setVerdict] = createSignal(
+    untrack(() => (props.existing === null ? undefined : { id: props.existing, for: identity() })),
+  );
+
+  const duplicate = () => {
+    const said = verdict();
+
+    return said !== undefined && said.for === identity() ? said.id : null;
+  };
 
   const missing = () => {
     if (draft.brand.trim() === "") return "Брэнд";
@@ -115,7 +137,7 @@ export function DraftForm(props: {
       ),
       (saved) =>
         saved.created === null
-          ? setDuplicate(saved.existing)
+          ? setVerdict({ id: saved.existing, for: untrack(identity) })
           : navigate(`/products/${saved.created}`),
     );
   };
