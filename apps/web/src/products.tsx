@@ -1,5 +1,4 @@
-import { LOW_STOCK } from "@amerik/contracts";
-import type { ProductForm } from "@amerik/contracts";
+import type { StockLevel } from "@amerik/contracts";
 import { createSignal, Show, untrack } from "solid-js";
 import { css } from "styled-system/css";
 import MinusIcon from "~icons/ph/minus-bold";
@@ -7,20 +6,9 @@ import PlusIcon from "~icons/ph/plus-bold";
 
 import { money, thousands } from "./format";
 import { act, button, Failed, field, round, Segmented, Sheet, sub, wide } from "./ui";
+import type { Tone } from "./ui";
 
 // Pieces the products list and the product page share: stock wording and the number sheets.
-
-export const formText: Record<ProductForm, string> = {
-  softgel: "Зөөлөн капсул",
-  capsule: "Капсул",
-  tablet: "Шахмал",
-  chewable: "Зажилдаг шахмал",
-  gummy: "Гамми",
-  lozenge: "Хөхдөг шахмал",
-  powder: "Нунтаг",
-  liquid: "Шингэн",
-  other: "Бусад",
-};
 
 /** Null until the first count or receipt. */
 export const stockText = (stock: number | null) => {
@@ -29,26 +17,12 @@ export const stockText = (stock: number | null) => {
   return stock === 0 ? "Дууссан" : `${stock}`;
 };
 
-/** Sold out is red, running out is amber, unknown is grey. */
-export const stockTone = (stock: number | null) => {
-  if (stock === null) return "neutral" as const;
-
-  if (stock <= 0) return "owes" as const;
-
-  return stock <= LOW_STOCK ? ("wait" as const) : undefined;
-};
-
-/** The stock number as a button: teal when fine, then amber, red and grey by tone. */
-export const stockButton = (stock: number | null) => {
-  const tone = stockTone(stock);
-
-  if (tone === "owes") return css.raw({ bg: "owesBg", color: "owes", boxShadow: "none" });
-
-  if (tone === "wait") return css.raw({ bg: "waitBg", color: "wait", boxShadow: "none" });
-
-  if (tone === "neutral") return css.raw({ bg: "chip", color: "inkMuted", boxShadow: "none" });
-
-  return css.raw({ bg: "selSoft", color: "sel", boxShadow: "none" });
+/** Sold out is red, running out amber, never counted grey, the rest teal. */
+export const stockTone: Record<StockLevel, Tone> = {
+  out: "owes",
+  low: "wait",
+  unknown: "neutral",
+  ok: "soft",
 };
 
 const digits = (text: string) => Number(text.replaceAll(/\D/gu, ""));

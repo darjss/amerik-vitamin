@@ -1,5 +1,5 @@
-import { ProductId } from "@amerik/contracts";
-import type { ProductDetail, StockMove, StockMoveReason } from "@amerik/contracts";
+import { ProductId, stockLevel } from "@amerik/contracts";
+import type { ProductDetail, StockMove } from "@amerik/contracts";
 import { useParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import type * as Effect from "effect/Effect";
@@ -31,7 +31,7 @@ import CloseIcon from "~icons/ph/x-bold";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { failureText, money, offline, sized, srcset, when } from "../../format";
-import { formText, PriceSheet, StepperSheet, stockText, stockTone } from "../../products";
+import { PriceSheet, StepperSheet, stockText, stockTone } from "../../products";
 import {
   act,
   appear,
@@ -55,15 +55,8 @@ import {
 } from "../../ui";
 import { DetailSkeleton } from "../../skeletons";
 import type { Icon } from "../../ui";
+import { formText, reasonText, stockAsk } from "../../words";
 import { Zoom } from "../../zoom";
-
-const reasonText: Record<StockMoveReason, string> = {
-  sale: "Зарсан",
-  cancel: "Цуцалсан",
-  edit: "Захиалга зассан",
-  receipt: "Ирсэн",
-  count: "Тоолсон",
-};
 
 /** The label facts she'd read off the bottle, skipping what the product doesn't have. */
 const facts = (product: ProductDetail) =>
@@ -76,9 +69,6 @@ const facts = (product: ProductDetail) =>
     ["Амт", product.flavor],
     ["Ангилал", product.category],
   ].flatMap(([label, value]) => (value ? [{ label, value }] : []));
-
-/** What the stock asks of her: reorder, reorder soon, or count it once. */
-const toneText = { owes: "Захиалах", wait: "Дуусаж байна", neutral: "Тоол" };
 
 const signed = (change: number) => (change > 0 ? `+${change}` : `−${-change}`);
 
@@ -363,8 +353,8 @@ export default function ProductPage() {
                     : "Сүүлийн 30 хоногт зараагүй"}
                 </div>
               </div>
-              <Show when={stockTone(product().stock)}>
-                {(tone) => <Pill tone={tone()}>{toneText[tone()]}</Pill>}
+              <Show when={stockAsk[stockLevel(product().stock)]}>
+                {(ask) => <Pill tone={stockTone[stockLevel(product().stock)]}>{ask()}</Pill>}
               </Show>
             </div>
 

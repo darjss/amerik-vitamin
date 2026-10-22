@@ -28,6 +28,7 @@ import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
 import { failureText, money, offline, thousands } from "./format";
 import { act, button, Failed, field, Pill, Segmented, Sheet, sub, wide } from "./ui";
+import { methodText } from "./words";
 
 /** The one thing to do next: hand it to TU, or confirm it arrived. COMMERCE-RULES. */
 export const nextStep = (order: { status: OrderStatus; terms: PaymentTerms }) => {
@@ -344,8 +345,8 @@ export function PaySheet(props: {
     <Sheet open={props.open} title="Мөнгө авсан" onClose={() => props.onClose()}>
       <Segmented
         options={[
-          ["cash", "Бэлэн", MoneyIcon],
-          ["transfer", "Шилжүүлэг", BankIcon],
+          ["cash", methodText.cash, MoneyIcon],
+          ["transfer", methodText.transfer, BankIcon],
         ]}
         value={method()}
         onChange={setMethod}

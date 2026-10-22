@@ -58,13 +58,14 @@ import {
 } from "../../ui";
 import { GridSkeleton } from "../../skeletons";
 import type { Icon } from "../../ui";
+import { sourceText } from "../../words";
 
 const FEE = 6000;
 
 const sources = [
-  ["messenger_human", "Чат", ChatIcon],
-  ["phone", "Утас", PhoneIcon],
-  ["walk_in", "Дэлгүүр", StoreIcon],
+  ["messenger_human", sourceText.messenger_human, ChatIcon],
+  ["phone", sourceText.phone, PhoneIcon],
+  ["walk_in", sourceText.walk_in, StoreIcon],
 ] satisfies ReadonlyArray<readonly [OrderSource, string, Icon]>;
 
 /** One line of the grouped contact fields: an icon, then the input. */

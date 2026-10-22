@@ -1,4 +1,4 @@
-import { LOW_STOCK } from "@amerik/contracts";
+import { stockLevel } from "@amerik/contracts";
 import type { ProductRow } from "@amerik/contracts";
 import { useSearchParams } from "@solidjs/router";
 import type * as Effect from "effect/Effect";
@@ -30,7 +30,7 @@ import TagIcon from "~icons/ph/tag";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { failureText, matches, money } from "../../format";
-import { PriceSheet, StockSheet, stockButton, stockText } from "../../products";
+import { PriceSheet, StockSheet, stockText, stockTone } from "../../products";
 import type { StockMode } from "../../products";
 import {
   appear,
@@ -51,35 +51,26 @@ import {
   sub,
   TabBar,
   Tile,
+  tones,
   top,
 } from "../../ui";
 import { ListSkeleton } from "../../skeletons";
 
-/** The stock views. Each one but Бүгд shows only when it has products. */
+/** The stock views, keyed by stock level. Each one but Бүгд shows only when it has products. */
 const views = [
   { key: "all", label: "Бүгд", dot: undefined },
   { key: "out", label: "Дууссан", dot: "owes" },
   { key: "low", label: "Дуусаж байна", dot: "wait" },
-  { key: "uncounted", label: "Тоолоогүй", dot: "inkFaint" },
+  { key: "unknown", label: "Тоолоогүй", dot: "inkFaint" },
   { key: "archived", label: "Архив", dot: undefined },
 ] as const;
 
 type View = (typeof views)[number]["key"];
 
-const inView = (view: View, product: ProductRow) => {
-  if (view === "archived") return product.archivedAt !== null;
-
-  if (product.archivedAt !== null) return false;
-
-  if (view === "out") return product.stock !== null && product.stock <= 0;
-
-  if (view === "low")
-    return product.stock !== null && product.stock > 0 && product.stock <= LOW_STOCK;
-
-  if (view === "uncounted") return product.stock === null;
-
-  return true;
-};
+const inView = (view: View, product: ProductRow) =>
+  view === "archived"
+    ? product.archivedAt !== null
+    : product.archivedAt === null && (view === "all" || stockLevel(product.stock) === view);
 
 /** A small raised chip on a row: the price, and ⋯. */
 const rowChip = css.raw(press, {
@@ -333,7 +324,8 @@ export default function Products() {
                           button,
                           small,
                           { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
-                          stockButton(product().stock),
+                          tones[stockTone[stockLevel(product().stock)]],
+                          { boxShadow: "none" },
                         )}
                       >
                         {stockText(product().stock)}

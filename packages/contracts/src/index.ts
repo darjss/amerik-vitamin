@@ -53,7 +53,9 @@ export {
   WrongOrderStatus,
 } from "./order.ts";
 
-export { Home, LOW_STOCK } from "./home.ts";
+export { Home, LOW_STOCK, stockLevel } from "./home.ts";
+
+export type { StockLevel } from "./home.ts";
 
 export {
   AmazonSource,

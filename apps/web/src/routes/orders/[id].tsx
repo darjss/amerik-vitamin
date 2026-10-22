@@ -1,11 +1,5 @@
 import { OrderId } from "@amerik/contracts";
-import type {
-  EditOrder,
-  ManualPayment,
-  OrderDetail,
-  OrderSource,
-  PaymentMethod,
-} from "@amerik/contracts";
+import type { EditOrder, ManualPayment, OrderDetail } from "@amerik/contracts";
 import { useParams } from "@solidjs/router";
 import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -68,34 +62,10 @@ import {
   title2,
 } from "../../ui";
 import { DetailSkeleton } from "../../skeletons";
+import { headlineText, methodText, sourceText } from "../../words";
 
-const headlineOf = (order: OrderDetail) => {
-  if (order.status === "cancelled") return "Цуцалсан";
-
-  if (order.status === "delivered") return "Хүргэгдсэн";
-
-  if (order.status === "shipped") return "Замд";
-
-  if (order.status === "paid" || order.terms === "cod") return "Илгээхэд бэлэн";
-
-  return "Төлбөр хүлээж байна";
-};
-
-const sourceText: Record<OrderSource, string> = {
-  messenger_bot: "Messenger бот",
-  messenger_human: "Чат",
-  web: "Вэб",
-  brand_site: "Брэнд сайт",
-  phone: "Утас",
-  walk_in: "Дэлгүүр",
-  notebook: "Дэвтэр",
-};
-
-const methodText: Record<PaymentMethod, string> = {
-  qpay: "QPay",
-  transfer: "Шилжүүлэг",
-  cash: "Бэлэн",
-};
+const headlineOf = (order: OrderDetail) =>
+  headlineText[order.status === "new" && order.terms === "cod" ? "paid" : order.status];
 
 const payText = (order: OrderDetail) => {
   const last = order.payments.at(-1);

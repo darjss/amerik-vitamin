@@ -19,7 +19,6 @@ import CloseIcon from "~icons/ph/x-bold";
 import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
 import { failureText, money, sized, srcset, thousands } from "./format";
-import { formText } from "./products";
 import {
   act,
   button,
@@ -38,6 +37,7 @@ import {
   title2,
   wide,
 } from "./ui";
+import { formText } from "./words";
 
 // The new-product form: filled by the drafting run, or empty for a hand-typed product.
 

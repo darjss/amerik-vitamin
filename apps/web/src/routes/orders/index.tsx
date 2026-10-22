@@ -37,6 +37,7 @@ import {
   top,
 } from "../../ui";
 import { ListSkeleton } from "../../skeletons";
+import { statusText } from "../../words";
 
 const views = [
   { key: "to_ship", label: "Илгээх", count: "toShip", input: { queue: "to_ship" } },
@@ -68,15 +69,6 @@ const searchOf = (query: string): ListOrders | undefined => {
   }
 
   return /^\d{3,8}$/u.test(digits) ? { phone: digits } : undefined;
-};
-
-// Shown where there is no next step to take.
-const statusText = {
-  new: "Төлбөр хүлээж",
-  paid: "Илгээгээгүй",
-  shipped: "Замд",
-  delivered: "Хүргэсэн",
-  cancelled: "Цуцалсан",
 };
 
 /** Days a ready order has waited to ship, from the second day on. */

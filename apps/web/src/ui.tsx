@@ -22,7 +22,6 @@ export const top = css.raw({ pt: "calc(env(safe-area-inset-top) + 14px)" });
 
 export const muted = css.raw({ color: "inkMuted" });
 
-/** The iOS large title. */
 export const largeTitle = css.raw({
   fontSize: "34px",
   lineHeight: "40px",
@@ -54,7 +53,6 @@ export const headline = css.raw({
 
 export const sub = css.raw({ fontSize: "15px", lineHeight: "20px", color: "inkMuted" });
 
-/** A section of a page: a title over content, with air between sections. */
 export const section = css.raw({ px: "20px", mt: "34px" });
 
 export const sectionHead = css.raw({
@@ -64,13 +62,11 @@ export const sectionHead = css.raw({
   mb: "14px",
 });
 
-/** Content that just loaded fades and rises into place, replacing its skeleton. */
 export const appear = css.raw({
   animation: "appear .25s ease-out both",
   _motionReduce: { animation: "none" },
 });
 
-/** A small teal ring that turns while something loads. */
 export const spinner = css.raw({
   flex: "none",
   width: "22px",
@@ -82,14 +78,12 @@ export const spinner = css.raw({
   _motionReduce: { animation: "none" },
 });
 
-/** A raised surface: something she handles, standing up off the cream. */
 export const panel = css.raw({
   bg: "surface",
   borderRadius: "22px",
   boxShadow: "inset 0 1px 0 {colors.white}, {shadows.raise}",
 });
 
-/** Squeezes on touch-down and springs back on release. */
 export const press = css.raw({
   cursor: "pointer",
   transition: "transform .56s {easings.spring}",
@@ -122,12 +116,10 @@ export const button = css.raw(press, {
   },
 });
 
-/** A filled action: warm ink does things. */
 export const act = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
 
 export const large = css.raw({ height: "56px", fontSize: "18px" });
 
-/** A docked action across the whole width. */
 export const wide = css.raw(large, { width: "100%" });
 
 export const small = css.raw({ height: "44px", px: "18px", fontSize: "16px" });
@@ -147,7 +139,6 @@ export const round = css.raw(press, {
 
 export const roundAct = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
 
-/** Frosted glass for buttons that float over the page. */
 export const glass = css.raw({
   bg: "surface/78",
   backdropFilter: "blur(20px) saturate(180%)",
@@ -166,7 +157,6 @@ export const glassBar = css.raw({
   backdropFilter: "blur(22px) saturate(180%)",
 });
 
-/** A filter chip with an optional count in <b>; teal when on. */
 export const chip = css.raw(press, {
   display: "inline-flex",
   alignItems: "center",
@@ -191,7 +181,6 @@ export const chipOn = css.raw({
   "& b": { color: "white/78" },
 });
 
-/** A row of chips that scrolls sideways past the screen edge. */
 export const chipRow = css.raw({
   display: "flex",
   gap: "8px",
@@ -280,7 +269,7 @@ const pillBase = css.raw({
   "& svg": { fontSize: "15px" },
 });
 
-const tones = {
+export const tones = {
   owes: css.raw({ bg: "owesBg", color: "owes" }),
   paid: css.raw({ bg: "paidBg", color: "paid" }),
   wait: css.raw({ bg: "waitBg", color: "wait" }),
@@ -288,7 +277,9 @@ const tones = {
   neutral: css.raw({ bg: "chip", color: "inkMuted" }),
 };
 
-export function Pill(props: { tone: keyof typeof tones; children: JSX.Element }) {
+export type Tone = keyof typeof tones;
+
+export function Pill(props: { tone: Tone; children: JSX.Element }) {
   return <span class={css(pillBase, tones[props.tone])}>{props.children}</span>;
 }
 
@@ -409,7 +400,6 @@ export function Tile(props: {
   );
 }
 
-/** One choice out of a few: an iOS segmented control with a sliding thumb. */
 export function Segmented<T extends string>(props: {
   options: ReadonlyArray<readonly [T, string, Icon?]>;
   value: T;
@@ -417,11 +407,7 @@ export function Segmented<T extends string>(props: {
 }) {
   const name = createUniqueId();
 
-  const index = () =>
-    Math.max(
-      0,
-      props.options.findIndex(([value]) => value === props.value),
-    );
+  const index = () => props.options.findIndex(([value]) => value === props.value);
 
   // Native radios: arrow keys and one tab stop come with them.
   return (
@@ -596,7 +582,7 @@ export function Sheet(props: {
   );
 }
 
-/** Fixed to the bottom over a frosted material: the screen's main action. */
+/** The screen's main action, docked to the bottom. */
 export function Dock(props: { children: JSX.Element }) {
   return (
     <div
@@ -644,7 +630,6 @@ const tabs = [
   { href: "/products", label: "Бараа", Icon: PillIcon, Active: PillFillIcon },
 ] satisfies ReadonlyArray<{ href: string; label: string; Icon: Icon; Active: Icon }>;
 
-/** One floating glass capsule over the page. */
 export function TabBar() {
   const location = useLocation();
 
