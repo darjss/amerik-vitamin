@@ -166,7 +166,10 @@ function NumberInput(props: NumberProps) {
       <SaveButton
         failed={props.failed}
         disabled={
-          props.busy || value() < min() || (props.price === true && value() === props.start)
+          // The stepper floors a price at 5,000₮, but any typed price above 0 saves.
+          props.busy ||
+          value() < (props.min ?? 1) ||
+          (props.price === true && value() === props.start)
         }
         onClick={() => props.onSave(value())}
       >
