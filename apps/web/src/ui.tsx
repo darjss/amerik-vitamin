@@ -1,7 +1,7 @@
 import { Unauthorized } from "@amerik/contracts";
 import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { createEffect, createUniqueId, For, Show } from "solid-js";
+import { createEffect, createSignal, createUniqueId, For, Show } from "solid-js";
 import { css } from "styled-system/css";
 import HouseFillIcon from "~icons/ph/house-fill";
 import HouseIcon from "~icons/ph/house";
@@ -396,6 +396,27 @@ export function SaveButton(props: {
     </>
   );
 }
+
+/** Copies text for a Messenger chat; `copied` holds for 2 seconds after each copy. */
+export const createCopied = () => {
+  // Every copy notifies, so a second one within 2 seconds restarts the timer.
+  const [copied, setCopied] = createSignal(false, { equals: false });
+
+  createEffect(copied, (on) => {
+    if (!on) return;
+
+    const reset = setTimeout(() => setCopied(false), 2000);
+
+    return () => clearTimeout(reset);
+  });
+
+  const copy = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+  };
+
+  return { copied, copy };
+};
 
 /** A failed read, or an expired session. */
 export function Problem(props: { error: unknown }) {

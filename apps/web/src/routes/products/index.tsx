@@ -1,20 +1,7 @@
 import { stockLevel } from "@amerik/contracts";
 import type { ProductRow } from "@amerik/contracts";
 import { useSearchParams } from "@solidjs/router";
-import type * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import {
-  action,
-  createMemo,
-  createOptimistic,
-  createSignal,
-  Errored,
-  For,
-  Loading,
-  refresh,
-  Show,
-  useContext,
-} from "solid-js";
+import { createMemo, createSignal, Errored, For, Loading, Show } from "solid-js";
 import { css } from "styled-system/css";
 import ArchiveIcon from "~icons/ph/archive";
 import CopyIcon from "~icons/ph/copy-bold";
@@ -28,8 +15,8 @@ import BagIcon from "~icons/ph/shopping-bag-open";
 import TagIcon from "~icons/ph/tag";
 
 import { ApiClient } from "../../api/client";
-import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { failureText, matches, money } from "../../format";
+import { createWrite, runEffect } from "../../api/solid-effect";
+import { matches, money } from "../../format";
 import { Tile } from "../../photos";
 import { NumberSheet, StockSheet, stockText, stockTone } from "../../products";
 import type { StockMode } from "../../products";
@@ -39,6 +26,7 @@ import {
   chip,
   chipOn,
   chipRow,
+  createCopied,
   Failed,
   headline,
   largeTitle,
@@ -103,16 +91,14 @@ const dots = {
 
 export default function Products() {
   const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
-  const runtime = useContext(RuntimeContext);
   // In the URL, so coming back from a product keeps the filters.
   const [params, setParams] = useSearchParams<{ view?: string; brand?: string; q?: string }>();
   const [stocking, setStocking] = createSignal<ProductRow>();
   const [stockMode, setStockMode] = createSignal<StockMode>("count");
   const [pricing, setPricing] = createSignal<ProductRow>();
   const [acting, setActing] = createSignal<ProductRow>();
-  const [copied, setCopied] = createSignal(false);
-  const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal<string>();
+  const { copied, copy } = createCopied();
+  const { write, busy, failed, setFailed } = createWrite({ source: products });
 
   const view = () => views.find((candidate) => candidate.key === params.view)?.key ?? "all";
   const query = () => params.q ?? "";
@@ -124,15 +110,14 @@ export default function Products() {
   );
 
   // Brands in the current view, with how many products each has there.
-  const brands = createMemo(() => {
-    const tally = new Map<string, number>();
-
-    for (const product of products()) {
-      if (inView(view(), product)) tally.set(product.brand, (tally.get(product.brand) ?? 0) + 1);
-    }
-
-    return [...tally].map(([name, count]) => ({ name, count }));
-  });
+  const brands = createMemo(() =>
+    [
+      ...Map.groupBy(
+        products().filter((product) => inView(view(), product)),
+        (product) => product.brand,
+      ),
+    ].map(([name, list]) => ({ name, count: list.length })),
+  );
 
   const shown = createMemo(() =>
     products().filter(
@@ -149,24 +134,6 @@ export default function Products() {
     setActing(undefined);
   };
 
-  // A failure keeps the sheet open and says why; success closes it and reloads the list.
-  const write = action(async function* write<A, E extends { readonly _tag: string }>(
-    effect: Effect.Effect<A, E, ApiClient>,
-  ) {
-    setBusy(true);
-    const exit = await runtime.runPromiseExit(effect);
-    yield;
-
-    if (Exit.isFailure(exit)) {
-      setFailed(failureText(exit.cause));
-
-      return;
-    }
-
-    close();
-    yield refresh(products);
-  });
-
   const openStock = (product: ProductRow, mode: StockMode = "count") => {
     close();
     setFailed(undefined);
@@ -182,16 +149,7 @@ export default function Products() {
 
   const openActions = (product: ProductRow) => {
     setFailed(undefined);
-    setCopied(false);
     setActing(product);
-  };
-
-  // What she pastes into a Messenger chat when someone asks the price.
-  const copy = async (product: ProductRow) => {
-    await navigator.clipboard.writeText(
-      `${product.brand} ${product.name}\n${money(product.price)}`,
-    );
-    setCopied(true);
   };
 
   return (
@@ -372,7 +330,9 @@ export default function Products() {
               <button
                 type="button"
                 class={css(actionRow, copied() && { bg: "paidBg", color: "paid" })}
-                onClick={() => void copy(product())}
+                onClick={() =>
+                  void copy(`${product().brand} ${product().name}\n${money(product().price)}`)
+                }
               >
                 <CopyIcon />
                 {copied() ? "Хуулсан" : "Нэр, үнэ хуулах"}
@@ -390,7 +350,10 @@ export default function Products() {
                   const productId = product().id;
                   const archived = product().archivedAt === null;
 
-                  void write(ApiClient.use((api) => api.archiveProduct({ productId, archived })));
+                  void write(
+                    ApiClient.use((api) => api.archiveProduct({ productId, archived })),
+                    close,
+                  );
                 }}
               >
                 <ArchiveIcon />
@@ -410,7 +373,10 @@ export default function Products() {
           const product = stocking();
 
           if (product !== undefined) {
-            void write(ApiClient.use((api) => api.countStock({ productId: product.id, counted })));
+            void write(
+              ApiClient.use((api) => api.countStock({ productId: product.id, counted })),
+              close,
+            );
           }
         }}
         onReceive={(received) => {
@@ -419,6 +385,7 @@ export default function Products() {
           if (product !== undefined) {
             void write(
               ApiClient.use((api) => api.receiveStock({ productId: product.id, received })),
+              close,
             );
           }
         }}
@@ -436,7 +403,10 @@ export default function Products() {
           const product = pricing();
 
           if (product !== undefined) {
-            void write(ApiClient.use((api) => api.setPrice({ productId: product.id, price })));
+            void write(
+              ApiClient.use((api) => api.setPrice({ productId: product.id, price })),
+              close,
+            );
           }
         }}
       />
