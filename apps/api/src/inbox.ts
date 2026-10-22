@@ -261,7 +261,6 @@ export const home = Effect.fn("home")(function* home() {
   };
 });
 
-/** How many orders sit behind each filter chip on the orders list. */
 export const orderCounts = Effect.fn("orderCounts")(function* orderCounts() {
   const db = yield* Database;
 
