@@ -67,6 +67,7 @@ export {
   DuplicateProduct,
   NewProduct,
   PhotoSource,
+  priceFromAmazon,
   ProductDetail,
   ProductDraft,
   ProductForm,

@@ -1,4 +1,4 @@
-import { ProductForm } from "@amerik/contracts";
+import { priceFromAmazon, ProductForm } from "@amerik/contracts";
 import type { CatalogOptions, NewProduct, ProductDraft, ProductId } from "@amerik/contracts";
 import { useNavigate } from "@solidjs/router";
 import * as Effect from "effect/Effect";
@@ -87,7 +87,8 @@ export function DraftForm(props: {
   const [form, setForm] = createStore({
     ...initial,
     images: [...initial.images],
-    price: 0,
+    // Amazon's price suggests hers; she can change it before saving.
+    price: initial.amazonCents === null ? 0 : priceFromAmazon(initial.amazonCents),
     stock: 0,
   });
 
@@ -383,8 +384,8 @@ export function DraftForm(props: {
         <Show when={form.amazonCents}>
           {(cents) => (
             <p class={css(sub, { mt: "-6px" })}>
-              Amazon дээр ${(cents() / 100).toFixed(2)}. Үлдэгдэл хоосон бол тоолоогүй гэж
-              нэмэгдэнэ.
+              Amazon дээр ${(cents() / 100).toFixed(2)}, тооцоолсон үнэ{" "}
+              {money(priceFromAmazon(cents()))}. Үлдэгдэл хоосон бол тоолоогүй гэж нэмэгдэнэ.
             </p>
           )}
         </Show>

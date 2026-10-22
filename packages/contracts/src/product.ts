@@ -173,6 +173,18 @@ export const ProductDraft = Schema.Struct({
 
 export type ProductDraft = typeof ProductDraft.Type;
 
+/**
+ * The shelf price for an Amazon price: vit-store's fitted line (4,587₮ per
+ * dollar plus 16,929₮), kept between 40,000₮ and 500,000₮, rounded to
+ * 5,000₮, then a flat 5,000₮ on top (COMMERCE-RULES). A suggestion; she sets the price.
+ */
+export const priceFromAmazon = (cents: number) => {
+  const raw = 4587 * (cents / 100) + 16_929;
+  const bounded = Math.min(500_000, Math.max(40_000, raw));
+
+  return Math.round(bounded / 5000) * 5000 + 5000;
+};
+
 /** Where a drafting run is. `existing` is set when the found product is already in the shop. */
 export const DraftState = Schema.Union([
   Schema.TaggedStruct("running", {}),
