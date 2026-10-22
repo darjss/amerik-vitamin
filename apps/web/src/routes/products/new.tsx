@@ -2,24 +2,12 @@ import { AmazonSource, DraftId, PhotoSource } from "@amerik/contracts";
 import type { CatalogOptions, DraftSource } from "@amerik/contracts";
 import { useSearchParams } from "@solidjs/router";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as Match from "effect/Match";
 import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
-import {
-  action,
-  createMemo,
-  createOptimistic,
-  createSignal,
-  Errored,
-  For,
-  Loading,
-  onSettled,
-  Show,
-  useContext,
-} from "solid-js";
+import { createMemo, createSignal, Errored, For, Loading, onSettled, Show } from "solid-js";
 import { css } from "styled-system/css";
 import CameraIcon from "~icons/ph/camera";
 import LinkIcon from "~icons/ph/link-bold";
@@ -28,8 +16,7 @@ import SparkleIcon from "~icons/ph/sparkle";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
-import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { failureText } from "../../format";
+import { createWrite, runEffect } from "../../api/solid-effect";
 import { blank, DraftForm, input } from "../../product-form";
 import { FormSkeleton } from "../../skeletons";
 import {
@@ -68,23 +55,17 @@ const toJpeg = async (file: File) => {
 
 export default function NewProductPage() {
   const [params, setParams] = useSearchParams<{ draft?: string; manual?: string }>();
-  const runtime = useContext(RuntimeContext);
   const options = createMemo(() => runEffect(ApiClient.use((api) => api.catalogOptions())));
   const [url, setUrl] = createSignal("");
-  const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal<string>();
+  const { write, busy, failed } = createWrite();
 
   const draftId = () => Option.getOrUndefined(Schema.decodeUnknownOption(DraftId)(params.draft));
 
-  const start = action(async function* start(source: DraftSource) {
-    setBusy(true);
-    setFailed(undefined);
-    const exit = await runtime.runPromiseExit(ApiClient.use((api) => api.startDraft({ source })));
-    yield;
-
-    if (Exit.isFailure(exit)) setFailed(failureText(exit.cause));
-    else setParams({ draft: exit.value, manual: undefined });
-  });
+  const start = (source: DraftSource) =>
+    write(
+      ApiClient.use((api) => api.startDraft({ source })),
+      (draft) => setParams({ draft, manual: undefined }),
+    );
 
   const pickPhoto = async (file: File | undefined) => {
     if (file === undefined) return;

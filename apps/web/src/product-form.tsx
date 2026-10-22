@@ -2,23 +2,13 @@ import { priceFromAmazon, ProductForm } from "@amerik/contracts";
 import type { CatalogOptions, NewProduct, ProductDraft, ProductId } from "@amerik/contracts";
 import { useNavigate } from "@solidjs/router";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
-import {
-  action,
-  createOptimistic,
-  createSignal,
-  createStore,
-  For,
-  Show,
-  untrack,
-  useContext,
-} from "solid-js";
+import { createSignal, createStore, For, Show, untrack } from "solid-js";
 import { css } from "styled-system/css";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "./api/client";
-import { RuntimeContext } from "./api/solid-effect";
-import { failureText, money, sized, srcset, thousands } from "./format";
+import { createWrite } from "./api/solid-effect";
+import { digits, money, sized, srcset, thousands } from "./format";
 import {
   chip,
   chipOn,
@@ -38,11 +28,7 @@ import { formText } from "./words";
 
 // The new-product form: filled by the drafting run, or empty for a hand-typed product.
 
-const optionalInt = (text: string) => {
-  const digits = text.replaceAll(/\D/gu, "");
-
-  return digits === "" ? null : Number(digits);
-};
+const optionalInt = (text: string) => (digits(text) === "" ? null : Number(digits(text)));
 
 /** The empty form for a product typed by hand. */
 export const blank: ProductDraft = {
@@ -79,11 +65,10 @@ export function DraftForm(props: {
   existing: ProductId | null;
   options: CatalogOptions;
 }) {
-  const runtime = useContext(RuntimeContext);
   const navigate = useNavigate();
   const initial = untrack(() => props.initial);
 
-  const [form, setForm] = createStore({
+  const [draft, setDraft] = createStore({
     ...initial,
     images: [...initial.images],
     // Amazon's price suggests hers; she can change it before saving.
@@ -91,18 +76,17 @@ export function DraftForm(props: {
     stock: 0,
   });
 
-  const [busy, setBusy] = createOptimistic(false);
-  const [failed, setFailed] = createSignal<string>();
+  const { write, busy, failed } = createWrite();
   const [duplicate, setDuplicate] = createSignal<ProductId | null>(untrack(() => props.existing));
 
   const missing = () => {
-    if (form.brand.trim() === "") return "Брэнд";
+    if (draft.brand.trim() === "") return "Брэнд";
 
-    if (form.name.trim() === "") return "Нэр";
+    if (draft.name.trim() === "") return "Нэр";
 
-    if (form.count <= 0) return "Ширхэг";
+    if (draft.count <= 0) return "Ширхэг";
 
-    if (form.price <= 0) return "Үнэ";
+    if (draft.price <= 0) return "Үнэ";
 
     return undefined;
   };
@@ -112,77 +96,54 @@ export function DraftForm(props: {
 
     const needed = missing();
 
-    return needed === undefined ? `Бараа нэмэх · ${money(form.price)}` : `${needed} оруулна уу`;
+    return needed === undefined ? `Бараа нэмэх · ${money(draft.price)}` : `${needed} оруулна уу`;
   };
 
-  const save = action(async function* save() {
-    setBusy(true);
-    setFailed(undefined);
-
-    const input: NewProduct = {
-      brand: form.brand.trim(),
-      category: form.category,
+  const save = () => {
+    const product: NewProduct = {
+      brand: draft.brand.trim(),
+      category: draft.category,
       // The line is part of the product's identity; a hand-typed product uses its name.
-      line: (form.line.trim() || form.name).trim(),
-      potency: form.potency?.trim() || null,
-      count: form.count,
-      form: form.form,
-      flavor: form.flavor?.trim() || null,
-      name: form.name.trim(),
-      servingSize: form.servingSize,
-      servings: form.servings,
-      dailyUnits: form.dailyUnits,
-      description: form.description.trim() || null,
-      images: [...form.images],
-      asin: form.asin,
-      price: form.price,
-      stock: form.stock,
+      line: (draft.line.trim() || draft.name).trim(),
+      potency: draft.potency?.trim() || null,
+      count: draft.count,
+      form: draft.form,
+      flavor: draft.flavor?.trim() || null,
+      name: draft.name.trim(),
+      servingSize: draft.servingSize,
+      servings: draft.servings,
+      dailyUnits: draft.dailyUnits,
+      description: draft.description.trim() || null,
+      images: [...draft.images],
+      asin: draft.asin,
+      price: draft.price,
+      stock: draft.stock,
     };
 
     // A duplicate is an answer, not a failure: she gets a link to the one that exists.
-    const exit = await runtime.runPromiseExit(
-      ApiClient.use((api) => api.createProduct(input)).pipe(
+    void write(
+      ApiClient.use((api) => api.createProduct(product)).pipe(
         Effect.map((created) => ({ created, existing: null })),
         Effect.catchTag("DuplicateProduct", ({ productId }) =>
           Effect.succeed({ created: null, existing: productId }),
         ),
       ),
+      (saved) =>
+        saved.created === null
+          ? setDuplicate(saved.existing)
+          : navigate(`/products/${saved.created}`),
     );
+  };
 
-    yield;
-
-    if (Exit.isFailure(exit)) {
-      setFailed(failureText(exit.cause));
-
-      return;
-    }
-
-    if (exit.value.created === null) setDuplicate(exit.value.existing);
-    else navigate(`/products/${exit.value.created}`);
-  });
-
-  const text = (key: "brand" | "name" | "line") => ({
-    value: form[key],
-    onInput: (event: { currentTarget: HTMLInputElement }) =>
-      setForm((draft) => {
-        draft[key] = event.currentTarget.value;
-      }),
-  });
-
-  const optional = (key: "potency" | "flavor") => ({
-    value: form[key] ?? "",
-    onInput: (event: { currentTarget: HTMLInputElement }) =>
-      setForm((draft) => {
-        draft[key] = event.currentTarget.value || null;
-      }),
-  });
-
-  const number = (key: "servingSize" | "servings" | "dailyUnits") => ({
-    inputmode: "numeric" as const,
-    value: form[key] ?? "",
-    onInput: (event: { currentTarget: HTMLInputElement }) =>
-      setForm((draft) => {
-        draft[key] = optionalInt(event.currentTarget.value);
+  // Empty numbers show as a blank field, not 0.
+  const bind = <K extends keyof typeof draft>(
+    key: K,
+    parse: (text: string) => (typeof draft)[K],
+  ) => ({
+    value: draft[key] || "",
+    onInput: (event: { currentTarget: { value: string } }) =>
+      setDraft((next) => {
+        next[key] = parse(event.currentTarget.value);
       }),
   });
 
@@ -202,11 +163,11 @@ export function DraftForm(props: {
       </Show>
       <Show
         when={[
-          form.photoOnly ? "Amazon-оос олдсонгүй, зөвхөн зургаас уншив." : "",
-          form.bannedWords.length > 0
-            ? `Тайлбарт хориотой үг байна: ${form.bannedWords.join(", ")}`
+          draft.photoOnly ? "Amazon-оос олдсонгүй, зөвхөн зургаас уншив." : "",
+          draft.bannedWords.length > 0
+            ? `Тайлбарт хориотой үг байна: ${draft.bannedWords.join(", ")}`
             : "",
-          form.note,
+          draft.note,
         ]
           .filter(Boolean)
           .join(" ")}
@@ -218,7 +179,7 @@ export function DraftForm(props: {
         )}
       </Show>
 
-      <Show when={form.images.length > 0}>
+      <Show when={draft.images.length > 0}>
         <div
           class={css({
             display: "flex",
@@ -230,7 +191,7 @@ export function DraftForm(props: {
             scrollbarWidth: "none",
           })}
         >
-          <For each={form.images}>
+          <For each={draft.images}>
             {(src, index) => (
               <div
                 class={css(panel, {
@@ -248,8 +209,8 @@ export function DraftForm(props: {
                   type="button"
                   aria-label={`Зураг ${index() + 1} хасах`}
                   onClick={() =>
-                    setForm((draft) => {
-                      draft.images.splice(index(), 1);
+                    setDraft((next) => {
+                      next.images.splice(index(), 1);
                     })
                   }
                   class={css(round, glass, {
@@ -269,11 +230,11 @@ export function DraftForm(props: {
         </div>
       </Show>
 
-      <Show when={form.amazonTitle}>
+      <Show when={draft.amazonTitle}>
         {(title) => (
           <p class={css(sub, { px: "20px", pt: "8px" })}>
             Amazon:{" "}
-            <a href={form.amazonUrl ?? undefined} class={css({ color: "sel" })}>
+            <a href={draft.amazonUrl ?? undefined} class={css({ color: "sel" })}>
               {title()}
             </a>
           </p>
@@ -283,31 +244,30 @@ export function DraftForm(props: {
       <section class={css(section, { mt: "20px", display: "grid", gap: "14px" })}>
         <label class={css(label)}>
           Брэнд
-          <input list="brands" class={css(input)} {...text("brand")} />
+          <input list="brands" class={css(input)} {...bind("brand", String)} />
           <datalist id="brands">
             <For each={props.options.brands}>{(brand) => <option value={brand} />}</For>
           </datalist>
         </label>
         <label class={css(label)}>
           Нэр
-          <input class={css(input)} {...text("name")} />
+          <input class={css(input)} {...bind("name", String)} />
         </label>
         <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
           <label class={css(label)}>
             Тун
-            <input class={css(input)} placeholder="1500 mcg" {...optional("potency")} />
+            <input
+              class={css(input)}
+              placeholder="1500 mcg"
+              {...bind("potency", (text) => text || null)}
+            />
           </label>
           <label class={css(label)}>
             Ширхэг
             <input
               inputmode="numeric"
               class={css(input)}
-              value={form.count === 0 ? "" : form.count}
-              onInput={(event) =>
-                setForm((draft) => {
-                  draft.count = optionalInt(event.currentTarget.value) ?? 0;
-                })
-              }
+              {...bind("count", (text) => Number(digits(text)))}
             />
           </label>
         </div>
@@ -323,11 +283,11 @@ export function DraftForm(props: {
               <button
                 type="button"
                 onClick={() =>
-                  setForm((draft) => {
-                    draft.form = value;
+                  setDraft((next) => {
+                    next.form = value;
                   })
                 }
-                class={css(chip, { height: "36px" }, form.form === value && chipOn)}
+                class={css(chip, { height: "36px" }, draft.form === value && chipOn)}
               >
                 {formText[value]}
               </button>
@@ -346,11 +306,11 @@ export function DraftForm(props: {
               <button
                 type="button"
                 onClick={() =>
-                  setForm((draft) => {
-                    draft.category = category.slug;
+                  setDraft((next) => {
+                    next.category = category.slug;
                   })
                 }
-                class={css(chip, { height: "36px" }, form.category === category.slug && chipOn)}
+                class={css(chip, { height: "36px" }, draft.category === category.slug && chipOn)}
               >
                 {category.name}
               </button>
@@ -366,12 +326,8 @@ export function DraftForm(props: {
             <input
               inputmode="numeric"
               placeholder="0₮"
-              value={form.price === 0 ? "" : `${thousands(form.price)}₮`}
-              onInput={(event) =>
-                setForm((draft) => {
-                  draft.price = optionalInt(event.currentTarget.value) ?? 0;
-                })
-              }
+              {...bind("price", (text) => Number(digits(text)))}
+              value={draft.price === 0 ? "" : `${thousands(draft.price)}₮`}
               class={css(input, { fontWeight: "650", fontVariantNumeric: "tabular-nums" })}
             />
           </label>
@@ -380,17 +336,12 @@ export function DraftForm(props: {
             <input
               inputmode="numeric"
               placeholder="0"
-              value={form.stock === 0 ? "" : form.stock}
-              onInput={(event) =>
-                setForm((draft) => {
-                  draft.stock = optionalInt(event.currentTarget.value) ?? 0;
-                })
-              }
+              {...bind("stock", (text) => Number(digits(text)))}
               class={css(input, { fontVariantNumeric: "tabular-nums" })}
             />
           </label>
         </div>
-        <Show when={form.amazonCents}>
+        <Show when={draft.amazonCents}>
           {(cents) => (
             <p class={css(sub, { mt: "-6px" })}>
               Amazon дээр ${(cents() / 100).toFixed(2)}, тооцоолсон үнэ{" "}
@@ -405,12 +356,7 @@ export function DraftForm(props: {
           Тайлбар
           <textarea
             rows={9}
-            value={form.description}
-            onInput={(event) =>
-              setForm((draft) => {
-                draft.description = event.currentTarget.value;
-              })
-            }
+            {...bind("description", String)}
             class={css(input, { lineHeight: "23px", resize: "vertical" })}
           />
         </label>
@@ -422,24 +368,32 @@ export function DraftForm(props: {
           <div class={css({ display: "grid", gap: "12px", pt: "10px" })}>
             <label class={css(label)}>
               Шугам (англиар, брэнд, тун, тоогүй)
-              <input class={css(input)} {...text("line")} />
+              <input class={css(input)} {...bind("line", String)} />
             </label>
             <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
               <label class={css(label)}>
                 Амт
-                <input class={css(input)} {...optional("flavor")} />
+                <input class={css(input)} {...bind("flavor", (text) => text || null)} />
               </label>
               <label class={css(label)}>
                 Нэг удаагийн хэмжээ
-                <input class={css(input)} {...number("servingSize")} />
+                <input
+                  inputmode="numeric"
+                  class={css(input)}
+                  {...bind("servingSize", optionalInt)}
+                />
               </label>
               <label class={css(label)}>
                 Хэдэн удаа
-                <input class={css(input)} {...number("servings")} />
+                <input inputmode="numeric" class={css(input)} {...bind("servings", optionalInt)} />
               </label>
               <label class={css(label)}>
                 Өдөрт хэдэн ширхэг
-                <input class={css(input)} {...number("dailyUnits")} />
+                <input
+                  inputmode="numeric"
+                  class={css(input)}
+                  {...bind("dailyUnits", optionalInt)}
+                />
               </label>
             </div>
           </div>
@@ -450,7 +404,7 @@ export function DraftForm(props: {
         <SaveButton
           failed={failed()}
           disabled={busy() || missing() !== undefined || duplicate() !== null}
-          onClick={() => void save()}
+          onClick={() => save()}
         >
           {buttonText()}
         </SaveButton>
