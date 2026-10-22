@@ -70,7 +70,6 @@ export default function Pack() {
     window.scrollTo(0, 0);
   };
 
-  // The current parcel's bar fills as she ticks.
   const fill = (at: number) => {
     if (at < index()) return 100;
 
@@ -150,7 +149,6 @@ export default function Pack() {
   );
 }
 
-/** One parcel: who it goes to, its bottles to tick, then Савласан or Алгасах. */
 function Parcel(props: {
   order: OrderSummary;
   isTicked: (productId: ProductId) => boolean;

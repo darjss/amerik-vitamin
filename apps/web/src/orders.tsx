@@ -195,7 +195,6 @@ export function StepButton(props: {
   );
 }
 
-/** Money to collect in red, or paid in green. */
 export function Money(props: { order: Pick<OrderSummary, "terms" | "paid" | "balance"> }) {
   return (
     <Show
@@ -233,7 +232,6 @@ const stages = (order: OrderDetail) => {
     : [placed, paid, shipped, delivered];
 };
 
-/** Four stages across the top; done ones fill teal, the next one is ringed. */
 export function Tracker(props: { order: OrderDetail }) {
   const nextIndex = () => stages(props.order).findIndex((stage) => !stage.done);
 

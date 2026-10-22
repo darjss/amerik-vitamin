@@ -26,8 +26,6 @@ import {
 } from "./ui";
 import { formText } from "./words";
 
-// The new-product form: filled by the drafting run, or empty for a hand-typed product.
-
 const optionalInt = (text: string) => (digits(text) === "" ? null : Number(digits(text)));
 
 /** The empty form for a product typed by hand. */

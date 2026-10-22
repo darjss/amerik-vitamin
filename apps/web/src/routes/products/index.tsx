@@ -60,7 +60,6 @@ const inView = (view: View, product: ProductRow) =>
     ? product.archivedAt !== null
     : product.archivedAt === null && (view === "all" || stockLevel(product.stock) === view);
 
-/** A small raised chip on a row: the price, and ⋯. */
 const rowChip = css.raw(press, {
   display: "inline-grid",
   placeItems: "center",
@@ -73,7 +72,6 @@ const rowChip = css.raw(press, {
   fontWeight: "650",
 });
 
-/** One row of the actions sheet: a full-width raised button with its icon. */
 const actionRow = css.raw(button, {
   justifyContent: "flex-start",
   gap: "14px",
@@ -109,7 +107,6 @@ export default function Products() {
     ),
   );
 
-  // Brands in the current view, with how many products each has there.
   const brands = createMemo(() =>
     [
       ...Map.groupBy(

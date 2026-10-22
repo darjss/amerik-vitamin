@@ -10,4 +10,4 @@ Read this when changing `apps/web/src/api/solid-effect.ts` or adding an Effect r
 - Use this adapter for reads. UI disposal must never abort a write that has started. Writes belong in actions and the server.
 - Browser reads use `WebLayer`, which posts to `/rpc`. SSR reads use `serverLayer`, which calls the API service binding. `start.renderMode` is `async` in `apps/web/vite.config.ts`, so the HTML waits for these reads.
 
-There is no generic mutation adapter. Add mutation behavior when a real caller needs it, using the installed Effect and Solid contracts.
+Writes go through `createWrite({ source, fallback })` in the same file. `write(effect, done)` is an action: `busy` is a `createOptimistic(false)` flag for its run, and a failure sets `failed` to `failureText`. Success calls `done` with the value. Either way `source` refreshes, unless the cause is `offline`, because that reload would fail too. A page or sheet with a write uses it rather than its own action.

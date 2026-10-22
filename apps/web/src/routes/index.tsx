@@ -42,7 +42,6 @@ export default function Home() {
   const home = createMemo(() => runEffect(ApiClient.use((api) => api.home())));
   const now = createMemo(() => runEffect(DateTime.nowAsDate));
 
-  // "Мягмар, 10-р сарын 20": the weekday in ink, the date softer.
   const date = () => longDate(now());
 
   return (

@@ -109,7 +109,6 @@ export default function NewOrder() {
     );
   });
 
-  // The phone's past orders, for Өмнө авсан.
   const pastOrders = createMemo(() => {
     const typed = phone();
 
@@ -136,14 +135,12 @@ export default function NewOrder() {
       return quantity > 0 ? [{ product, quantity }] : [];
     });
 
-  // Sold out goes last; a search narrows by brand or name.
   const shown = createMemo(() =>
     live()
       .filter((product) => matches(product, query()))
       .toSorted((a, b) => Number(a.stock === 0) - Number(b.stock === 0)),
   );
 
-  // What this phone bought before, most recent first.
   const before = () => {
     const ids = new Set(pastOrders().flatMap((order) => order.lines.map((line) => line.productId)));
 
@@ -164,7 +161,6 @@ export default function NewOrder() {
     return walkIn() || phone().length === 8 ? undefined : "Утасны дугаар оруулна уу";
   };
 
-  // A failure keeps the draft and says why above the button.
   const place = () => {
     const lines = picked().map(({ product, quantity }) => ({ productId: product.id, quantity }));
 

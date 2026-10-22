@@ -141,7 +141,6 @@ export const glass = css.raw({
   boxShadow: "glass",
 });
 
-/** The frosted bar a pushed page opens with; each page lays out its own row. */
 export const glassBar = css.raw({
   position: "sticky",
   top: 0,
@@ -508,7 +507,6 @@ export function Sheet(props: {
   );
 }
 
-/** The screen's main action, docked to the bottom. */
 export function Dock(props: { children: JSX.Element }) {
   return (
     <div

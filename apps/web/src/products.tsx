@@ -8,8 +8,6 @@ import { digits, money, thousands } from "./format";
 import { field, round, SaveButton, Segmented, Sheet, sheetPrompt } from "./ui";
 import type { Tone } from "./ui";
 
-// Pieces the products list and the product page share: stock wording and the number sheets.
-
 /** Null until the first count or receipt. */
 export const stockText = (stock: number | null) => {
   if (stock === null) return "Тоолоогүй";
@@ -17,7 +15,6 @@ export const stockText = (stock: number | null) => {
   return stock === 0 ? "Дууссан" : `${stock}`;
 };
 
-/** Sold out is red, running out amber, never counted grey, the rest teal. */
 export const stockTone: Record<StockLevel, Tone> = {
   out: "owes",
   low: "wait",
@@ -48,7 +45,7 @@ type NumberProps = {
   onSave: (value: number) => void;
 };
 
-/** − number +, opened fresh at `start` each time: a count, a shipment or a price. */
+/** A count, a shipment or a price. Opens fresh at `start` each time. */
 export function NumberSheet(
   props: NumberProps & { open: boolean; title: string; prompt: string; onClose: () => void },
 ) {
@@ -79,7 +76,6 @@ type StockProduct = { name: string; brand: string; count: number; stock: number 
 export function StockSheet(
   props: StockProps & {
     product: StockProduct | undefined;
-    /** Which job the sheet opens on. */
     mode: StockMode;
     onClose: () => void;
   },

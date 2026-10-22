@@ -3,9 +3,8 @@ import { css } from "styled-system/css";
 
 import { panel } from "./ui";
 
-// Loading fallbacks shaped like the page that's coming: grey bones with a
-// slow light sweep. They fade in after a beat, so a fast load never flashes
-// one, and the content that replaces them fades in too (`appear` in ui.tsx).
+// Loading fallbacks shaped like the page that's coming. They wait 150ms
+// before showing, so a fast load never flashes one.
 
 const bone = css.raw({
   display: "block",
@@ -20,13 +19,12 @@ const bone = css.raw({
   _motionReduce: { animation: "none" },
 });
 
-/** The whole skeleton waits 150ms before showing, then fades in. */
 const delayed = css.raw({
   animation: "appear .3s ease-out .15s both",
   _motionReduce: { animation: "none" },
 });
 
-/** One grey shape; sizes are inline because they vary per use. */
+/** Sizes are inline styles because they vary per use. */
 function Bone(props: { width: string; height: string; round?: boolean }) {
   return (
     <span
@@ -40,7 +38,6 @@ function Bone(props: { width: string; height: string; round?: boolean }) {
   );
 }
 
-/** A photo row: tile, name lines, a chip, and the button on the right. */
 function Row(props: { tile: number }) {
   return (
     <div class={css({ display: "flex", alignItems: "center", gap: "14px", py: "8px" })}>
@@ -58,7 +55,7 @@ function Row(props: { tile: number }) {
   );
 }
 
-/** The products and orders lists: chips, then rows. */
+/** The products and orders lists. */
 export function ListSkeleton(props: { rows?: number; chips?: boolean }) {
   return (
     <div class={css(delayed)} aria-busy="true">
@@ -77,7 +74,7 @@ export function ListSkeleton(props: { rows?: number; chips?: boolean }) {
   );
 }
 
-/** A pushed page: the frosted bar's two round buttons, an optional photo, title, panels. */
+/** A pushed page: a product, an order, or packing. */
 export function DetailSkeleton(props: { photo?: boolean }) {
   return (
     <div class={css(delayed)} aria-busy="true">
@@ -107,7 +104,6 @@ export function DetailSkeleton(props: { photo?: boolean }) {
   );
 }
 
-/** Home: the date title, today's packing panel, then the to-do rows. */
 export function HomeSkeleton() {
   return (
     <div class={css(delayed)} aria-busy="true">
@@ -132,7 +128,7 @@ export function HomeSkeleton() {
   );
 }
 
-/** The new-order photo grid: a search field, then three tiles a row. */
+/** The new-order photo grid. */
 export function GridSkeleton() {
   return (
     <div
@@ -149,7 +145,6 @@ export function GridSkeleton() {
   );
 }
 
-/** A form: label and field pairs. */
 export function FormSkeleton(props: { fields?: number }) {
   return (
     <div
