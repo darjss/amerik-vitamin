@@ -2,14 +2,10 @@ import { BrandId, DuplicateProduct, newId, ProductId, ProductUnavailable } from 
 import type { ArchiveProduct, NewProduct, SetPrice } from "@amerik/contracts";
 import { Database, dieOnDatabaseError, moveStock, schema, transaction } from "@amerik/db";
 import { and, asc, desc, eq, gte, inArray, isNull, or, sum } from "drizzle-orm";
-import type { SQL } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
 const { brands, categories, orders, products, stockMoves } = schema;
-
-/** The photo the dashboard shows: the first one, or none. */
-export const firstImage = (images: ReadonlyArray<string>) => images[0] ?? null;
 
 /** Every product, archived ones included, by brand and name. */
 export const listProducts = Effect.fn("listProducts")(function* listProducts() {
@@ -31,7 +27,7 @@ export const listProducts = Effect.fn("listProducts")(function* listProducts() {
     .orderBy(asc(brands.name), asc(products.name))
     .pipe(dieOnDatabaseError);
 
-  return rows.map(({ images, ...product }) => ({ ...product, image: firstImage(images) }));
+  return rows.map(({ images, ...product }) => ({ ...product, image: images[0] ?? null }));
 });
 
 /** The latest stock-log lines on the product page. Older ones stay in the table. */
@@ -157,7 +153,7 @@ const slugify = (text: string) =>
     .replaceAll(/^-|-$/gu, "");
 
 /** A nullable identity field matches only the same value, null included (products_identity). */
-const same = (column: Parameters<typeof eq>[0], value: string | null): SQL | undefined =>
+const same = (column: Parameters<typeof eq>[0], value: string | null) =>
   value === null ? isNull(column) : eq(column, value);
 
 /**

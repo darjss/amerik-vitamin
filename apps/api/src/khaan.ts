@@ -194,28 +194,21 @@ const candidatesFor = Effect.fn("candidatesFor")(function* candidatesFor(transfe
       ),
     );
 
-  const byOrder = new Map<OrderId, Candidate>();
-
-  for (const order of open) {
-    if (
-      order.total - Number(order.paid ?? 0) === transfer.amount &&
-      mentionsOrder(transfer.description, order)
-    ) {
-      byOrder.set(order.orderId, { kind: "open", orderId: order.orderId });
-    }
-  }
-
   // An order that both owes the amount and holds a manual payment of it: the
-  // bank line is the manual payment's, never a second payment.
-  for (const payment of manual) {
-    if (mentionsOrder(transfer.description, payment)) {
-      byOrder.set(payment.orderId, {
-        kind: "manual",
-        orderId: payment.orderId,
-        paymentId: payment.paymentId,
-      });
-    }
-  }
+  // bank line is the manual payment's, never a second payment. The manual
+  // entries come last so the Map keeps them.
+  const byOrder = new Map<OrderId, Candidate>([
+    ...open
+      .filter(
+        (order) =>
+          order.total - Number(order.paid ?? 0) === transfer.amount &&
+          mentionsOrder(transfer.description, order),
+      )
+      .map((order) => [order.orderId, { kind: "open", orderId: order.orderId }] as const),
+    ...manual
+      .filter((payment) => mentionsOrder(transfer.description, payment))
+      .map(({ orderId, paymentId }) => [orderId, { kind: "manual", orderId, paymentId }] as const),
+  ]);
 
   return [...byOrder.values()];
 });

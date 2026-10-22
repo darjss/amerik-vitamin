@@ -1,5 +1,5 @@
 import { LOW_STOCK, OrderNotFound } from "@amerik/contracts";
-import type { ListOrders, OrderId, OrderLineView, OrderQueue } from "@amerik/contracts";
+import type { ListOrders, OrderId, OrderQueue } from "@amerik/contracts";
 import { Database, dieOnDatabaseError, schema } from "@amerik/db";
 import {
   and,
@@ -19,8 +19,6 @@ import {
 } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-
-import { firstImage } from "./products";
 
 // What mom reads: the order inbox, one order, and the home screen.
 const { brands, customers, orderEvents, orderLines, orders, payments, products } = schema;
@@ -64,35 +62,32 @@ const inQueue = (queue: OrderQueue) =>
 /** Each order's lines with brand, count and photo, by product name. */
 const lineViews = Effect.fn("lineViews")(function* lineViews(orderIds: ReadonlyArray<OrderId>) {
   const db = yield* Database;
-  const byOrder = new Map<OrderId, Array<OrderLineView>>();
 
-  if (orderIds.length === 0) return byOrder;
+  const rows =
+    orderIds.length === 0
+      ? []
+      : yield* db
+          .select({
+            orderId: orderLines.orderId,
+            productId: orderLines.productId,
+            name: products.name,
+            brand: brands.name,
+            count: products.count,
+            images: products.images,
+            quantity: orderLines.quantity,
+            unitPrice: orderLines.unitPrice,
+          })
+          .from(orderLines)
+          .innerJoin(products, eq(products.id, orderLines.productId))
+          .innerJoin(brands, eq(brands.id, products.brandId))
+          .where(inArray(orderLines.orderId, orderIds))
+          .orderBy(asc(products.name))
+          .pipe(dieOnDatabaseError);
 
-  const rows = yield* db
-    .select({
-      orderId: orderLines.orderId,
-      productId: orderLines.productId,
-      name: products.name,
-      brand: brands.name,
-      count: products.count,
-      images: products.images,
-      quantity: orderLines.quantity,
-      unitPrice: orderLines.unitPrice,
-    })
-    .from(orderLines)
-    .innerJoin(products, eq(products.id, orderLines.productId))
-    .innerJoin(brands, eq(brands.id, products.brandId))
-    .where(inArray(orderLines.orderId, orderIds))
-    .orderBy(asc(products.name))
-    .pipe(dieOnDatabaseError);
-
-  for (const { orderId, images, ...line } of rows) {
-    const lines = byOrder.get(orderId) ?? [];
-    lines.push({ ...line, image: firstImage(images) });
-    byOrder.set(orderId, lines);
-  }
-
-  return byOrder;
+  return Map.groupBy(
+    rows.map(({ images, ...line }) => ({ ...line, image: images[0] ?? null })),
+    (line) => line.orderId,
+  );
 });
 
 export const listOrders = Effect.fn("listOrders")(function* listOrders(input: ListOrders) {
@@ -248,7 +243,7 @@ export const home = Effect.fn("home")(function* home() {
 
   const pulled = shelf.map(({ images, quantity, ...product }) => ({
     ...product,
-    image: firstImage(images),
+    image: images[0] ?? null,
     quantity: quantity ?? 0,
   }));
 
@@ -261,7 +256,7 @@ export const home = Effect.fn("home")(function* home() {
     awaitingPayment,
     shelf: pulled,
     lowStock: low.flatMap(({ images, stock, ...product }) =>
-      stock === null ? [] : [{ ...product, image: firstImage(images), stock }],
+      stock === null ? [] : [{ ...product, image: images[0] ?? null, stock }],
     ),
   };
 });
