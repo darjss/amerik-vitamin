@@ -7,10 +7,11 @@ import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
+import { callOutside } from "./outside";
+
 /**
- * The OpenAI-compatible endpoint the drafting models answer on. Today that's
- * the owner's CLIProxyAPI behind a Cloudflare tunnel (docs/plan/01-launch.md),
- * with a key of its own so it can be revoked alone.
+ * An OpenAI-compatible base URL that serves `/chat/completions` with
+ * `response_format: json_object` and image parts, and a key only this shop uses.
  */
 export const modelConfig = Config.all({
   url: Config.String("MODEL_BASE_URL"),
@@ -20,7 +21,7 @@ export const modelConfig = Config.all({
 /** Fields and photo picks: fast, reads images. */
 export const FAST = "gpt-6-luna";
 
-/** Mongolian copy: the bakeoff's most natural writer. */
+/** Mongolian copy. */
 export const WRITER = "gpt-6-sol";
 
 /** The model refused, timed out, or answered something that didn't decode. The workflow retries. */
@@ -65,17 +66,7 @@ const make = Effect.fn("Model.make")(function* make(config: Effect.Success<typeo
       return yield* Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(
         completion.choices[0].message.content,
       );
-    }).pipe(
-      Effect.timeout("3 minutes"),
-      // Only a reason leaves: the request carries the key.
-      Effect.catchTags({
-        HttpClientError: (error) =>
-          Effect.fail(new ModelUnavailable({ reason: error.reason._tag })),
-        SchemaError: (error) => Effect.fail(new ModelUnavailable({ reason: error.message })),
-        TimeoutError: () => Effect.fail(new ModelUnavailable({ reason: "timeout" })),
-      }),
-      Effect.provideService(HttpClient.TracerDisabledWhen, () => true),
-    );
+    }).pipe(callOutside("3 minutes", (reason) => new ModelUnavailable({ reason })));
 
   return { json };
 });
