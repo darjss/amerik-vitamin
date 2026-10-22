@@ -11,6 +11,8 @@ import ReceiptFillIcon from "~icons/ph/receipt-fill";
 import ReceiptIcon from "~icons/ph/receipt";
 import WarningIcon from "~icons/ph/warning-circle-fill";
 
+import { button, press } from "./styles";
+
 export type Icon = (props: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 
 /** Clears the iPhone status bar when the page runs full screen. */
@@ -51,65 +53,6 @@ export const panel = css.raw({
   boxShadow: "inset 0 1px 0 {colors.white}, {shadows.raise}",
 });
 
-export const press = css.raw({
-  cursor: "pointer",
-  transition: "transform .56s {easings.spring}",
-  _active: { transform: "scale(.97)", transition: "transform .12s ease-out" },
-});
-
-export const button = css.raw(press, {
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  flex: "none",
-  height: "48px",
-  px: "20px",
-  borderRadius: "999px",
-  textStyle: "headline",
-  whiteSpace: "nowrap",
-  bg: "surface",
-  color: "ink",
-  boxShadow: "raiseSm",
-  "& svg": { fontSize: "20px" },
-  _disabled: {
-    bg: "chip",
-    color: "inkFaint",
-    boxShadow: "none",
-    cursor: "default",
-    _active: { transform: "none" },
-  },
-});
-
-export const act = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
-
-export const large = css.raw({ height: "56px", fontSize: "18px" });
-
-export const wide = css.raw(large, { width: "100%" });
-
-export const small = css.raw({ height: "44px", px: "18px", fontSize: "16px" });
-
-export const round = css.raw(press, {
-  width: "44px",
-  height: "44px",
-  borderRadius: "50%",
-  display: "grid",
-  placeItems: "center",
-  flex: "none",
-  fontSize: "20px",
-  bg: "surface",
-  color: "ink",
-  boxShadow: "raiseSm",
-});
-
-export const roundAct = css.raw({ bg: "ink", color: "surface", boxShadow: "lift" });
-
-export const glass = css.raw({
-  bg: "surface/78",
-  backdropFilter: "blur(20px) saturate(180%)",
-  boxShadow: "glass",
-});
-
 export const glassBar = css.raw({
   position: "sticky",
   top: 0,
@@ -119,30 +62,6 @@ export const glassBar = css.raw({
   pb: "8px",
   bg: "page/90",
   backdropFilter: "blur(22px) saturate(180%)",
-});
-
-export const chip = css.raw(press, {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "7px",
-  flex: "none",
-  height: "40px",
-  px: "15px",
-  borderRadius: "20px",
-  bg: "surface",
-  boxShadow: "raiseSm",
-  textStyle: "subhead",
-  fontWeight: "600",
-  whiteSpace: "nowrap",
-  transition: "background .2s ease, color .2s ease",
-  "& b": { fontWeight: "700", color: "inkMuted", fontVariantNumeric: "tabular-nums" },
-});
-
-export const chipOn = css.raw({
-  bg: "sel",
-  color: "white",
-  boxShadow: "0 1px 2px {colors.sel/25}",
-  "& b": { color: "white/78" },
 });
 
 export const chipRow = css.raw({
@@ -356,7 +275,7 @@ export function SaveButton(props: {
         type="button"
         disabled={props.disabled}
         onClick={() => props.onClick()}
-        class={css(button, act, wide)}
+        class={button({ tone: "ink", size: "lg", wide: true })}
       >
         {props.children}
       </button>
@@ -393,7 +312,7 @@ export function Problem(props: { error: unknown }) {
     <div class={css(panel, { m: "16px", p: "20px", display: "grid", gap: "14px" })}>
       <Show when={unauthorized()} fallback={<p>Ачаалж чадсангүй. Дахин оролдоно уу.</p>}>
         <p>Дахин нэвтэрнэ үү.</p>
-        <a href="/login" class={css(button, act)}>
+        <a href="/login" class={button({ tone: "ink" })}>
           Нэвтрэх
         </a>
       </Show>

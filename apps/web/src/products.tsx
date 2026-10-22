@@ -5,7 +5,8 @@ import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
 
 import { digits, money, thousands } from "./format";
-import { field, round, SaveButton, Segmented, Sheet, sheetPrompt } from "./ui";
+import { round } from "./styles";
+import { field, SaveButton, Segmented, Sheet, sheetPrompt } from "./ui";
 import type { Tone } from "./ui";
 
 /** Null until the first count or receipt. */
@@ -33,7 +34,7 @@ const bigNumber = css.raw(field, {
   fontVariantNumeric: "tabular-nums",
 });
 
-const plusMinus = css.raw(round, { width: "56px", height: "56px", fontSize: "22px" });
+const plusMinus = css.raw(round.raw(), { width: "56px", height: "56px", fontSize: "22px" });
 
 type NumberProps = {
   start: number;

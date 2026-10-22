@@ -20,25 +20,21 @@ import { money, sized, srcset, when } from "../../format";
 import { Zoom } from "../../photos";
 import { NumberSheet, stockText, stockTone } from "../../products";
 import { DetailSkeleton } from "../../skeletons";
+import { button, press, round } from "../../styles";
 import {
   appear,
-  button,
   createCopied,
   Failed,
-  glass,
   glassBar,
   Note,
   panel,
   Pill,
-  press,
   Problem,
-  round,
   SaveButton,
   section,
   sectionHead,
   Sheet,
   sub,
-  wide,
 } from "../../ui";
 import type { Icon } from "../../ui";
 import { formText, reasonText, stockAsk } from "../../words";
@@ -72,7 +68,7 @@ export default function ProductPage() {
         <Loading fallback={<DetailSkeleton photo />}>
           <div class={css(appear)}>
             <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-              <a href="/products" aria-label="Хаах" class={css(round, glass)}>
+              <a href="/products" aria-label="Хаах" class={round({ tone: "glass" })}>
                 <CloseIcon />
               </a>
               <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>
@@ -82,7 +78,7 @@ export default function ProductPage() {
                 type="button"
                 aria-label="Бусад үйлдэл"
                 onClick={() => open("menu")}
-                class={css(round, glass)}
+                class={round({ tone: "glass" })}
               >
                 <MoreIcon />
               </button>
@@ -381,7 +377,7 @@ function QuickActions(props: { product: ProductDetail; onOpen: (sheet: SheetKind
           void copy(`${props.product.brand} ${props.product.name}\n${money(props.product.price)}`)
         }
         class={css(
-          button,
+          button.raw(),
           { mx: "16px", mt: "10px", width: "calc(100% - 32px)" },
           copied() && { bg: "paidBg", color: "paid", boxShadow: "none" },
         )}
@@ -535,7 +531,7 @@ function MenuSheet(props: {
           type="button"
           disabled={props.busy}
           onClick={() => props.onArchive(true)}
-          class={css(button, wide, { color: "owes" })}
+          class={css(button.raw({ wide: true }), { color: "owes" })}
         >
           <ArchiveIcon />
           Архивлах

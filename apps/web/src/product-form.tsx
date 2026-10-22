@@ -9,20 +9,8 @@ import CloseIcon from "~icons/ph/x-bold";
 import { ApiClient } from "./api/client";
 import { createWrite } from "./api/solid-effect";
 import { digits, money, sized, srcset, thousands } from "./format";
-import {
-  chip,
-  chipOn,
-  Dock,
-  field,
-  glass,
-  Note,
-  panel,
-  round,
-  SaveButton,
-  section,
-  sectionHead,
-  sub,
-} from "./ui";
+import { chip, round } from "./styles";
+import { Dock, field, Note, panel, SaveButton, section, sectionHead, sub } from "./ui";
 import { formText } from "./words";
 
 const optionalInt = (text: string) => (digits(text) === "" ? null : Number(digits(text)));
@@ -210,7 +198,7 @@ export function DraftForm(props: {
                       next.images.splice(index(), 1);
                     })
                   }
-                  class={css(round, glass, {
+                  class={css(round.raw({ tone: "glass" }), {
                     position: "absolute",
                     top: "6px",
                     right: "6px",
@@ -284,7 +272,7 @@ export function DraftForm(props: {
                     next.form = value;
                   })
                 }
-                class={css(chip, { height: "36px" }, draft.form === value && chipOn)}
+                class={css(chip.raw({ on: draft.form === value }), { height: "36px" })}
               >
                 {formText[value]}
               </button>
@@ -307,7 +295,7 @@ export function DraftForm(props: {
                     next.category = category.slug;
                   })
                 }
-                class={css(chip, { height: "36px" }, draft.category === category.slug && chipOn)}
+                class={css(chip.raw({ on: draft.category === category.slug }), { height: "36px" })}
               >
                 {category.name}
               </button>

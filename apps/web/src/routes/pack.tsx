@@ -14,21 +14,8 @@ import { money, phone } from "../format";
 import { advance, Money } from "../orders";
 import { Tile } from "../photos";
 import { DetailSkeleton } from "../skeletons";
-import {
-  act,
-  appear,
-  button,
-  Dock,
-  glass,
-  glassBar,
-  large,
-  Note,
-  panel,
-  Problem,
-  round,
-  sub,
-  wide,
-} from "../ui";
+import { button, round } from "../styles";
+import { appear, Dock, glassBar, Note, panel, Problem, sub } from "../ui";
 
 const key = (order: OrderSummary, productId: ProductId) => `${order.id}:${productId}`;
 
@@ -85,7 +72,7 @@ export default function Pack() {
           <div class={css(appear)}>
             <header class={css(glassBar, { pb: "10px" })}>
               <div class={css({ display: "flex", alignItems: "center", gap: "10px" })}>
-                <a href="/" aria-label="Хаах" class={css(round, glass)}>
+                <a href="/" aria-label="Хаах" class={round({ tone: "glass" })}>
                   <CloseIcon />
                 </a>
                 <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>Савлах</b>
@@ -301,7 +288,7 @@ function Parcel(props: {
           <button
             type="button"
             onClick={() => props.onNext(false)}
-            class={css(button, large, { flex: 1 })}
+            class={css(button.raw({ size: "lg" }), { flex: 1 })}
           >
             Алгасах
           </button>
@@ -309,7 +296,7 @@ function Parcel(props: {
             type="button"
             disabled={!props.allTicked}
             onClick={() => props.onNext(true)}
-            class={css(button, act, large, { flex: 1.6 })}
+            class={css(button.raw({ tone: "ink", size: "lg" }), { flex: 1.6 })}
           >
             Савласан
           </button>
@@ -422,7 +409,7 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
                 type="button"
                 disabled={busy()}
                 onClick={() => handAll(props.packed)}
-                class={css(button, act, wide)}
+                class={button({ tone: "ink", wide: true })}
               >
                 <TruckIcon />
                 {props.packed.length} илгээмжийг TU-д өгөх
@@ -446,7 +433,10 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
               болсонгүй. Захиалга дотроос дахин оролдоно уу.
             </p>
           </Show>
-          <a href="/" class={css(button, act, large, { mt: "28px", px: "32px" })}>
+          <a
+            href="/"
+            class={css(button.raw({ tone: "ink", size: "lg" }), { mt: "28px", px: "32px" })}
+          >
             Нүүр рүү
           </a>
         </div>

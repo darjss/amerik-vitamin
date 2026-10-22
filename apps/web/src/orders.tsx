@@ -27,7 +27,8 @@ import TruckIcon from "~icons/ph/truck-bold";
 import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
 import { digits, failureText, money, offline, thousands } from "./format";
-import { act, button, field, Pill, SaveButton, Segmented, Sheet, sub, wide } from "./ui";
+import { button } from "./styles";
+import { field, Pill, SaveButton, Segmented, Sheet, sub } from "./ui";
 import { methodText } from "./words";
 
 /** The one thing to do next: hand it to TU, or confirm it arrived. COMMERCE-RULES. */
@@ -152,7 +153,10 @@ export function StepButton(props: {
             <button
               type="button"
               disabled={running(props.order.id)}
-              class={css(button, act, { position: "relative", zIndex: 1 }, props.wide && wide)}
+              class={css(button.raw({ tone: "ink", wide: props.wide }), {
+                position: "relative",
+                zIndex: 1,
+              })}
               onClick={() => hold(props.order.id, next().step, props.reload)}
             >
               <TruckIcon />
@@ -163,16 +167,12 @@ export function StepButton(props: {
           {(left) => (
             <button
               type="button"
-              class={css(
-                button,
-                {
-                  position: "relative",
-                  zIndex: 1,
-                  overflow: "hidden",
-                  fontVariantNumeric: "tabular-nums",
-                },
-                props.wide && wide,
-              )}
+              class={css(button.raw({ wide: props.wide }), {
+                position: "relative",
+                zIndex: 1,
+                overflow: "hidden",
+                fontVariantNumeric: "tabular-nums",
+              })}
               onClick={() => release(props.order.id)}
             >
               Болих {left()}

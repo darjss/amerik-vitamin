@@ -16,24 +16,8 @@ import { runEffect } from "../../api/solid-effect";
 import { daysBetween, phone } from "../../format";
 import { HeldSteps, Money, nextStep, StepButton } from "../../orders";
 import { Tile } from "../../photos";
-import {
-  act,
-  appear,
-  button,
-  chip,
-  chipOn,
-  Note,
-  panel,
-  Pill,
-  Problem,
-  round,
-  roundAct,
-  searchBox,
-  small,
-  sub,
-  TabBar,
-  top,
-} from "../../ui";
+import { button, chip, round } from "../../styles";
+import { appear, Note, panel, Pill, Problem, searchBox, sub, TabBar, top } from "../../ui";
 import { ListSkeleton } from "../../skeletons";
 import { statusText } from "../../words";
 
@@ -111,7 +95,7 @@ export default function Orders() {
   return (
     <main class={css(top, { pb: "120px" })}>
       <div class={css({ display: "flex", justifyContent: "flex-end", px: "16px", pt: "4px" })}>
-        <a href="/orders/new" aria-label="Шинэ захиалга" class={css(round, roundAct)}>
+        <a href="/orders/new" aria-label="Шинэ захиалга" class={round({ tone: "ink" })}>
           <PlusIcon />
         </a>
       </div>
@@ -145,7 +129,7 @@ export default function Orders() {
           {(candidate) => (
             <a
               href={candidate.key === "to_ship" ? "/orders" : `/orders?view=${candidate.key}`}
-              class={css(chip, view().key === candidate.key && chipOn)}
+              class={chip({ on: view().key === candidate.key })}
             >
               {candidate.label}
               <Show when={candidate.count}>
@@ -190,7 +174,7 @@ export default function Orders() {
                   <div class={css({ textStyle: "headline" })}>{orders().length} илгээмж</div>
                   <div class={css(sub)}>{pieces()} ширхэг</div>
                 </div>
-                <a href="/pack" class={css(button, act, small)}>
+                <a href="/pack" class={button({ tone: "ink", size: "sm" })}>
                   Савлах
                 </a>
               </div>

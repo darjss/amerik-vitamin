@@ -9,21 +9,8 @@ import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
 import { longDate, money } from "../format";
 import { Tile } from "../photos";
-import {
-  act,
-  appear,
-  button,
-  large,
-  panel,
-  Pill,
-  Problem,
-  section,
-  sectionHead,
-  small,
-  sub,
-  TabBar,
-  top,
-} from "../ui";
+import { button } from "../styles";
+import { appear, panel, Pill, Problem, section, sectionHead, sub, TabBar, top } from "../ui";
 import { HomeSkeleton } from "../skeletons";
 
 const bigMoney = css.raw({
@@ -105,7 +92,7 @@ export default function Home() {
                   </For>
                 </div>
                 <div class={css({ px: "16px", pb: "16px" })}>
-                  <a href="/pack" class={css(button, act, large, { width: "100%" })}>
+                  <a href="/pack" class={button({ tone: "ink", wide: true })}>
                     <PackageIcon />
                     Савлах
                   </a>
@@ -140,7 +127,7 @@ export default function Home() {
                     </div>
                     <div class={css(sub)}>Шилжүүлэг ирсэн эсэхийг шалгах</div>
                   </div>
-                  <a href="/orders?view=awaiting" class={css(button, act, small)}>
+                  <a href="/orders?view=awaiting" class={button({ tone: "ink", size: "sm" })}>
                     Шалгах
                   </a>
                 </div>

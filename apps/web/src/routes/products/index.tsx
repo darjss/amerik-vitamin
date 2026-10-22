@@ -20,21 +20,15 @@ import { matches, money } from "../../format";
 import { Tile } from "../../photos";
 import { NumberSheet, StockSheet, stockText, stockTone } from "../../products";
 import type { StockMode } from "../../products";
+import { button, chip, press, round } from "../../styles";
 import {
   appear,
-  button,
-  chip,
-  chipOn,
   chipRow,
   createCopied,
   Failed,
-  press,
   Problem,
-  round,
-  roundAct,
   searchBox,
   Sheet,
-  small,
   sub,
   TabBar,
   tones,
@@ -70,7 +64,7 @@ const rowChip = css.raw(press, {
   fontWeight: "650",
 });
 
-const actionRow = css.raw(button, {
+const actionRow = css.raw(button.raw(), {
   justifyContent: "flex-start",
   gap: "14px",
   width: "100%",
@@ -159,7 +153,7 @@ export default function Products() {
         })}
       >
         <h1 class={css({ textStyle: "largeTitle" })}>Бараа</h1>
-        <a href="/products/new" aria-label="Шинэ бараа" class={css(round, roundAct)}>
+        <a href="/products/new" aria-label="Шинэ бараа" class={round({ tone: "ink" })}>
           <PlusIcon />
         </a>
       </div>
@@ -187,12 +181,11 @@ export default function Products() {
                         brand: undefined,
                       })
                     }
-                    class={css(
-                      chip,
-                      view() === candidate.key &&
-                        (candidate.key !== "all" || params.brand === undefined) &&
-                        chipOn,
-                    )}
+                    class={chip({
+                      on:
+                        view() === candidate.key &&
+                        (candidate.key !== "all" || params.brand === undefined),
+                    })}
                   >
                     <Show when={candidate.dot}>
                       {(dot) => (
@@ -221,7 +214,7 @@ export default function Products() {
                     onClick={() =>
                       setParams({ brand: params.brand === brand().name ? undefined : brand().name })
                     }
-                    class={css(chip, params.brand === brand().name && chipOn)}
+                    class={chip({ on: params.brand === brand().name })}
                   >
                     {brand().name}
                     <b>{brand().count}</b>
@@ -274,8 +267,7 @@ export default function Products() {
                         aria-label={`${product().name} үлдэгдэл`}
                         onClick={() => openStock(product())}
                         class={css(
-                          button,
-                          small,
+                          button.raw({ size: "sm" }),
                           { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
                           tones[stockTone[stockLevel(product().stock)]],
                           { boxShadow: "none" },

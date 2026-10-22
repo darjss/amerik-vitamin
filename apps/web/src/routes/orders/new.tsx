@@ -33,13 +33,13 @@ import { Cart } from "../../cart";
 import { digits, matches, money } from "../../format";
 import { Tile } from "../../photos";
 import { GridSkeleton } from "../../skeletons";
+import { press } from "../../styles";
 import {
   appear,
   Dock,
   glassBar,
   panel,
   Pill,
-  press,
   Problem,
   SaveButton,
   searchBox,

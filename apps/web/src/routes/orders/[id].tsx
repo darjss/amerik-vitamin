@@ -36,20 +36,16 @@ import {
 } from "../../orders";
 import { Tile } from "../../photos";
 import { DetailSkeleton } from "../../skeletons";
+import { button, round } from "../../styles";
 import {
   appear,
-  button,
   createCopied,
   Dock,
   Failed,
-  glass,
   glassBar,
-  large,
   Note,
   panel,
   Problem,
-  round,
-  roundAct,
   section,
   sectionHead,
   Sheet,
@@ -125,7 +121,7 @@ export default function OrderPage() {
         <Loading fallback={<DetailSkeleton />}>
           <div class={css(appear)}>
             <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-              <a href="/orders" aria-label="Хаах" class={css(round, glass)}>
+              <a href="/orders" aria-label="Хаах" class={round({ tone: "glass" })}>
                 <CloseIcon />
               </a>
               <b
@@ -142,7 +138,7 @@ export default function OrderPage() {
                 type="button"
                 aria-label="Бусад үйлдэл"
                 onClick={() => open("menu")}
-                class={css(round, glass)}
+                class={round({ tone: "glass" })}
               >
                 <MoreIcon />
               </button>
@@ -177,7 +173,7 @@ export default function OrderPage() {
                   type="button"
                   disabled={!editable(order())}
                   onClick={() => open("edit")}
-                  class={css(button, large, { width: "100%" })}
+                  class={button({ wide: true })}
                 >
                   Хаяг, тэмдэглэл засах
                 </button>
@@ -185,7 +181,7 @@ export default function OrderPage() {
                   <button
                     type="button"
                     onClick={() => open("cancel")}
-                    class={css(button, large, { width: "100%", color: "owes" })}
+                    class={css(button.raw({ wide: true }), { color: "owes" })}
                   >
                     Захиалга цуцлах
                   </button>
@@ -297,7 +293,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
               </div>
               <History phone={digits()} orders={props.order.customerOrders} />
             </div>
-            <a href={`tel:${digits()}`} aria-label="Залгах" class={css(round, roundAct)}>
+            <a href={`tel:${digits()}`} aria-label="Залгах" class={round({ tone: "ink" })}>
               <PhoneIcon />
             </a>
           </div>
@@ -338,7 +334,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
               type="button"
               aria-label="Хаяг хуулах"
               onClick={() => void copy(address())}
-              class={css(round, copied() && { bg: "paidBg", color: "paid" })}
+              class={css(round.raw(), copied() && { bg: "paidBg", color: "paid" })}
             >
               <CopyIcon />
             </button>
@@ -449,7 +445,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
         <button
           type="button"
           onClick={() => props.onPay()}
-          class={css(button, { width: "100%", mt: "14px" })}
+          class={css(button.raw(), { width: "100%", mt: "14px" })}
         >
           Мөнгө авсан
         </button>
@@ -475,7 +471,7 @@ function CancelSheet(props: {
         <button
           type="button"
           onClick={() => props.onClose()}
-          class={css(button, large, { flex: 1 })}
+          class={css(button.raw({ size: "lg" }), { flex: 1 })}
         >
           Үгүй
         </button>
@@ -483,7 +479,7 @@ function CancelSheet(props: {
           type="button"
           disabled={props.busy}
           onClick={() => props.onCancel()}
-          class={css(button, large, { flex: 1, bg: "owes", color: "white" })}
+          class={css(button.raw({ size: "lg" }), { flex: 1, bg: "owes", color: "white" })}
         >
           Цуцлах
         </button>

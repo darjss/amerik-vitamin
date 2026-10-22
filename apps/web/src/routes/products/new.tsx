@@ -19,20 +19,8 @@ import { ApiClient } from "../../api/client";
 import { createWrite, runEffect } from "../../api/solid-effect";
 import { blank, DraftForm, input } from "../../product-form";
 import { FormSkeleton } from "../../skeletons";
-import {
-  act,
-  button,
-  Failed,
-  glass,
-  glassBar,
-  Note,
-  panel,
-  Problem,
-  round,
-  spinner,
-  sub,
-  wide,
-} from "../../ui";
+import { button, round } from "../../styles";
+import { Failed, glassBar, Note, panel, Problem, spinner, sub } from "../../ui";
 
 // Шинэ бараа: an Amazon link or a bottle photo goes to the drafting Workflow
 // on the API; she checks the filled-in form, adds her price and confirms.
@@ -74,7 +62,7 @@ export default function NewProductPage() {
   return (
     <main class={css({ pb: "140px" })}>
       <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-        <a href="/products" aria-label="Хаах" class={css(round, glass)}>
+        <a href="/products" aria-label="Хаах" class={round({ tone: "glass" })}>
           <CloseIcon />
         </a>
         <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>Шинэ бараа</b>
@@ -147,7 +135,7 @@ export default function NewProductPage() {
                       type="button"
                       disabled={busy() || !/amazon\.|amzn\./iu.test(url())}
                       onClick={() => void start(AmazonSource.make({ url: url() }))}
-                      class={css(button, act, wide)}
+                      class={button({ tone: "ink", wide: true })}
                     >
                       <SparkleIcon />
                       Унших
@@ -159,7 +147,7 @@ export default function NewProductPage() {
                   <button
                     type="button"
                     onClick={() => setParams({ manual: "1" })}
-                    class={css(button, { justifySelf: "center" })}
+                    class={css(button.raw(), { justifySelf: "center" })}
                   >
                     <PencilIcon />
                     Гараар бөглөх
@@ -215,7 +203,7 @@ function DraftRun(props: { id: DraftId; options: CatalogOptions }) {
             <button
               type="button"
               onClick={() => setParams({ draft: undefined })}
-              class={css(button, wide)}
+              class={button({ wide: true })}
             >
               Дахин оролдох
             </button>
