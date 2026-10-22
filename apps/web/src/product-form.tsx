@@ -18,14 +18,14 @@ import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
-import { Dock } from "./chrome";
 import { failureText, money, sized, srcset, thousands } from "./format";
-import { formText } from "./product-parts";
+import { formText } from "./products";
 import {
   act,
   button,
   chip,
   chipOn,
+  Dock,
   Failed,
   field,
   glass,

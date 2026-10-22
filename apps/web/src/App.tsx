@@ -7,7 +7,7 @@ import { Loading } from "solid-js";
 import { serverLayer } from "./api/binding";
 import { WebLayer } from "./api/client";
 import { createRuntime, RuntimeContext } from "./api/solid-effect";
-import { createHeldSteps, HeldSteps } from "./steps";
+import { createHeldSteps, HeldSteps } from "./orders";
 import { ZoomProvider } from "./zoom";
 
 import "@fontsource-variable/inter/opsz.css";

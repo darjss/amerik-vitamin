@@ -7,7 +7,6 @@ import PackageIcon from "~icons/ph/package-bold";
 
 import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
-import { TabBar } from "../chrome";
 import { longDate, money } from "../format";
 import {
   act,
@@ -23,6 +22,7 @@ import {
   sectionHead,
   small,
   sub,
+  TabBar,
   Tile,
   title2,
   title3,

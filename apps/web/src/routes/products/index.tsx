@@ -29,10 +29,9 @@ import TagIcon from "~icons/ph/tag";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { Sheet, TabBar } from "../../chrome";
 import { failureText, matches, money } from "../../format";
-import { PriceSheet, StockSheet, stockButton, stockText } from "../../product-parts";
-import type { StockMode } from "../../product-parts";
+import { PriceSheet, StockSheet, stockButton, stockText } from "../../products";
+import type { StockMode } from "../../products";
 import {
   appear,
   button,
@@ -47,8 +46,10 @@ import {
   round,
   roundAct,
   searchBox,
+  Sheet,
   small,
   sub,
+  TabBar,
   Tile,
   top,
 } from "../../ui";

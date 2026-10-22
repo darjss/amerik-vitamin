@@ -13,9 +13,8 @@ import PlusIcon from "~icons/ph/plus-bold";
 
 import { ApiClient } from "../../api/client";
 import { runEffect } from "../../api/solid-effect";
-import { TabBar } from "../../chrome";
 import { daysBetween, phone } from "../../format";
-import { HeldSteps, nextStep } from "../../steps";
+import { HeldSteps, Money, nextStep, StepButton } from "../../orders";
 import {
   act,
   appear,
@@ -24,7 +23,6 @@ import {
   chipOn,
   headline,
   largeTitle,
-  Money,
   Note,
   panel,
   Pill,
@@ -33,8 +31,8 @@ import {
   roundAct,
   searchBox,
   small,
-  StepButton,
   sub,
+  TabBar,
   Tile,
   top,
 } from "../../ui";

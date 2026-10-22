@@ -35,13 +35,20 @@ import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { Dock, Sheet } from "../../chrome";
 import { clock, failureText, money, offline, phone, when } from "../../format";
-import { EditSheet, History, PaySheet, Tracker } from "../../order-parts";
-import { HeldSteps, nextStep } from "../../steps";
+import {
+  EditSheet,
+  HeldSteps,
+  History,
+  nextStep,
+  PaySheet,
+  StepButton,
+  Tracker,
+} from "../../orders";
 import {
   appear,
   button,
+  Dock,
   Failed,
   glass,
   glassBar,
@@ -55,7 +62,7 @@ import {
   roundAct,
   section,
   sectionHead,
-  StepButton,
+  Sheet,
   sub,
   Tile,
   title2,

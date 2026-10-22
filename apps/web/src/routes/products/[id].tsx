@@ -30,9 +30,8 @@ import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { Sheet } from "../../chrome";
 import { failureText, money, offline, sized, srcset, when } from "../../format";
-import { formText, PriceSheet, StepperSheet, stockText, stockTone } from "../../product-parts";
+import { formText, PriceSheet, StepperSheet, stockText, stockTone } from "../../products";
 import {
   act,
   appear,
@@ -49,6 +48,7 @@ import {
   round,
   section,
   sectionHead,
+  Sheet,
   sub,
   title2,
   wide,

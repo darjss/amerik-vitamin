@@ -21,18 +21,17 @@ import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../api/client";
 import { runEffect, RuntimeContext } from "../api/solid-effect";
-import { Dock } from "../chrome";
 import { money, phone } from "../format";
-import { advance } from "../steps";
+import { advance, Money } from "../orders";
 import {
   act,
   appear,
   button,
+  Dock,
   glass,
   glassBar,
   headline,
   large,
-  Money,
   Note,
   panel,
   Problem,

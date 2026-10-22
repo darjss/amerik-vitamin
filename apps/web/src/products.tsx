@@ -5,9 +5,8 @@ import { css } from "styled-system/css";
 import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
 
-import { Sheet } from "./chrome";
 import { money, thousands } from "./format";
-import { act, button, Failed, field, round, Segmented, sub, wide } from "./ui";
+import { act, button, Failed, field, round, Segmented, Sheet, sub, wide } from "./ui";
 
 // Pieces the products list and the product page share: stock wording and the number sheets.
 
@@ -65,7 +64,7 @@ const bigNumber = css.raw(field, {
   fontVariantNumeric: "tabular-nums",
 });
 
-const stepButton = css.raw(round, { width: "56px", height: "56px", fontSize: "22px" });
+const plusMinus = css.raw(round, { width: "56px", height: "56px", fontSize: "22px" });
 
 type Form = { prompt: string; busy: boolean; failed: string | undefined };
 
@@ -169,7 +168,7 @@ function Stepper(props: StepperProps) {
           aria-label="Хасах"
           disabled={value() <= props.min}
           onClick={() => setValue((current) => Math.max(props.min, current - 1))}
-          class={css(stepButton)}
+          class={css(plusMinus)}
         >
           <MinusIcon />
         </button>
@@ -183,7 +182,7 @@ function Stepper(props: StepperProps) {
           type="button"
           aria-label="Нэмэх"
           onClick={() => setValue((current) => current + 1)}
-          class={css(stepButton)}
+          class={css(plusMinus)}
         >
           <PlusIcon />
         </button>
@@ -224,7 +223,7 @@ function PriceInput(props: PriceProps) {
           aria-label={`${thousands(PRICE_STEP)}₮ хасах`}
           disabled={price() <= PRICE_STEP}
           onClick={() => setPrice((current) => Math.max(PRICE_STEP, current - PRICE_STEP))}
-          class={css(stepButton)}
+          class={css(plusMinus)}
         >
           <MinusIcon />
         </button>
@@ -239,7 +238,7 @@ function PriceInput(props: PriceProps) {
           type="button"
           aria-label={`${thousands(PRICE_STEP)}₮ нэмэх`}
           onClick={() => setPrice((current) => current + PRICE_STEP)}
-          class={css(stepButton)}
+          class={css(plusMinus)}
         >
           <PlusIcon />
         </button>

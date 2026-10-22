@@ -34,12 +34,12 @@ import StoreIcon from "~icons/ph/storefront";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { Cart } from "../../cart";
-import { Dock } from "../../chrome";
 import { failureText, matches, money } from "../../format";
 import {
   act,
   appear,
   button,
+  Dock,
   Failed,
   glassBar,
   headline,
