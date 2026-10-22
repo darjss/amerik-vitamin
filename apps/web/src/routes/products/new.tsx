@@ -242,7 +242,6 @@ function DraftRun(props: { id: DraftId; options: CatalogOptions }) {
 }
 
 const steps = [
-  "Шошго уншиж байна",
   "Amazon-оос хайж байна",
   "Мэдээлэл бөглөж байна",
   "Тайлбар бичиж байна",
@@ -258,7 +257,7 @@ function Progress() {
   });
 
   // The run doesn't report its step, so the label walks on a rough clock.
-  const step = () => Math.min(steps.length - 1, Math.floor(seconds() / 15));
+  const step = () => Math.min(steps.length - 1, Math.floor(seconds() / 20));
 
   return (
     <div class={css({ px: "16px", pt: "12px" })}>

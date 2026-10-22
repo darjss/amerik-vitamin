@@ -107,6 +107,14 @@ export function DraftForm(props: {
     return undefined;
   };
 
+  const buttonText = () => {
+    if (duplicate() !== null) return "Дэлгүүрт аль хэдийн байна";
+
+    const needed = missing();
+
+    return needed === undefined ? `Бараа нэмэх · ${money(form.price)}` : `${needed} оруулна уу`;
+  };
+
   const save = action(async function* save() {
     setBusy(true);
     setFailed(undefined);
@@ -375,7 +383,8 @@ export function DraftForm(props: {
         <Show when={form.amazonCents}>
           {(cents) => (
             <p class={css(sub, { mt: "-6px" })}>
-              Amazon дээр ${(cents() / 100).toFixed(2)}. Шинэ бараа тоолоогүй үлдэгдэлтэй нэмэгдэнэ.
+              Amazon дээр ${(cents() / 100).toFixed(2)}. Үлдэгдэл хоосон бол тоолоогүй гэж
+              нэмэгдэнэ.
             </p>
           )}
         </Show>
@@ -435,9 +444,7 @@ export function DraftForm(props: {
           onClick={() => void save()}
           class={css(button, act, wide)}
         >
-          {missing() === undefined
-            ? `Бараа нэмэх · ${money(form.price)}`
-            : `${missing()} оруулна уу`}
+          {buttonText()}
         </button>
       </Dock>
     </div>
