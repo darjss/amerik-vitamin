@@ -103,3 +103,97 @@ export class ProductUnavailable extends Schema.TaggedError<ProductUnavailable>()
   "ProductUnavailable",
   { productId: ProductId },
 ) {}
+
+/** A product with the same identity (brand, line, potency, count, form, flavor) or ASIN exists. */
+export class DuplicateProduct extends Schema.TaggedError<DuplicateProduct>()("DuplicateProduct", {
+  productId: ProductId,
+}) {}
+
+/** One drafting run: the Cloudflare Workflow instance that reads the source. */
+export const DraftId = Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(100)).pipe(
+  Schema.brand("DraftId"),
+);
+
+export type DraftId = typeof DraftId.Type;
+
+export class DraftNotFound extends Schema.TaggedError<DraftNotFound>()("DraftNotFound", {
+  draftId: DraftId,
+}) {}
+
+/** The brand and category lists the new-product form picks from. */
+export const CatalogOptions = Schema.Struct({
+  brands: Schema.Array(Schema.String),
+  categories: Schema.Array(Schema.Struct({ slug: Schema.String, name: Schema.String })),
+});
+
+export type CatalogOptions = typeof CatalogOptions.Type;
+
+/** A bottle photo, downscaled on the phone to a JPEG, as base64. About 1600px on the long side. */
+const PhotoJpeg = Schema.String.check(Schema.isMinLength(100), Schema.isMaxLength(4_000_000));
+
+export const AmazonSource = Schema.TaggedStruct("amazon", {
+  url: Schema.String.check(Schema.isMaxLength(2000)),
+});
+
+export const PhotoSource = Schema.TaggedStruct("photo", { jpeg: PhotoJpeg });
+
+/** What the AI reads a new product from: an Amazon link, or a photo of the bottle. */
+export const DraftSource = Schema.Union([AmazonSource, PhotoSource]);
+
+export type DraftSource = typeof DraftSource.Type;
+
+/** Every field of the new-product form. The AI fills it; she checks it and adds the price. */
+const ProductFields = {
+  brand: Schema.String,
+  category: Schema.String,
+  line: Schema.String,
+  potency: Schema.NullOr(Schema.String),
+  count: Schema.Int,
+  form: ProductForm,
+  flavor: Schema.NullOr(Schema.String),
+  name: Schema.String,
+  servingSize: Schema.NullOr(Schema.Int),
+  servings: Schema.NullOr(Schema.Int),
+  dailyUnits: Schema.NullOr(Schema.Int),
+  description: Schema.String,
+  images: Schema.Array(Schema.String),
+  asin: Schema.NullOr(Schema.String),
+};
+
+/** The AI's draft: the form fields, plus what she needs to judge it. */
+export const ProductDraft = Schema.Struct({
+  ...ProductFields,
+  amazonUrl: Schema.NullOr(Schema.String),
+  amazonTitle: Schema.NullOr(Schema.String),
+  /** Amazon's price in US cents, a hint for her own price. */
+  amazonCents: Schema.NullOr(Schema.Int),
+  /** A doubt for her, in Mongolian: a count that disagrees, a photo it couldn't read. */
+  note: Schema.String,
+});
+
+export type ProductDraft = typeof ProductDraft.Type;
+
+/** Where a drafting run is. `existing` is set when the found product is already in the shop. */
+export const DraftState = Schema.Union([
+  Schema.TaggedStruct("running", {}),
+  Schema.TaggedStruct("ready", { draft: ProductDraft, existing: Schema.NullOr(ProductId) }),
+  Schema.TaggedStruct("failed", { reason: Schema.String }),
+]);
+
+export type DraftState = typeof DraftState.Type;
+
+const Trimmed = Schema.String.check(Schema.isTrimmed(), Schema.isMinLength(1));
+
+/** The confirmed form. A new brand name creates the brand. */
+export const NewProduct = Schema.Struct({
+  ...ProductFields,
+  brand: Trimmed,
+  line: Trimmed,
+  name: Trimmed,
+  count: Schema.Int.check(Schema.isGreaterThan(0)),
+  description: Schema.NullOr(Schema.String),
+  price: Tugrik.check(Schema.isGreaterThan(0)),
+  stock: Schema.Int.check(Schema.isGreaterThanOrEqualTo(0)),
+});
+
+export type NewProduct = typeof NewProduct.Type;

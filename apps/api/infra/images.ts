@@ -19,3 +19,11 @@ export const ProductImages = deployStage.pipe(
   ),
   retain(),
 );
+
+/**
+ * The prefix a stored photo URL starts with. A dev bucket has no domain, so
+ * dev URLs are paths the web Worker forwards to the API's `/img` route.
+ */
+export const imageOrigin = deployStage.pipe(
+  Effect.map((stage) => (stage === "production" ? `https://${imageHostname}` : "/img")),
+);

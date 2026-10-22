@@ -16,23 +16,36 @@ import {
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
+import ArchiveIcon from "~icons/ph/archive";
+import CopyIcon from "~icons/ph/copy-bold";
+import MoreIcon from "~icons/ph/dots-three-bold";
+import HashIcon from "~icons/ph/hash";
+import InfoIcon from "~icons/ph/info";
 import SearchIcon from "~icons/ph/magnifying-glass";
+import PackageIcon from "~icons/ph/package";
+import PlusIcon from "~icons/ph/plus-bold";
+import BagIcon from "~icons/ph/shopping-bag-open";
+import TagIcon from "~icons/ph/tag";
 
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
-import { TabBar } from "../../chrome";
+import { Sheet, TabBar } from "../../chrome";
 import { failureText, matches, money } from "../../format";
 import { PriceSheet, StockSheet, stockButton, stockText } from "../../product-parts";
+import type { StockMode } from "../../product-parts";
 import {
   button,
   chip,
   chipOn,
   chipRow,
+  Failed,
   headline,
   largeTitle,
   panel,
   press,
   Problem,
+  round,
+  roundAct,
   searchBox,
   small,
   sub,
@@ -66,6 +79,29 @@ const inView = (view: View, product: ProductRow) => {
   return true;
 };
 
+/** A small raised chip on a row: the price, and ⋯. */
+const rowChip = css.raw(press, {
+  display: "inline-grid",
+  placeItems: "center",
+  px: "10px",
+  height: "30px",
+  borderRadius: "15px",
+  bg: "surface",
+  boxShadow: "raiseSm",
+  fontSize: "15px",
+  fontWeight: "650",
+});
+
+/** One row of the actions sheet: a full-width raised button with its icon. */
+const actionRow = css.raw(button, {
+  justifyContent: "flex-start",
+  gap: "14px",
+  width: "100%",
+  height: "54px",
+  borderRadius: "16px",
+  "& svg": { fontSize: "22px" },
+});
+
 const dots = {
   owes: css.raw({ bg: "owes" }),
   wait: css.raw({ bg: "wait" }),
@@ -78,7 +114,10 @@ export default function Products() {
   // In the URL, so coming back from a product keeps the filters.
   const [params, setParams] = useSearchParams<{ view?: string; brand?: string; q?: string }>();
   const [stocking, setStocking] = createSignal<ProductRow>();
+  const [stockMode, setStockMode] = createSignal<StockMode>("count");
   const [pricing, setPricing] = createSignal<ProductRow>();
+  const [acting, setActing] = createSignal<ProductRow>();
+  const [copied, setCopied] = createSignal(false);
   const [busy, setBusy] = createOptimistic(false);
   const [failed, setFailed] = createSignal<string>();
 
@@ -113,6 +152,7 @@ export default function Products() {
   const close = () => {
     setStocking(undefined);
     setPricing(undefined);
+    setActing(undefined);
   };
 
   // A failure keeps the sheet open and says why; success closes it and reloads the list.
@@ -133,19 +173,49 @@ export default function Products() {
     yield refresh(products);
   });
 
-  const openStock = (product: ProductRow) => {
+  const openStock = (product: ProductRow, mode: StockMode = "count") => {
+    close();
     setFailed(undefined);
+    setStockMode(mode);
     setStocking(product);
   };
 
   const openPrice = (product: ProductRow) => {
+    close();
     setFailed(undefined);
     setPricing(product);
   };
 
+  const openActions = (product: ProductRow) => {
+    setFailed(undefined);
+    setCopied(false);
+    setActing(product);
+  };
+
+  // What she pastes into a Messenger chat when someone asks the price.
+  const copy = async (product: ProductRow) => {
+    await navigator.clipboard.writeText(
+      `${product.brand} ${product.name}\n${money(product.price)}`,
+    );
+    setCopied(true);
+  };
+
   return (
     <main class={css(top, { pb: "120px" })}>
-      <h1 class={css(largeTitle, { px: "20px", pt: "52px" })}>Бараа</h1>
+      <div
+        class={css({
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          px: "20px",
+          pt: "52px",
+        })}
+      >
+        <h1 class={css(largeTitle)}>Бараа</h1>
+        <a href="/products/new" aria-label="Шинэ бараа" class={css(round, roundAct)}>
+          <PlusIcon />
+        </a>
+      </div>
       <label class={css(searchBox, { mx: "16px", mt: "16px" })}>
         <SearchIcon />
         <input
@@ -232,24 +302,24 @@ export default function Products() {
                           {product().brand} · {product().count} ш
                         </div>
                       </a>
-                      <button
-                        type="button"
-                        aria-label={`${product().name} үнэ өөрчлөх`}
-                        onClick={() => openPrice(product())}
-                        class={css(press, {
-                          mt: "4px",
-                          px: "10px",
-                          height: "30px",
-                          borderRadius: "15px",
-                          bg: "surface",
-                          boxShadow: "raiseSm",
-                          fontSize: "15px",
-                          fontWeight: "650",
-                          fontVariantNumeric: "tabular-nums",
-                        })}
-                      >
-                        {money(product().price)}
-                      </button>
+                      <div class={css({ display: "flex", gap: "8px", mt: "4px" })}>
+                        <button
+                          type="button"
+                          aria-label={`${product().name} үнэ өөрчлөх`}
+                          onClick={() => openPrice(product())}
+                          class={css(rowChip, { fontVariantNumeric: "tabular-nums" })}
+                        >
+                          {money(product().price)}
+                        </button>
+                        <button
+                          type="button"
+                          aria-label={`${product().name} үйлдэл`}
+                          onClick={() => openActions(product())}
+                          class={css(rowChip, { width: "40px", px: 0, fontSize: "18px" })}
+                        >
+                          <MoreIcon />
+                        </button>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -272,8 +342,70 @@ export default function Products() {
         </Loading>
       </Errored>
 
+      <Sheet
+        open={acting() !== undefined}
+        title={acting()?.name ?? ""}
+        onClose={() => setActing(undefined)}
+      >
+        <Show when={acting()}>
+          {(product) => (
+            <div class={css({ display: "grid", gap: "8px" })}>
+              <Show when={product().archivedAt === null}>
+                <a href={`/orders/new?add=${product().id}`} class={css(actionRow)}>
+                  <BagIcon />
+                  Захиалга үүсгэх
+                </a>
+              </Show>
+              <button
+                type="button"
+                class={css(actionRow)}
+                onClick={() => openStock(product(), "receive")}
+              >
+                <PackageIcon />
+                Ирсэн бараа нэмэх
+              </button>
+              <button type="button" class={css(actionRow)} onClick={() => openStock(product())}>
+                <HashIcon />
+                Тоолох
+              </button>
+              <button type="button" class={css(actionRow)} onClick={() => openPrice(product())}>
+                <TagIcon />
+                Үнэ өөрчлөх
+              </button>
+              <button
+                type="button"
+                class={css(actionRow, copied() && { bg: "paidBg", color: "paid" })}
+                onClick={() => void copy(product())}
+              >
+                <CopyIcon />
+                {copied() ? "Хуулсан" : "Нэр, үнэ хуулах"}
+              </button>
+              <a href={`/products/${product().id}`} class={css(actionRow)}>
+                <InfoIcon />
+                Дэлгэрэнгүй
+              </a>
+              <Failed text={failed()} />
+              <button
+                type="button"
+                disabled={busy()}
+                class={css(actionRow, product().archivedAt === null && { color: "owes" })}
+                onClick={() => {
+                  const productId = product().id;
+                  const archived = product().archivedAt === null;
+
+                  void write(ApiClient.use((api) => api.archiveProduct({ productId, archived })));
+                }}
+              >
+                <ArchiveIcon />
+                {product().archivedAt === null ? "Архивлах" : "Сэргээх"}
+              </button>
+            </div>
+          )}
+        </Show>
+      </Sheet>
       <StockSheet
         product={stocking()}
+        mode={stockMode()}
         busy={busy()}
         failed={failed()}
         onClose={close}

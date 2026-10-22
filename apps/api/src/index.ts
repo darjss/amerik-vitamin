@@ -1,5 +1,6 @@
 import { Api } from "@amerik/contracts";
 import { Database } from "@amerik/db";
+import { RuntimeContext } from "alchemy";
 import * as Cloudflare from "alchemy/Cloudflare";
 import * as Drizzle from "alchemy/Drizzle/Postgres";
 import * as Effect from "effect/Effect";
@@ -10,7 +11,9 @@ import * as RpcServer from "effect/rpc/RpcServer";
 
 import { Postgres } from "../infra/database";
 import { apiDevPort, apiDomain, apiOrigin } from "../infra/domain";
+import { ProductImages } from "../infra/images";
 import { AuthenticatedLive, authRoute, authSettings } from "./auth";
+import { Drafts, ProductDraftWorkflow, servePhoto } from "./drafts";
 import { pingDatabase } from "./health";
 import { Khaan, khaanConfig, syncKhaan } from "./khaan";
 import { dispatchOutbox, Telegram, telegramConfig } from "./outbox";
@@ -33,6 +36,14 @@ export default ApiWorker.make(
     const hyperdrive = yield* Cloudflare.Hyperdrive.Connect(yield* Postgres);
     const database = Layer.succeed(Database, yield* Drizzle.Postgres(hyperdrive.connectionString));
     const auth = yield* authSettings;
+    const bucket = yield* Cloudflare.R2.ReadWriteBucket(yield* ProductImages);
+    // Bucket calls resolve their binding through the runtime the Worker started with.
+    const runtime = Layer.succeed(RuntimeContext, yield* Cloudflare.Worker);
+
+    const drafts = Layer.merge(
+      Layer.succeed(Drafts, { workflow: yield* ProductDraftWorkflow, bucket }),
+      runtime,
+    );
 
     // Config read here is bound to the Worker as a secret at deploy time.
     // The QPay and Telegram layers are built per request or cron run, so a
@@ -89,10 +100,13 @@ export default ApiWorker.make(
               AuthenticatedLive(auth),
               HideDefectsLive,
               RpcSerialization.layerJson,
-            ).pipe(Layer.provide(database)),
+            ).pipe(Layer.provide(Layer.merge(database, drafts))),
           ),
         ),
       ),
+      // Dev photo URLs are `/img/<key>` paths (infra/images.ts); production
+      // serves the bucket on its own domain and never comes here.
+      HttpRouter.add("GET", "/img/*", servePhoto(bucket).pipe(Effect.provide(runtime))),
       HttpRouter.add("*", "/api/auth/*", authRoute(auth).pipe(Effect.provide(database))),
       HttpRouter.add("GET", "/health", health.pipe(Effect.provide(database))),
       // A paid order queues an outbox row. The request scope closes through
@@ -112,7 +126,11 @@ export default ApiWorker.make(
     };
   }).pipe(
     Effect.provide(
-      Layer.mergeAll(Cloudflare.Hyperdrive.ConnectBinding, Cloudflare.Workers.CronEventSourceLive),
+      Layer.mergeAll(
+        Cloudflare.Hyperdrive.ConnectBinding,
+        Cloudflare.Workers.CronEventSourceLive,
+        Cloudflare.R2.ReadWriteBucketBinding,
+      ),
     ),
   ),
 );

@@ -1,5 +1,5 @@
 import { ProductId } from "@amerik/contracts";
-import type { ProductDetail, ProductForm, StockMove, StockMoveReason } from "@amerik/contracts";
+import type { ProductDetail, StockMove, StockMoveReason } from "@amerik/contracts";
 import { useParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import type * as Effect from "effect/Effect";
@@ -32,7 +32,7 @@ import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { Sheet } from "../../chrome";
 import { failureText, money, offline, when } from "../../format";
-import { PriceSheet, StepperSheet, stockText, stockTone } from "../../product-parts";
+import { formText, PriceSheet, StepperSheet, stockText, stockTone } from "../../product-parts";
 import {
   button,
   act,
@@ -54,18 +54,6 @@ import {
 } from "../../ui";
 import type { Icon } from "../../ui";
 import { Zoom } from "../../zoom";
-
-const formText: Record<ProductForm, string> = {
-  softgel: "Зөөлөн капсул",
-  capsule: "Капсул",
-  tablet: "Шахмал",
-  chewable: "Зажилдаг шахмал",
-  gummy: "Гамми",
-  lozenge: "Хөхдөг шахмал",
-  powder: "Нунтаг",
-  liquid: "Шингэн",
-  other: "Бусад",
-};
 
 const reasonText: Record<StockMoveReason, string> = {
   sale: "Зарсан",

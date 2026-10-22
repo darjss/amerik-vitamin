@@ -56,9 +56,19 @@ export {
 export { Home, LOW_STOCK } from "./home.ts";
 
 export {
+  AmazonSource,
   ArchiveProduct,
+  CatalogOptions,
   CountStock,
+  DraftId,
+  DraftNotFound,
+  DraftSource,
+  DraftState,
+  DuplicateProduct,
+  NewProduct,
+  PhotoSource,
   ProductDetail,
+  ProductDraft,
   ProductForm,
   ProductRow,
   ProductUnavailable,

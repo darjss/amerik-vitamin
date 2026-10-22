@@ -1,7 +1,8 @@
-import { ProductUnavailable } from "@amerik/contracts";
-import type { ArchiveProduct, ProductId, SetPrice } from "@amerik/contracts";
-import { Database, dieOnDatabaseError, schema } from "@amerik/db";
-import { and, asc, desc, eq, gte, inArray, sum } from "drizzle-orm";
+import { BrandId, DuplicateProduct, newId, ProductId, ProductUnavailable } from "@amerik/contracts";
+import type { ArchiveProduct, NewProduct, SetPrice } from "@amerik/contracts";
+import { Database, dieOnDatabaseError, moveStock, schema, transaction } from "@amerik/db";
+import { and, asc, desc, eq, gte, inArray, isNull, or, sum } from "drizzle-orm";
+import type { SQL } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
@@ -115,6 +116,142 @@ export const setPrice = Effect.fn("setPrice")(function* setPrice(input: SetPrice
 
   if (updated.length === 0) return yield* new ProductUnavailable({ productId: input.productId });
 });
+
+/** The brands and categories the new-product form offers. */
+export const catalogOptions = Effect.fn("catalogOptions")(function* catalogOptions() {
+  const db = yield* Database;
+
+  const [brandRows, categoryRows] = yield* Effect.all([
+    db.select({ name: brands.name }).from(brands).orderBy(asc(brands.name)),
+    db
+      .select({ slug: categories.slug, name: categories.name })
+      .from(categories)
+      .orderBy(asc(categories.position)),
+  ]).pipe(dieOnDatabaseError);
+
+  return { brands: brandRows.map((brand) => brand.name), categories: categoryRows };
+});
+
+/** The shop's product with this ASIN, if it has one. */
+export const existingProduct = Effect.fn("existingProduct")(function* existingProduct(
+  asin: string | null,
+) {
+  if (asin === null) return null;
+
+  const db = yield* Database;
+
+  const [row] = yield* db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.asin, asin))
+    .limit(1)
+    .pipe(dieOnDatabaseError);
+
+  return row?.id ?? null;
+});
+
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/gu, "-")
+    .replaceAll(/^-|-$/gu, "");
+
+/** A nullable identity field matches only the same value, null included (products_identity). */
+const same = (column: Parameters<typeof eq>[0], value: string | null): SQL | undefined =>
+  value === null ? isNull(column) : eq(column, value);
+
+/**
+ * Adds a confirmed product. A new brand name creates the brand. Stock she
+ * enters arrives as a receipt in the stock log; none leaves it uncounted.
+ */
+export const createProduct = Effect.fn("createProduct")(function* createProduct(
+  input: NewProduct,
+  actor: string,
+) {
+  const db = yield* Database;
+  const now = DateTime.toDateUtc(yield* DateTime.now);
+
+  yield* db
+    .insert(brands)
+    .values({
+      id: yield* newId(BrandId),
+      name: input.brand,
+      slug: slugify(input.brand),
+      createdAt: now,
+    })
+    .onConflictDoNothing({ target: brands.name });
+
+  const [[brand], [category]] = yield* Effect.all([
+    db.select({ id: brands.id }).from(brands).where(eq(brands.name, input.brand)),
+    db.select({ id: categories.id }).from(categories).where(eq(categories.slug, input.category)),
+  ]);
+
+  if (brand === undefined)
+    return yield* Effect.die(`createProduct: brand ${input.brand} not saved`);
+
+  if (category === undefined)
+    return yield* Effect.die(`createProduct: no category ${input.category}`);
+
+  const identity = and(
+    eq(products.brandId, brand.id),
+    eq(products.line, input.line),
+    same(products.potency, input.potency),
+    eq(products.count, input.count),
+    eq(products.form, input.form),
+    same(products.flavor, input.flavor),
+  );
+
+  const [existing] = yield* db
+    .select({ id: products.id })
+    .from(products)
+    .where(input.asin === null ? identity : or(identity, eq(products.asin, input.asin)))
+    .limit(1);
+
+  if (existing !== undefined) return yield* new DuplicateProduct({ productId: existing.id });
+
+  const id = yield* newId(ProductId);
+  const slug = slugify(`${input.brand} ${input.name}`);
+
+  const [taken] = yield* db
+    .select({ id: products.id })
+    .from(products)
+    .where(eq(products.slug, slug))
+    .limit(1);
+
+  yield* db.insert(products).values({
+    id,
+    brandId: brand.id,
+    categoryId: category.id,
+    line: input.line,
+    potency: input.potency,
+    count: input.count,
+    form: input.form,
+    flavor: input.flavor,
+    name: input.name,
+    // Two products can share a display name; the id's tail tells their pages apart.
+    slug: taken === undefined ? slug : `${slug}-${id.slice(-6)}`,
+    price: input.price,
+    asin: input.asin,
+    servingSize: input.servingSize,
+    servings: input.servings,
+    dailyUnits: input.dailyUnits,
+    images: [...input.images],
+    description: input.description,
+    createdAt: now,
+  });
+
+  if (input.stock > 0) {
+    yield* moveStock({
+      productId: id,
+      change: input.stock,
+      reason: "receipt",
+      note: "Шинэ бараа",
+      actor,
+    });
+  }
+
+  return id;
+}, transaction);
 
 export const archiveProduct = Effect.fn("archiveProduct")(function* archiveProduct(
   input: ArchiveProduct,

@@ -13,7 +13,15 @@ import {
   placeOrder,
   recordPayment,
 } from "./orders";
-import { archiveProduct, getProduct, listProducts, setPrice } from "./products";
+import { getDraft, startDraft } from "./drafts";
+import {
+  archiveProduct,
+  catalogOptions,
+  createProduct,
+  getProduct,
+  listProducts,
+  setPrice,
+} from "./products";
 import { countStock, receiveStock } from "./stock";
 
 /** Every write's actor is the signed-in admin, never a value from the client. */
@@ -37,6 +45,10 @@ export const ApiHandlers = Api.toLayer({
   getProduct: ({ productId }) => getProduct(productId),
   receiveStock: (input) => Effect.flatMap(actor, (email) => receiveStock(input, email)),
   setPrice: (input) => setPrice(input),
+  catalogOptions: () => catalogOptions(),
+  startDraft: ({ source }) => startDraft(source),
+  getDraft: ({ draftId }) => getDraft(draftId),
+  createProduct: (input) => Effect.flatMap(actor, (email) => createProduct(input, email)),
   archiveProduct: (input) => archiveProduct(input),
 });
 

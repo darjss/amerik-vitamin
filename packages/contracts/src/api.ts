@@ -27,7 +27,14 @@ import {
 } from "./order.ts";
 import {
   ArchiveProduct,
+  CatalogOptions,
   CountStock,
+  DraftId,
+  DraftNotFound,
+  DraftSource,
+  DraftState,
+  DuplicateProduct,
+  NewProduct,
   ProductDetail,
   ProductRow,
   ProductUnavailable,
@@ -95,6 +102,18 @@ const Dashboard = RpcGroup.make(
     error: ProductUnavailable,
   }),
   Rpc.make("setPrice", { payload: SetPrice, error: ProductUnavailable }),
+  Rpc.make("catalogOptions", { success: CatalogOptions }),
+  Rpc.make("startDraft", { payload: { source: DraftSource }, success: DraftId }),
+  Rpc.make("getDraft", {
+    payload: { draftId: DraftId },
+    success: DraftState,
+    error: DraftNotFound,
+  }),
+  Rpc.make("createProduct", {
+    payload: NewProduct,
+    success: ProductId,
+    error: DuplicateProduct,
+  }),
   Rpc.make("archiveProduct", { payload: ArchiveProduct, error: ProductUnavailable }),
 ).middleware(Authenticated);
 

@@ -1,4 +1,5 @@
 import { LOW_STOCK } from "@amerik/contracts";
+import type { ProductForm } from "@amerik/contracts";
 import { createSignal, Show, untrack } from "solid-js";
 import { css } from "styled-system/css";
 import MinusIcon from "~icons/ph/minus-bold";
@@ -9,6 +10,18 @@ import { money, thousands } from "./format";
 import { act, button, Failed, field, round, Segmented, sub, wide } from "./ui";
 
 // Pieces the products list and the product page share: stock wording and the number sheets.
+
+export const formText: Record<ProductForm, string> = {
+  softgel: "Зөөлөн капсул",
+  capsule: "Капсул",
+  tablet: "Шахмал",
+  chewable: "Зажилдаг шахмал",
+  gummy: "Гамми",
+  lozenge: "Хөхдөг шахмал",
+  powder: "Нунтаг",
+  liquid: "Шингэн",
+  other: "Бусад",
+};
 
 /** Null until the first count or receipt. */
 export const stockText = (stock: number | null) => {
@@ -73,64 +86,74 @@ export function StepperSheet(props: SheetFrame & StepperProps) {
   );
 }
 
-type StockMode = "count" | "receive";
+export type StockMode = "count" | "receive";
 
 /**
  * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
  * shelf, Ирсэн adds a shipment. Switching resets the number for that job.
  */
-export function StockSheet(props: {
-  product: { name: string; brand: string; count: number; stock: number | null } | undefined;
+type StockProps = {
   busy: boolean;
   failed: string | undefined;
-  onClose: () => void;
   onCount: (counted: number) => void;
   onReceive: (received: number) => void;
-}) {
-  const [mode, setMode] = createSignal<StockMode>("count");
+};
 
+type StockProduct = { name: string; brand: string; count: number; stock: number | null };
+
+export function StockSheet(
+  props: StockProps & {
+    product: StockProduct | undefined;
+    /** Which job the sheet opens on. */
+    mode: StockMode;
+    onClose: () => void;
+  },
+) {
   return (
     <Sheet
       open={props.product !== undefined}
       title={props.product?.name ?? ""}
-      onClose={() => {
-        setMode("count");
-        props.onClose();
-      }}
+      onClose={props.onClose}
     >
-      <Show when={props.product}>
-        {(product) => (
-          <>
-            <div class={css({ pb: "16px", mt: "-6px" })}>
-              <Segmented
-                options={[
-                  ["count", "Тоолсон"],
-                  ["receive", "Ирсэн"],
-                ]}
-                value={mode()}
-                onChange={setMode}
-              />
-            </div>
-            <Show when={mode()} keyed>
-              {(current) => (
-                <Stepper
-                  prompt={
-                    current === "count"
-                      ? `${product().brand} · ${product().count} ш. Тавиур дээр хэд байна?`
-                      : `Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(product().stock)}.`
-                  }
-                  start={current === "count" ? (product().stock ?? 0) : 1}
-                  min={current === "count" ? 0 : 1}
-                  busy={props.busy}
-                  failed={props.failed}
-                  onSave={current === "count" ? props.onCount : props.onReceive}
-                />
-              )}
-            </Show>
-          </>
-        )}
+      <Show when={props.product} keyed>
+        {(product) => <StockBody {...props} product={product} />}
       </Show>
     </Sheet>
+  );
+}
+
+function StockBody(props: StockProps & { product: StockProduct; mode: StockMode }) {
+  const [mode, setMode] = createSignal(untrack(() => props.mode));
+
+  return (
+    <>
+      <div class={css({ pb: "16px", mt: "-6px" })}>
+        <Segmented
+          options={[
+            ["count", "Тоолсон"],
+            ["receive", "Ирсэн"],
+          ]}
+          value={mode()}
+          onChange={setMode}
+        />
+      </div>
+      <Show when={mode()} keyed>
+        {(current) => (
+          <Stepper
+            prompt={
+              current === "count"
+                ? `${props.product.brand} · ${props.product.count} ш. Тавиур дээр хэд байна?`
+                : `Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(props.product.stock)}.`
+            }
+            start={current === "count" ? (props.product.stock ?? 0) : 1}
+            min={current === "count" ? 0 : 1}
+            busy={props.busy}
+            failed={props.failed}
+            onSave={current === "count" ? props.onCount : props.onReceive}
+          />
+        )}
+      </Show>
+    </>
   );
 }
 
