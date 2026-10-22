@@ -23,6 +23,7 @@ import { ApiClient } from "../api/client";
 import { runEffect, RuntimeContext } from "../api/solid-effect";
 import { money, phone } from "../format";
 import { advance, Money } from "../orders";
+import { Tile } from "../photos";
 import {
   act,
   appear,
@@ -37,7 +38,6 @@ import {
   Problem,
   round,
   sub,
-  Tile,
   title2,
   wide,
 } from "../ui";

@@ -15,6 +15,7 @@ import { ApiClient } from "../../api/client";
 import { runEffect } from "../../api/solid-effect";
 import { daysBetween, phone } from "../../format";
 import { HeldSteps, Money, nextStep, StepButton } from "../../orders";
+import { Tile } from "../../photos";
 import {
   act,
   appear,
@@ -33,7 +34,6 @@ import {
   small,
   sub,
   TabBar,
-  Tile,
   top,
 } from "../../ui";
 import { ListSkeleton } from "../../skeletons";

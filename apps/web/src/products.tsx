@@ -4,8 +4,8 @@ import { css } from "styled-system/css";
 import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
 
-import { money, thousands } from "./format";
-import { act, button, Failed, field, round, Segmented, Sheet, sub, wide } from "./ui";
+import { digits, money, thousands } from "./format";
+import { field, round, SaveButton, Segmented, Sheet, sheetPrompt } from "./ui";
 import type { Tone } from "./ui";
 
 // Pieces the products list and the product page share: stock wording and the number sheets.
@@ -25,13 +25,11 @@ export const stockTone: Record<StockLevel, Tone> = {
   ok: "soft",
 };
 
-const digits = (text: string) => Number(text.replaceAll(/\D/gu, ""));
-
-/** Prices move in steps of 5,000₮. */
 const PRICE_STEP = 5000;
 
 const bigNumber = css.raw(field, {
   flex: 1,
+  minWidth: 0,
   textAlign: "center",
   fontSize: "30px",
   fontWeight: "700",
@@ -40,20 +38,24 @@ const bigNumber = css.raw(field, {
 
 const plusMinus = css.raw(round, { width: "56px", height: "56px", fontSize: "22px" });
 
-type Form = { prompt: string; busy: boolean; failed: string | undefined };
+type NumberProps = {
+  start: number;
+  /** A price steps by 5,000₮ from 5,000₮, shows as money, and saves only when changed. */
+  price?: boolean;
+  min?: number;
+  busy: boolean;
+  failed: string | undefined;
+  onSave: (value: number) => void;
+};
 
-type SheetFrame = { open: boolean; title: string; onClose: () => void };
-
-type StepperProps = Form & { start: number; min: number; onSave: (value: number) => void };
-
-type PriceProps = Form & { price: number; onSave: (price: number) => void };
-
-/** − number +, for a count (from 0) or a shipment (from 1). Opens fresh at `start` each time. */
-export function StepperSheet(props: SheetFrame & StepperProps) {
+/** − number +, opened fresh at `start` each time: a count, a shipment or a price. */
+export function NumberSheet(
+  props: NumberProps & { open: boolean; title: string; prompt: string; onClose: () => void },
+) {
   return (
-    <Sheet open={props.open} title={props.title} onClose={props.onClose}>
+    <Sheet open={props.open} title={props.title} prompt={props.prompt} onClose={props.onClose}>
       <Show when={props.open}>
-        <Stepper {...props} />
+        <NumberInput {...props} />
       </Show>
     </Sheet>
   );
@@ -61,10 +63,6 @@ export function StepperSheet(props: SheetFrame & StepperProps) {
 
 export type StockMode = "count" | "receive";
 
-/**
- * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
- * shelf, Ирсэн adds a shipment. Switching resets the number for that job.
- */
 type StockProps = {
   busy: boolean;
   failed: string | undefined;
@@ -74,6 +72,10 @@ type StockProps = {
 
 type StockProduct = { name: string; brand: string; count: number; stock: number | null };
 
+/**
+ * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
+ * shelf, Ирсэн adds a shipment. Switching resets the number for that job.
+ */
 export function StockSheet(
   props: StockProps & {
     product: StockProduct | undefined;
@@ -112,120 +114,68 @@ function StockBody(props: StockProps & { product: StockProduct; mode: StockMode 
       </div>
       <Show when={mode()} keyed>
         {(current) => (
-          <Stepper
-            prompt={
-              current === "count"
+          <>
+            <p class={css(sheetPrompt)}>
+              {current === "count"
                 ? `${props.product.brand} · ${props.product.count} ш. Тавиур дээр хэд байна?`
-                : `Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(props.product.stock)}.`
-            }
-            start={current === "count" ? (props.product.stock ?? 0) : 1}
-            min={current === "count" ? 0 : 1}
-            busy={props.busy}
-            failed={props.failed}
-            onSave={current === "count" ? props.onCount : props.onReceive}
-          />
+                : `Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(props.product.stock)}.`}
+            </p>
+            <NumberInput
+              start={current === "count" ? (props.product.stock ?? 0) : 1}
+              min={current === "count" ? 0 : 1}
+              busy={props.busy}
+              failed={props.failed}
+              onSave={current === "count" ? props.onCount : props.onReceive}
+            />
+          </>
         )}
       </Show>
     </>
   );
 }
 
-function Stepper(props: StepperProps) {
+function NumberInput(props: NumberProps) {
   const [value, setValue] = createSignal(untrack(() => props.start));
+  const step = () => (props.price ? PRICE_STEP : 1);
+  const min = () => props.min ?? step();
 
   return (
     <>
-      <p class={css(sub, { pb: "18px", mt: "-10px" })}>{props.prompt}</p>
       <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
         <button
           type="button"
-          aria-label="Хасах"
-          disabled={value() <= props.min}
-          onClick={() => setValue((current) => Math.max(props.min, current - 1))}
+          aria-label={props.price ? `${thousands(PRICE_STEP)}₮ хасах` : "Хасах"}
+          disabled={value() <= min()}
+          onClick={() => setValue((current) => Math.max(min(), current - step()))}
           class={css(plusMinus)}
         >
           <MinusIcon />
         </button>
         <input
           inputmode="numeric"
-          value={value()}
-          onInput={(event) => setValue(digits(event.currentTarget.value))}
+          aria-label={props.price ? "Үнэ" : undefined}
+          value={props.price ? (value() === 0 ? "" : `${thousands(value())}₮`) : value()}
+          onInput={(event) => setValue(Number(digits(event.currentTarget.value)))}
           class={css(bigNumber)}
         />
         <button
           type="button"
-          aria-label="Нэмэх"
-          onClick={() => setValue((current) => current + 1)}
+          aria-label={props.price ? `${thousands(PRICE_STEP)}₮ нэмэх` : "Нэмэх"}
+          onClick={() => setValue((current) => current + step())}
           class={css(plusMinus)}
         >
           <PlusIcon />
         </button>
       </div>
-      <Failed text={props.failed} />
-      <button
-        type="button"
-        disabled={props.busy || value() < props.min}
+      <SaveButton
+        failed={props.failed}
+        disabled={
+          props.busy || value() < min() || (props.price === true && value() === props.start)
+        }
         onClick={() => props.onSave(value())}
-        class={css(button, act, wide)}
       >
-        Хадгалах
-      </button>
-    </>
-  );
-}
-
-/** A new shelf price, typed with thousands separators. */
-export function PriceSheet(props: SheetFrame & PriceProps) {
-  return (
-    <Sheet open={props.open} title={props.title} onClose={props.onClose}>
-      <Show when={props.open}>
-        <PriceInput {...props} />
-      </Show>
-    </Sheet>
-  );
-}
-
-function PriceInput(props: PriceProps) {
-  const [price, setPrice] = createSignal(untrack(() => props.price));
-
-  return (
-    <>
-      <p class={css(sub, { pb: "18px", mt: "-10px" })}>{props.prompt}</p>
-      <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
-        <button
-          type="button"
-          aria-label={`${thousands(PRICE_STEP)}₮ хасах`}
-          disabled={price() <= PRICE_STEP}
-          onClick={() => setPrice((current) => Math.max(PRICE_STEP, current - PRICE_STEP))}
-          class={css(plusMinus)}
-        >
-          <MinusIcon />
-        </button>
-        <input
-          inputmode="numeric"
-          aria-label="Үнэ"
-          value={price() === 0 ? "" : `${thousands(price())}₮`}
-          onInput={(event) => setPrice(digits(event.currentTarget.value))}
-          class={css(bigNumber, { minWidth: 0 })}
-        />
-        <button
-          type="button"
-          aria-label={`${thousands(PRICE_STEP)}₮ нэмэх`}
-          onClick={() => setPrice((current) => current + PRICE_STEP)}
-          class={css(plusMinus)}
-        >
-          <PlusIcon />
-        </button>
-      </div>
-      <Failed text={props.failed} />
-      <button
-        type="button"
-        disabled={props.busy || price() <= 0 || price() === props.price}
-        onClick={() => props.onSave(price())}
-        class={css(button, act, wide)}
-      >
-        {price() > 0 ? `${money(price())} болгох` : "Хадгалах"}
-      </button>
+        {props.price && value() > 0 ? `${money(value())} болгох` : "Хадгалах"}
+      </SaveButton>
     </>
   );
 }

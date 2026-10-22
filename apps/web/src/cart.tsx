@@ -5,7 +5,8 @@ import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
 
 import { money } from "./format";
-import { headline, section, sectionHead, sub, Tile, title3 } from "./ui";
+import { Tile } from "./photos";
+import { headline, section, sectionHead, sub, title3 } from "./ui";
 
 /** Сагс on the new-order page: each picked product with a stepper, then the sums. */
 export function Cart(props: {

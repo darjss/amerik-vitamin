@@ -31,9 +31,8 @@ import CloseIcon from "~icons/ph/x-bold";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { failureText, money, offline, sized, srcset, when } from "../../format";
-import { PriceSheet, StepperSheet, stockText, stockTone } from "../../products";
+import { NumberSheet, stockText, stockTone } from "../../products";
 import {
-  act,
   appear,
   button,
   Failed,
@@ -46,6 +45,7 @@ import {
   press,
   Problem,
   round,
+  SaveButton,
   section,
   sectionHead,
   Sheet,
@@ -53,10 +53,10 @@ import {
   title2,
   wide,
 } from "../../ui";
+import { Zoom } from "../../photos";
 import { DetailSkeleton } from "../../skeletons";
 import type { Icon } from "../../ui";
 import { formText, reasonText, stockAsk } from "../../words";
-import { Zoom } from "../../zoom";
 
 /** The label facts she'd read off the bottle, skipping what the product doesn't have. */
 const facts = (product: ProductDetail) =>
@@ -462,7 +462,7 @@ export default function ProductPage() {
               </Show>
             </section>
 
-            <StepperSheet
+            <NumberSheet
               open={sheet() === "count"}
               title="Тоолох"
               prompt="Тавиур дээр хэд байна?"
@@ -473,7 +473,7 @@ export default function ProductPage() {
               onClose={() => open(undefined)}
               onSave={(counted) => void count(counted)}
             />
-            <StepperSheet
+            <NumberSheet
               open={sheet() === "receive"}
               title="Ирсэн бараа"
               prompt={`Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(product().stock)}.`}
@@ -484,39 +484,41 @@ export default function ProductPage() {
               onClose={() => open(undefined)}
               onSave={(received) => void receive(received)}
             />
-            <PriceSheet
+            <NumberSheet
               open={sheet() === "price"}
               title="Үнэ"
               prompt={`Одоо ${money(product().price)}. Хуучин захиалгын үнэ өөрчлөгдөхгүй.`}
-              price={product().price}
+              start={product().price}
+              price
               busy={busy()}
               failed={failed()}
               onClose={() => open(undefined)}
               onSave={(price) => void setPrice(price)}
             />
-            <Sheet open={sheet() === "menu"} title={product().name} onClose={() => open(undefined)}>
+            <Sheet
+              open={sheet() === "menu"}
+              title={product().name}
+              prompt={
+                product().archivedAt === null ? (
+                  <Note>Хуучин захиалгууд хэвээр үлдэнэ. Хүссэн үедээ сэргээж болно.</Note>
+                ) : (
+                  "Архивласан бараа жагсаалт болон шинэ захиалгад харагдахгүй."
+                )
+              }
+              onClose={() => open(undefined)}
+            >
               <Show
                 when={product().archivedAt === null}
                 fallback={
-                  <>
-                    <p class={css(sub, { pb: "18px", mt: "-10px" })}>
-                      Архивласан бараа жагсаалт болон шинэ захиалгад харагдахгүй.
-                    </p>
-                    <Failed text={failed()} />
-                    <button
-                      type="button"
-                      disabled={busy()}
-                      onClick={() => void archive(false)}
-                      class={css(button, act, wide)}
-                    >
-                      Сэргээх
-                    </button>
-                  </>
+                  <SaveButton
+                    failed={failed()}
+                    disabled={busy()}
+                    onClick={() => void archive(false)}
+                  >
+                    Сэргээх
+                  </SaveButton>
                 }
               >
-                <div class={css({ pb: "18px", mt: "-10px" })}>
-                  <Note>Хуучин захиалгууд хэвээр үлдэнэ. Хүссэн үедээ сэргээж болно.</Note>
-                </div>
                 <Failed text={failed()} />
                 <button
                   type="button"

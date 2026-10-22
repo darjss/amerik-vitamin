@@ -20,22 +20,19 @@ import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
 import { failureText, money, sized, srcset, thousands } from "./format";
 import {
-  act,
-  button,
   chip,
   chipOn,
   Dock,
-  Failed,
   field,
   glass,
   Note,
   panel,
   round,
+  SaveButton,
   section,
   sectionHead,
   sub,
   title2,
-  wide,
 } from "./ui";
 import { formText } from "./words";
 
@@ -450,15 +447,13 @@ export function DraftForm(props: {
       </section>
 
       <Dock>
-        <Failed text={failed()} />
-        <button
-          type="button"
+        <SaveButton
+          failed={failed()}
           disabled={busy() || missing() !== undefined || duplicate() !== null}
           onClick={() => void save()}
-          class={css(button, act, wide)}
         >
           {buttonText()}
-        </button>
+        </SaveButton>
       </Dock>
     </div>
   );

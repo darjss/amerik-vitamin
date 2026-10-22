@@ -26,8 +26,8 @@ import TruckIcon from "~icons/ph/truck-bold";
 
 import { ApiClient } from "./api/client";
 import { RuntimeContext } from "./api/solid-effect";
-import { failureText, money, offline, thousands } from "./format";
-import { act, button, Failed, field, Pill, Segmented, Sheet, sub, wide } from "./ui";
+import { digits, failureText, money, offline, thousands } from "./format";
+import { act, button, field, Pill, SaveButton, Segmented, Sheet, sub, wide } from "./ui";
 import { methodText } from "./words";
 
 /** The one thing to do next: hand it to TU, or confirm it arrived. COMMERCE-RULES. */
@@ -339,7 +339,7 @@ export function PaySheet(props: {
 }) {
   const [method, setMethod] = createSignal<ManualPayment["method"]>("cash");
   const [typed, setTyped] = createSignal<string>();
-  const amount = () => Number((typed() ?? String(props.balance)).replaceAll(/\D/gu, ""));
+  const amount = () => Number(digits(typed() ?? String(props.balance)));
 
   return (
     <Sheet open={props.open} title="Мөнгө авсан" onClose={() => props.onClose()}>
@@ -364,15 +364,13 @@ export function PaySheet(props: {
           })}
         />
       </label>
-      <Failed text={props.failed} />
-      <button
-        type="button"
+      <SaveButton
+        failed={props.failed}
         disabled={props.busy || amount() <= 0}
         onClick={() => props.onSave(amount(), method())}
-        class={css(button, act, wide)}
       >
         {money(amount())} бүртгэх
-      </button>
+      </SaveButton>
     </Sheet>
   );
 }
@@ -408,17 +406,15 @@ export function EditSheet(props: {
           class={css(field)}
         />
       </label>
-      <Failed text={props.failed} />
-      <button
-        type="button"
+      <SaveButton
+        failed={props.failed}
         disabled={props.busy}
         onClick={() =>
           props.onSave(address() ?? props.order.address ?? "", notes() ?? props.order.notes ?? "")
         }
-        class={css(button, act, wide)}
       >
         Хадгалах
-      </button>
+      </SaveButton>
     </Sheet>
   );
 }

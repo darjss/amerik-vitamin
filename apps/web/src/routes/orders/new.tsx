@@ -34,27 +34,24 @@ import StoreIcon from "~icons/ph/storefront";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { Cart } from "../../cart";
-import { failureText, matches, money } from "../../format";
+import { digits, failureText, matches, money } from "../../format";
+import { Tile } from "../../photos";
 import {
-  act,
   appear,
-  button,
   Dock,
-  Failed,
   glassBar,
   headline,
   panel,
   Pill,
   press,
   Problem,
+  SaveButton,
   searchBox,
   section,
   Segmented,
   spinner,
   sub,
-  Tile,
   title3,
-  wide,
 } from "../../ui";
 import { GridSkeleton } from "../../skeletons";
 import type { Icon } from "../../ui";
@@ -265,9 +262,7 @@ export default function NewOrder() {
                 aria-label="Утас"
                 placeholder={walkIn() ? "Утас, заавал биш" : "Утас"}
                 value={phone()}
-                onInput={(event) =>
-                  setPhone(event.currentTarget.value.replaceAll(/\D/gu, "").slice(-8))
-                }
+                onInput={(event) => setPhone(digits(event.currentTarget.value).slice(-8))}
                 class={css({
                   fontWeight: "650",
                   letterSpacing: "0.01em",
@@ -519,15 +514,13 @@ export default function NewOrder() {
             </section>
 
             <Dock>
-              <Failed text={failed()} />
-              <button
-                type="button"
+              <SaveButton
+                failed={failed()}
                 disabled={missing() !== undefined || busy()}
-                onClick={() => place()}
-                class={css(button, act, wide)}
+                onClick={() => void place()}
               >
                 {missing() ?? `Захиалга үүсгэх · ${money(subtotal() + fee())}`}
-              </button>
+              </SaveButton>
             </Dock>
           </div>
         </Loading>

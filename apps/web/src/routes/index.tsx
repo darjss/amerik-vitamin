@@ -8,6 +8,7 @@ import PackageIcon from "~icons/ph/package-bold";
 import { ApiClient } from "../api/client";
 import { runEffect } from "../api/solid-effect";
 import { longDate, money } from "../format";
+import { Tile } from "../photos";
 import {
   act,
   appear,
@@ -23,7 +24,6 @@ import {
   small,
   sub,
   TabBar,
-  Tile,
   title2,
   title3,
   top,

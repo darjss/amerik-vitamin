@@ -8,7 +8,7 @@ import { serverLayer } from "./api/binding";
 import { WebLayer } from "./api/client";
 import { createRuntime, RuntimeContext } from "./api/solid-effect";
 import { createHeldSteps, HeldSteps } from "./orders";
-import { ZoomProvider } from "./zoom";
+import { ZoomProvider } from "./photos";
 
 import "@fontsource-variable/inter/opsz.css";
 import "./app.css";

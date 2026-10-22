@@ -1,7 +1,7 @@
 import { Unauthorized } from "@amerik/contracts";
 import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { createEffect, createUniqueId, For, Show, useContext } from "solid-js";
+import { createEffect, createUniqueId, For, Show } from "solid-js";
 import { css } from "styled-system/css";
 import HouseFillIcon from "~icons/ph/house-fill";
 import HouseIcon from "~icons/ph/house";
@@ -10,10 +10,6 @@ import PillIcon from "~icons/ph/pill";
 import ReceiptFillIcon from "~icons/ph/receipt-fill";
 import ReceiptIcon from "~icons/ph/receipt";
 import WarningIcon from "~icons/ph/warning-circle-fill";
-
-import { sized, srcset } from "./format";
-import { Zoom } from "./zoom";
-import type { Product } from "./zoom";
 
 export type Icon = (props: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 
@@ -283,123 +279,6 @@ export function Pill(props: { tone: Tone; children: JSX.Element }) {
   return <span class={css(pillBase, tones[props.tone])}>{props.children}</span>;
 }
 
-const tileBase = css.raw({
-  position: "relative",
-  display: "block",
-  flex: "none",
-  bg: "white",
-  boxShadow: "raiseSm",
-  "& img": {
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "contain",
-    p: "9%",
-  },
-});
-
-const rings = {
-  page: css.raw({ boxShadow: "0 0 0 2.5px {colors.page}" }),
-  surface: css.raw({ boxShadow: "0 0 0 2.5px {colors.surface}" }),
-};
-
-/**
- * A product photo as a raised white tile, with ×N as a teal badge on its
- * corner. A tap shows it full size unless `still`; sizes are inline styles
- * because Panda only builds classes for values written in a css() call.
- */
-export function Tile(props: {
-  product: Product;
-  size?: number;
-  quantity?: number;
-  soft?: boolean;
-  ring?: keyof typeof rings;
-  still?: boolean;
-}) {
-  const zoom = useContext(Zoom);
-
-  const box = () => {
-    const radius = props.size === undefined || props.size >= 100 ? 20 : props.size >= 60 ? 17 : 14;
-
-    return props.size === undefined
-      ? { width: "100%", "aspect-ratio": "1", "border-radius": `${radius}px` }
-      : { width: `${props.size}px`, height: `${props.size}px`, "border-radius": `${radius}px` };
-  };
-
-  const inside = () => (
-    <>
-      <Show when={props.product.image}>
-        {(src) => (
-          // A tile without a size fills a grid cell, about 120px on her phone.
-          <img
-            src={sized(src(), (props.size ?? 120) * 2)}
-            srcset={srcset(src(), props.size ?? 120)}
-            alt={`${props.product.brand} ${props.product.name}`}
-            loading="lazy"
-            decoding="async"
-          />
-        )}
-      </Show>
-      <Show when={props.quantity}>
-        {(quantity) => (
-          <b
-            class={css(
-              {
-                position: "absolute",
-                zIndex: 2,
-                top: "-7px",
-                right: "-7px",
-                minWidth: "28px",
-                height: "28px",
-                px: "7px",
-                borderRadius: "14px",
-                bg: "sel",
-                color: "white",
-                fontSize: "15px",
-                fontWeight: "700",
-                display: "grid",
-                placeItems: "center",
-                fontVariantNumeric: "tabular-nums",
-                pointerEvents: "none",
-              },
-              rings[props.ring ?? "page"],
-              props.soft && { bg: "selSoft", color: "sel" },
-            )}
-          >
-            ×{quantity()}
-          </b>
-        )}
-      </Show>
-    </>
-  );
-
-  return (
-    <Show
-      when={!props.still && props.product.image}
-      fallback={
-        <span class={css(tileBase)} style={box()}>
-          {inside()}
-        </span>
-      }
-    >
-      <button
-        type="button"
-        aria-label={`${props.product.name} томоор харах`}
-        onClick={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          zoom(props.product);
-        }}
-        class={css(tileBase, { zIndex: 1, cursor: "zoom-in" })}
-        style={box()}
-      >
-        {inside()}
-      </button>
-    </Show>
-  );
-}
-
 export function Segmented<T extends string>(props: {
   options: ReadonlyArray<readonly [T, string, Icon?]>;
   value: T;
@@ -496,6 +375,28 @@ export function Failed(props: { text: string | undefined }) {
   );
 }
 
+/** A form's one write, with why the last try failed right above it. */
+export function SaveButton(props: {
+  failed: string | undefined;
+  disabled: boolean;
+  onClick: () => void;
+  children: JSX.Element;
+}) {
+  return (
+    <>
+      <Failed text={props.failed} />
+      <button
+        type="button"
+        disabled={props.disabled}
+        onClick={() => props.onClick()}
+        class={css(button, act, wide)}
+      >
+        {props.children}
+      </button>
+    </>
+  );
+}
+
 /** A failed read, or an expired session. */
 export function Problem(props: { error: unknown }) {
   const unauthorized = () => props.error instanceof Unauthorized;
@@ -512,10 +413,13 @@ export function Problem(props: { error: unknown }) {
   );
 }
 
+export const sheetPrompt = css.raw(sub, { pb: "18px", mt: "-10px" });
+
 /** A bottom sheet on the native dialog: Escape, the backdrop and the grabber close it. */
 export function Sheet(props: {
   open: boolean;
   title: string;
+  prompt?: JSX.Element;
   onClose: () => void;
   children: JSX.Element;
 }) {
@@ -577,6 +481,7 @@ export function Sheet(props: {
         })}
       />
       <h2 class={css(title3, { pt: "6px", pb: "18px" })}>{props.title}</h2>
+      <Show when={props.prompt}>{(prompt) => <div class={css(sheetPrompt)}>{prompt()}</div>}</Show>
       {props.children}
     </dialog>
   );

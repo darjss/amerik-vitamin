@@ -30,7 +30,8 @@ import TagIcon from "~icons/ph/tag";
 import { ApiClient } from "../../api/client";
 import { runEffect, RuntimeContext } from "../../api/solid-effect";
 import { failureText, matches, money } from "../../format";
-import { PriceSheet, StockSheet, stockText, stockTone } from "../../products";
+import { Tile } from "../../photos";
+import { NumberSheet, StockSheet, stockText, stockTone } from "../../products";
 import type { StockMode } from "../../products";
 import {
   appear,
@@ -50,7 +51,6 @@ import {
   small,
   sub,
   TabBar,
-  Tile,
   tones,
   top,
 } from "../../ui";
@@ -423,11 +423,12 @@ export default function Products() {
           }
         }}
       />
-      <PriceSheet
+      <NumberSheet
         open={pricing() !== undefined}
         title={pricing()?.name ?? ""}
         prompt={`Одоо ${money(pricing()?.price ?? 0)}. Хуучин захиалгын үнэ өөрчлөгдөхгүй.`}
-        price={pricing()?.price ?? 0}
+        start={pricing()?.price ?? 0}
+        price
         busy={busy()}
         failed={failed()}
         onClose={close}

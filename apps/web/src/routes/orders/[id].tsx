@@ -39,6 +39,7 @@ import {
   StepButton,
   Tracker,
 } from "../../orders";
+import { Tile } from "../../photos";
 import {
   appear,
   button,
@@ -58,7 +59,6 @@ import {
   sectionHead,
   Sheet,
   sub,
-  Tile,
   title2,
 } from "../../ui";
 import { DetailSkeleton } from "../../skeletons";
@@ -368,7 +368,7 @@ export default function OrderPage() {
                           <small
                             class={css({ display: "block", fontSize: "15px", fontWeight: "500" })}
                           >
-                            {methodText[payment().method]} · {clock(payment().createdAt)}
+                            {methodText[payment().method]} · {clock.format(payment().createdAt)}
                           </small>
                         </span>
                       </span>
