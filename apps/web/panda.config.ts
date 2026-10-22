@@ -2,9 +2,6 @@ import { defineConfig } from "@pandacss/dev";
 import presetBase from "@pandacss/preset-base";
 import pandaPreset from "@pandacss/preset-panda";
 
-// The dashboard's look is decided in PRODUCT.md: "Native, two-tone". Warm ink
-// does things, petrol teal shows what is selected or done, and the other
-// colours are statuses. Photos, depth and type carry the rest.
 export default defineConfig({
   include: ["./src/**/*.{ts,tsx}"],
   jsxFramework: "solid",
@@ -55,12 +52,10 @@ export default defineConfig({
         footnote: { value: { fontSize: "13px", lineHeight: "17px" } },
       },
       keyframes: {
-        // Content that just loaded rises a few pixels into place.
         appear: {
           from: { opacity: 0, transform: "translateY(4px)" },
           to: { opacity: 1, transform: "none" },
         },
-        // A skeleton's light sweeping left to right.
         shimmer: {
           from: { backgroundPosition: "100% 0" },
           to: { backgroundPosition: "-100% 0" },
@@ -72,16 +67,12 @@ export default defineConfig({
           surface: { value: "#fffdf9" },
           ink: { value: "#1e1b17" },
           inkMuted: { value: "#665e54" },
-          // Placeholders and the label of an action that isn't ready yet.
           inkFaint: { value: "#857d72" },
           line: { value: "#e9e3d8" },
           chip: { value: "#efeae0" },
-          // Empty progress: the tracker's connectors and the packing bars.
           track: { value: "#e1d9cb" },
-          // Rings around what isn't done yet: a tracker dot, a packing tick box.
           dot: { value: "#d9d1c3" },
           tick: { value: "#c9c0b1" },
-          // Behind a sheet or the full-size photo.
           scrim: { value: "rgba(15,14,12,.45)" },
           sel: { value: "#0f4c5c" },
           selSoft: { value: "#e1ecee" },
@@ -94,7 +85,6 @@ export default defineConfig({
           waitInk: { value: "#4d3400" },
         },
         fonts: {
-          // Inter has Mongolian's Ө and Ү; its optical sizes draw large titles as Inter Display.
           sans: { value: "'Inter Variable', -apple-system, system-ui, sans-serif" },
         },
         shadows: {

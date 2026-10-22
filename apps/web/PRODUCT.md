@@ -49,14 +49,18 @@ Two tones do the work. Warm ink fills every action. Petrol teal marks what's sel
 | surface   | `#fffdf9`              | Raised panels, buttons, chips, search fields                                        |
 | ink       | `#1e1b17`              | Text, and every filled action: TU-д өгөх, Савлах, +, call, Захиалга үүсгэх          |
 | ink-muted | `#665e54`              | Secondary text                                                                      |
+| ink-faint | `#857d72`              | Placeholders, the label of an action that isn't ready yet                           |
 | chip      | `#efeae0`              | Segmented control track, an action that isn't ready yet                             |
+| track     | `#e1d9cb`              | Empty progress: the tracker's connectors, the packing bars                          |
+| dot, tick | `#d9d1c3`, `#c9c0b1`   | Rings around what isn't done yet: a tracker dot, a packing tick box                 |
+| scrim     | `rgba(15,14,12,.45)`   | Behind a sheet or the full-size photo                                               |
 | sel       | `#0f4c5c`              | Active filter, done tracker steps, ticks, packing progress, ×N badges, picked tiles |
 | sel-soft  | `#e1ecee`              | Active tab, ×N on the order page, "2 дахь захиалга", a held row                     |
 | paid      | `#2f6b3a` on `#e5efe2` | Paid                                                                                |
 | owes      | `#b4233c` on `#fbe6e8` | Money to collect, payment waiting, sold out                                         |
 | wait      | `#8a5a00` on `#f8ecce` | Notes she must not miss, "3 хоног", low stock                                       |
 
-Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only.
+Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only. The type scale is iOS's, as Panda text styles in `panda.config.ts`: largeTitle 34/40, title2 22/28, title3 20/25, headline 17/22 semibold, body 17, callout 16/20, subhead 15/20, footnote 13/17. Big numerals for money, stock and counts are one-offs on their page.
 
 Rules:
 
