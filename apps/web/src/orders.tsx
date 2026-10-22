@@ -254,7 +254,7 @@ export function Tracker(props: { order: OrderDetail }) {
                 flexDirection: "column",
                 alignItems: "center",
                 gap: "8px",
-                fontSize: "13px",
+                textStyle: "footnote",
                 fontWeight: "600",
                 textAlign: "center",
                 color: "inkMuted",

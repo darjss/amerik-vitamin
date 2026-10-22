@@ -15,6 +15,45 @@ export default defineConfig({
   presets: [presetBase, pandaPreset],
   theme: {
     extend: {
+      textStyles: {
+        largeTitle: {
+          value: {
+            fontSize: "34px",
+            lineHeight: "40px",
+            fontWeight: "700",
+            letterSpacing: "-0.025em",
+            textWrap: "balance",
+          },
+        },
+        title2: {
+          value: {
+            fontSize: "22px",
+            lineHeight: "28px",
+            fontWeight: "700",
+            letterSpacing: "-0.02em",
+          },
+        },
+        title3: {
+          value: {
+            fontSize: "20px",
+            lineHeight: "25px",
+            fontWeight: "650",
+            letterSpacing: "-0.015em",
+          },
+        },
+        headline: {
+          value: {
+            fontSize: "17px",
+            lineHeight: "22px",
+            fontWeight: "600",
+            letterSpacing: "-0.01em",
+          },
+        },
+        body: { value: { fontSize: "17px", lineHeight: "1.3" } },
+        callout: { value: { fontSize: "16px", lineHeight: "20px" } },
+        subhead: { value: { fontSize: "15px", lineHeight: "20px" } },
+        footnote: { value: { fontSize: "13px", lineHeight: "17px" } },
+      },
       keyframes: {
         // Content that just loaded rises a few pixels into place.
         appear: {

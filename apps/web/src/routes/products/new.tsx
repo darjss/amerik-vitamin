@@ -25,8 +25,6 @@ import {
   Failed,
   glass,
   glassBar,
-  headline,
-  largeTitle,
   Note,
   panel,
   Problem,
@@ -79,7 +77,7 @@ export default function NewProductPage() {
         <a href="/products" aria-label="Хаах" class={css(round, glass)}>
           <CloseIcon />
         </a>
-        <b class={css(headline, { flex: 1, textAlign: "center" })}>Шинэ бараа</b>
+        <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>Шинэ бараа</b>
         <span class={css({ width: "44px" })} />
       </header>
 
@@ -92,7 +90,7 @@ export default function NewProductPage() {
               when={params.manual}
               fallback={
                 <div class={css({ px: "16px", pt: "8px", display: "grid", gap: "14px" })}>
-                  <h1 class={css(largeTitle, { px: "4px" })}>Юунаас унших вэ?</h1>
+                  <h1 class={css({ textStyle: "largeTitle", px: "4px" })}>Юунаас унших вэ?</h1>
                   <p class={css(sub, { px: "4px", mt: "-6px" })}>
                     AI Amazon-оос мэдээлэл, зураг олж, тайлбар бичээд маягтыг бөглөнө. Та шалгаад
                     үнээ оруулна.
@@ -105,7 +103,7 @@ export default function NewProductPage() {
                       gap: "8px",
                       py: "28px",
                       cursor: "pointer",
-                      fontSize: "17px",
+                      textStyle: "body",
                       fontWeight: "650",
                       "& svg": { fontSize: "34px", color: "sel" },
                     })}
@@ -129,7 +127,7 @@ export default function NewProductPage() {
                         display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                        fontSize: "17px",
+                        textStyle: "body",
                         fontWeight: "650",
                         "& svg": { color: "sel", fontSize: "20px" },
                       })}
@@ -251,7 +249,7 @@ function Progress() {
       <div class={css(panel, { p: "22px", display: "grid", gap: "16px" })}>
         <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
           <span class={css(spinner)} />
-          <b class={css(headline, { flex: 1 })}>{steps[step()]}</b>
+          <b class={css({ textStyle: "headline", flex: 1 })}>{steps[step()]}</b>
           <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>{seconds()} сек</span>
         </div>
         <div class={css({ display: "grid", gap: "8px" })}>
@@ -259,7 +257,8 @@ function Progress() {
             {(name, index) => (
               <div
                 class={css(
-                  { display: "flex", gap: "10px", fontSize: "15px", color: "inkMuted" },
+                  sub,
+                  { display: "flex", gap: "10px" },
                   index() < step() && { color: "sel" },
                   index() === step() && { color: "ink", fontWeight: "600" },
                 )}

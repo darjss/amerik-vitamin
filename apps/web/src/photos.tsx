@@ -57,7 +57,7 @@ export function ZoomProvider(props: { children: JSX.Element }) {
               <b class={css({ fontSize: "22px", lineHeight: "28px", fontWeight: "700" })}>
                 {product().name}
               </b>
-              <span class={css({ color: "inkMuted", fontSize: "17px" })}>
+              <span class={css({ textStyle: "body", color: "inkMuted" })}>
                 {product().brand} · {product().count} ш
               </span>
             </>
@@ -141,7 +141,7 @@ export function Tile(props: {
                 borderRadius: "14px",
                 bg: "sel",
                 color: "white",
-                fontSize: "15px",
+                textStyle: "subhead",
                 fontWeight: "700",
                 display: "grid",
                 placeItems: "center",

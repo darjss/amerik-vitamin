@@ -22,7 +22,6 @@ import {
   section,
   sectionHead,
   sub,
-  title2,
 } from "./ui";
 import { formText } from "./words";
 
@@ -52,7 +51,7 @@ export const blank: ProductDraft = {
   note: "",
 };
 
-const label = css.raw({ display: "grid", gap: "6px", fontSize: "15px", color: "inkMuted" });
+const label = css.raw(sub, { display: "grid", gap: "6px" });
 
 /** A text field; the ink color keeps typed text dark inside the muted label. */
 export const input = css.raw(field, { color: "ink" });
@@ -273,7 +272,7 @@ export function DraftForm(props: {
 
       <section class={css(section, { mt: "22px" })}>
         <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css(title2, { fontSize: "18px" })}>Хэлбэр</h2>
+          <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Хэлбэр</h2>
         </div>
         <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
           <For each={ProductForm.literals}>
@@ -296,7 +295,7 @@ export function DraftForm(props: {
 
       <section class={css(section, { mt: "22px" })}>
         <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css(title2, { fontSize: "18px" })}>Ангилал</h2>
+          <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Ангилал</h2>
         </div>
         <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
           <For each={props.options.categories}>

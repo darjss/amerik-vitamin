@@ -27,7 +27,6 @@ import {
   Failed,
   glass,
   glassBar,
-  headline,
   Note,
   panel,
   Pill,
@@ -39,7 +38,6 @@ import {
   sectionHead,
   Sheet,
   sub,
-  title2,
   wide,
 } from "../../ui";
 import type { Icon } from "../../ui";
@@ -77,7 +75,9 @@ export default function ProductPage() {
               <a href="/products" aria-label="Хаах" class={css(round, glass)}>
                 <CloseIcon />
               </a>
-              <b class={css(headline, { flex: 1, textAlign: "center" })}>{product().brand}</b>
+              <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>
+                {product().brand}
+              </b>
               <button
                 type="button"
                 aria-label="Бусад үйлдэл"
@@ -235,7 +235,14 @@ function Gallery(props: { product: ProductDetail }) {
 function Heading(props: { product: ProductDetail; onPrice: () => void }) {
   return (
     <div class={css({ px: "20px", pt: "8px" })}>
-      <h1 class={css(title2, { fontSize: "26px", lineHeight: "32px", textWrap: "balance" })}>
+      <h1
+        class={css({
+          textStyle: "title2",
+          fontSize: "26px",
+          lineHeight: "32px",
+          textWrap: "balance",
+        })}
+      >
         {props.product.name}
       </h1>
       <div class={css({ display: "flex", alignItems: "center", gap: "10px", mt: "12px" })}>
@@ -312,7 +319,7 @@ const quickAction = css.raw(press, {
   bg: "surface",
   color: "ink",
   boxShadow: "raiseSm",
-  fontSize: "13px",
+  textStyle: "footnote",
   fontWeight: "600",
   "& svg": { fontSize: "24px" },
 });
@@ -402,17 +409,16 @@ function Facts(props: { product: ProductDetail }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Мэдээлэл</h2>
+        <h2 class={css({ textStyle: "title2" })}>Мэдээлэл</h2>
       </div>
       <dl class={css({ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 16px" })}>
         <For each={facts(props.product)} keyed={(fact) => fact.label}>
           {(fact) => (
             <>
-              <dt class={css(sub, { fontSize: "17px", lineHeight: "22px" })}>{fact().label}</dt>
+              <dt class={css(sub, { textStyle: "body" })}>{fact().label}</dt>
               <dd
                 class={css({
-                  fontSize: "17px",
-                  lineHeight: "22px",
+                  textStyle: "body",
                   fontWeight: "550",
                   textAlign: "right",
                   fontVariantNumeric: "tabular-nums",
@@ -432,7 +438,7 @@ function Description(props: { text: string }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Тайлбар</h2>
+        <h2 class={css({ textStyle: "title2" })}>Тайлбар</h2>
       </div>
       <div class={css({ display: "grid", gap: "12px", fontSize: "17px", lineHeight: "25px" })}>
         <For each={props.text.split(/\n+/u)}>{(paragraph) => <p>{paragraph}</p>}</For>
@@ -445,7 +451,7 @@ function History(props: { moves: ReadonlyArray<StockMove>; now: Date }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Түүх</h2>
+        <h2 class={css({ textStyle: "title2" })}>Түүх</h2>
       </div>
       <Show when={props.moves.length > 0} fallback={<p class={css(sub)}>Хөдөлгөөн алга.</p>}>
         <For each={props.moves} keyed={(move) => move.id}>
@@ -460,7 +466,7 @@ function MoveRow(props: { move: StockMove; now: Date }) {
   return (
     <div class={css({ display: "flex", alignItems: "baseline", gap: "12px", py: "9px" })}>
       <div class={css({ flex: 1, minWidth: 0 })}>
-        <div class={css({ fontSize: "17px", fontWeight: "550" })}>
+        <div class={css({ textStyle: "body", fontWeight: "550" })}>
           {reasonText[props.move.reason]}
           <Show when={props.move.orderId}>
             {(orderId) => (
@@ -481,7 +487,7 @@ function MoveRow(props: { move: StockMove; now: Date }) {
       </div>
       <b
         class={css(
-          { fontSize: "17px", fontVariantNumeric: "tabular-nums" },
+          { textStyle: "body", fontVariantNumeric: "tabular-nums" },
           props.move.change > 0 && { color: "paid" },
         )}
       >

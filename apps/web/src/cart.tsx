@@ -6,7 +6,7 @@ import PlusIcon from "~icons/ph/plus-bold";
 
 import { money } from "./format";
 import { Tile } from "./photos";
-import { headline, section, sectionHead, sub, title3 } from "./ui";
+import { section, sectionHead, sub } from "./ui";
 
 export function Cart(props: {
   lines: ReadonlyArray<{ product: ProductRow; quantity: number }>;
@@ -18,7 +18,7 @@ export function Cart(props: {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title3)}>Сагс</h2>
+        <h2 class={css({ textStyle: "title3" })}>Сагс</h2>
       </div>
       <Show
         when={props.lines.length > 0}
@@ -30,7 +30,9 @@ export function Cart(props: {
               <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
                 <Tile product={line().product} size={52} />
                 <div class={css({ flex: 1, minWidth: 0 })}>
-                  <div class={css(headline, { fontSize: "16px" })}>{line().product.name}</div>
+                  <div class={css({ textStyle: "headline", fontSize: "16px" })}>
+                    {line().product.name}
+                  </div>
                   <div class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
                     {money(line().product.price * line().quantity)}
                   </div>

@@ -28,8 +28,6 @@ import {
   chipRow,
   createCopied,
   Failed,
-  headline,
-  largeTitle,
   press,
   Problem,
   round,
@@ -68,7 +66,7 @@ const rowChip = css.raw(press, {
   borderRadius: "15px",
   bg: "surface",
   boxShadow: "raiseSm",
-  fontSize: "15px",
+  textStyle: "subhead",
   fontWeight: "650",
 });
 
@@ -160,7 +158,7 @@ export default function Products() {
           pt: "52px",
         })}
       >
-        <h1 class={css(largeTitle)}>Бараа</h1>
+        <h1 class={css({ textStyle: "largeTitle" })}>Бараа</h1>
         <a href="/products/new" aria-label="Шинэ бараа" class={css(round, roundAct)}>
           <PlusIcon />
         </a>
@@ -247,7 +245,7 @@ export default function Products() {
                       <Tile product={product()} size={68} />
                       <div class={css({ flex: 1, minWidth: 0 })}>
                         <a href={`/products/${product().id}`} class={css({ display: "block" })}>
-                          <div class={css(headline)}>{product().name}</div>
+                          <div class={css({ textStyle: "headline" })}>{product().name}</div>
                           <div class={css(sub)}>
                             {product().brand} · {product().count} ш
                           </div>

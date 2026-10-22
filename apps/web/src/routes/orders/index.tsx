@@ -22,8 +22,6 @@ import {
   button,
   chip,
   chipOn,
-  headline,
-  largeTitle,
   Note,
   panel,
   Pill,
@@ -117,7 +115,7 @@ export default function Orders() {
           <PlusIcon />
         </a>
       </div>
-      <h1 class={css(largeTitle, { px: "20px", mt: "8px" })}>Захиалга</h1>
+      <h1 class={css({ textStyle: "largeTitle", px: "20px", mt: "8px" })}>Захиалга</h1>
 
       <label class={css(searchBox, { mx: "16px", mt: "16px" })}>
         <SearchIcon />
@@ -189,7 +187,7 @@ export default function Orders() {
                   </For>
                 </span>
                 <div class={css({ flex: 1, minWidth: 0, fontVariantNumeric: "tabular-nums" })}>
-                  <div class={css(headline)}>{orders().length} илгээмж</div>
+                  <div class={css({ textStyle: "headline" })}>{orders().length} илгээмж</div>
                   <div class={css(sub)}>{pieces()} ширхэг</div>
                 </div>
                 <a href="/pack" class={css(button, act, small)}>

@@ -37,7 +37,6 @@ import {
   appear,
   Dock,
   glassBar,
-  headline,
   panel,
   Pill,
   press,
@@ -48,7 +47,6 @@ import {
   Segmented,
   spinner,
   sub,
-  title3,
 } from "../../ui";
 import type { Icon } from "../../ui";
 import { sourceText } from "../../words";
@@ -201,13 +199,13 @@ export default function NewOrder() {
             px: "6px",
             display: "grid",
             placeItems: "center",
-            fontSize: "17px",
+            textStyle: "body",
             fontWeight: "600",
           })}
         >
           Болих
         </a>
-        <b class={css(headline)}>Шинэ захиалга</b>
+        <b class={css({ textStyle: "headline" })}>Шинэ захиалга</b>
       </header>
 
       {/* A failed customer lookup lands here too, not in a quiet empty pill. */}
@@ -249,7 +247,7 @@ export default function NewOrder() {
             />
 
             <section class={css(section, { mt: "26px" })}>
-              <h2 class={css(title3, { mb: "10px" })}>Төлбөр</h2>
+              <h2 class={css({ textStyle: "title3", mb: "10px" })}>Төлбөр</h2>
               <Segmented
                 options={[
                   ["prepay", "Урьдчилсан", BankIcon],
@@ -290,8 +288,7 @@ const fieldRow = css.raw({
     py: "16px",
     bg: "transparent",
     outline: "none",
-    fontSize: "17px",
-    lineHeight: "22px",
+    textStyle: "body",
     color: "ink",
     resize: "none",
     _placeholder: { color: "inkFaint" },
@@ -376,7 +373,7 @@ function PastBuys(props: {
   return (
     <Show when={props.products.length > 0}>
       <section class={css(section, { mt: "28px" })}>
-        <h2 class={css(title3, { mb: "10px" })}>Өмнө авсан</h2>
+        <h2 class={css({ textStyle: "title3", mb: "10px" })}>Өмнө авсан</h2>
         <div
           class={css({
             display: "flex",
@@ -455,7 +452,7 @@ function ProductGrid(props: {
 }) {
   return (
     <section class={css(section, { mt: "22px" })}>
-      <h2 class={css(title3)}>Бараа</h2>
+      <h2 class={css({ textStyle: "title3" })}>Бараа</h2>
       <label class={css(searchBox, { mt: "12px" })}>
         <SearchIcon />
         <input
@@ -525,8 +522,7 @@ function ProductGrid(props: {
                 class={css(sub, {
                   display: "block",
                   mt: "2px",
-                  fontSize: "13px",
-                  lineHeight: "17px",
+                  textStyle: "footnote",
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -538,7 +534,7 @@ function ProductGrid(props: {
                 class={css({
                   display: "block",
                   mt: "3px",
-                  fontSize: "15px",
+                  textStyle: "subhead",
                   fontWeight: "650",
                   fontVariantNumeric: "tabular-nums",
                 })}

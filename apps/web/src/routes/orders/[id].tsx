@@ -44,9 +44,7 @@ import {
   Failed,
   glass,
   glassBar,
-  headline,
   large,
-  largeTitle,
   Note,
   panel,
   Problem,
@@ -56,7 +54,6 @@ import {
   sectionHead,
   Sheet,
   sub,
-  title2,
 } from "../../ui";
 import { headlineText, methodText, sourceText } from "../../words";
 
@@ -132,7 +129,8 @@ export default function OrderPage() {
                 <CloseIcon />
               </a>
               <b
-                class={css(headline, {
+                class={css({
+                  textStyle: "headline",
                   flex: 1,
                   textAlign: "center",
                   fontVariantNumeric: "tabular-nums",
@@ -151,7 +149,7 @@ export default function OrderPage() {
             </header>
 
             <div class={css({ px: "20px", pt: "14px" })}>
-              <h1 class={css(largeTitle)}>{headlineOf(order())}</h1>
+              <h1 class={css({ textStyle: "largeTitle" })}>{headlineOf(order())}</h1>
               <p class={css(sub, { mt: "6px" })}>
                 {payText(order())} · {when(order().createdAt, now())} · {sourceText[order().source]}
               </p>
@@ -241,7 +239,7 @@ function Lines(props: { order: OrderDetail }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Бараа</h2>
+        <h2 class={css({ textStyle: "title2" })}>Бараа</h2>
         <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
           {props.order.lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
         </span>
@@ -252,14 +250,14 @@ function Lines(props: { order: OrderDetail }) {
             <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
               <Tile product={line()} size={64} quantity={line().quantity} soft />
               <div class={css({ flex: 1, minWidth: 0 })}>
-                <div class={css(headline)}>{line().name}</div>
+                <div class={css({ textStyle: "headline" })}>{line().name}</div>
                 <div class={css(sub)}>
                   {line().brand} · {line().count} ш
                 </div>
               </div>
               <span
                 class={css({
-                  fontSize: "17px",
+                  textStyle: "body",
                   fontWeight: "600",
                   fontVariantNumeric: "tabular-nums",
                 })}
@@ -280,7 +278,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Захиалагч</h2>
+        <h2 class={css({ textStyle: "title2" })}>Захиалагч</h2>
       </div>
       <Show when={props.order.customerPhone}>
         {(digits) => (
@@ -368,7 +366,7 @@ const receiptRow = css.raw({
   justifyContent: "space-between",
   alignItems: "baseline",
   py: "5px",
-  fontSize: "17px",
+  textStyle: "body",
   fontVariantNumeric: "tabular-nums",
 });
 
@@ -378,7 +376,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css(title2)}>Төлбөр</h2>
+        <h2 class={css({ textStyle: "title2" })}>Төлбөр</h2>
       </div>
       <div class={css(panel, { overflow: "hidden" })}>
         <div class={css({ px: "20px", py: "16px" })}>
@@ -408,7 +406,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
                 py: "14px",
                 bg: "paidBg",
                 color: "paid",
-                fontSize: "17px",
+                textStyle: "body",
                 fontWeight: "650",
                 fontVariantNumeric: "tabular-nums",
                 "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
@@ -418,7 +416,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
                 <CheckCircleIcon />
                 <span>
                   Төлсөн
-                  <small class={css({ display: "block", fontSize: "15px", fontWeight: "500" })}>
+                  <small class={css({ display: "block", textStyle: "subhead", fontWeight: "500" })}>
                     {methodText[payment().method]} · {clock.format(payment().createdAt)}
                   </small>
                 </span>
@@ -437,7 +435,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
               py: "14px",
               bg: "owesBg",
               color: "owes",
-              fontSize: "17px",
+              textStyle: "body",
               fontWeight: "650",
               fontVariantNumeric: "tabular-nums",
             })}

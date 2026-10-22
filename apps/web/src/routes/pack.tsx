@@ -21,14 +21,12 @@ import {
   Dock,
   glass,
   glassBar,
-  headline,
   large,
   Note,
   panel,
   Problem,
   round,
   sub,
-  title2,
   wide,
 } from "../ui";
 
@@ -90,7 +88,7 @@ export default function Pack() {
                 <a href="/" aria-label="Хаах" class={css(round, glass)}>
                   <CloseIcon />
                 </a>
-                <b class={css(headline, { flex: 1, textAlign: "center" })}>Савлах</b>
+                <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>Савлах</b>
                 <span
                   class={css(sub, {
                     width: "44px",
@@ -179,7 +177,7 @@ function Parcel(props: {
             gap: "6px",
             alignItems: "flex-start",
             mt: "6px",
-            fontSize: "16px",
+            textStyle: "callout",
             "& svg": { flex: "none", mt: "2px" },
           })}
         >
@@ -372,7 +370,7 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
             <span class={css(disc)}>
               <CheckIcon />
             </span>
-            <h1 class={css(title2)}>{props.packed.length} илгээмж савласан</h1>
+            <h1 class={css({ textStyle: "title2" })}>{props.packed.length} илгээмж савласан</h1>
             <Show when={props.total > props.packed.length}>
               <p class={css(sub, { mt: "6px" })}>
                 {props.total - props.packed.length} алгассан. Илгээх жагсаалтад үлдэнэ.
@@ -394,7 +392,9 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
                     })}
                   >
                     <div class={css({ flex: 1, minWidth: 0 })}>
-                      <div class={css(headline, { fontVariantNumeric: "tabular-nums" })}>
+                      <div
+                        class={css({ textStyle: "headline", fontVariantNumeric: "tabular-nums" })}
+                      >
                         {phoneText(order())}
                       </div>
                       <div
@@ -437,7 +437,7 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
           <span class={css(disc)}>
             <TruckIcon />
           </span>
-          <h1 class={css(title2)}>{done().sent} илгээмж TU-д өглөө</h1>
+          <h1 class={css({ textStyle: "title2" })}>{done().sent} илгээмж TU-д өглөө</h1>
           <Show when={done().failed.length > 0}>
             <p class={css({ color: "owes", mt: "8px" })}>
               {done()

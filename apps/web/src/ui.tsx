@@ -18,36 +18,7 @@ export const top = css.raw({ pt: "calc(env(safe-area-inset-top) + 14px)" });
 
 export const muted = css.raw({ color: "inkMuted" });
 
-export const largeTitle = css.raw({
-  fontSize: "34px",
-  lineHeight: "40px",
-  fontWeight: "700",
-  letterSpacing: "-0.025em",
-  textWrap: "balance",
-});
-
-export const title2 = css.raw({
-  fontSize: "22px",
-  lineHeight: "28px",
-  fontWeight: "700",
-  letterSpacing: "-0.02em",
-});
-
-export const title3 = css.raw({
-  fontSize: "20px",
-  lineHeight: "25px",
-  fontWeight: "650",
-  letterSpacing: "-0.015em",
-});
-
-export const headline = css.raw({
-  fontSize: "17px",
-  lineHeight: "22px",
-  fontWeight: "600",
-  letterSpacing: "-0.01em",
-});
-
-export const sub = css.raw({ fontSize: "15px", lineHeight: "20px", color: "inkMuted" });
+export const sub = css.raw({ textStyle: "subhead", color: "inkMuted" });
 
 export const section = css.raw({ px: "20px", mt: "34px" });
 
@@ -95,9 +66,7 @@ export const button = css.raw(press, {
   height: "48px",
   px: "20px",
   borderRadius: "999px",
-  fontSize: "17px",
-  fontWeight: "600",
-  letterSpacing: "-0.01em",
+  textStyle: "headline",
   whiteSpace: "nowrap",
   bg: "surface",
   color: "ink",
@@ -162,7 +131,7 @@ export const chip = css.raw(press, {
   borderRadius: "20px",
   bg: "surface",
   boxShadow: "raiseSm",
-  fontSize: "15px",
+  textStyle: "subhead",
   fontWeight: "600",
   whiteSpace: "nowrap",
   transition: "background .2s ease, color .2s ease",
@@ -192,7 +161,7 @@ export const field = css.raw({
   boxShadow: "0 0 0 .5px {colors.ink/12}, inset 0 1px 2px {colors.ink/5}",
   px: "14px",
   py: "12px",
-  fontSize: "17px",
+  textStyle: "body",
   color: "ink",
   outline: "none",
   _focus: { boxShadow: "0 0 0 2px {colors.sel}" },
@@ -215,7 +184,7 @@ export const searchBox = css.raw({
     bg: "transparent",
     outline: "none",
     color: "ink",
-    fontSize: "17px",
+    textStyle: "body",
     _placeholder: { color: "inkMuted" },
   },
 });
@@ -234,13 +203,12 @@ export function Note(props: { children: JSX.Element; large?: boolean }) {
           borderRadius: "14px",
           bg: "waitBg",
           color: "waitInk",
-          fontSize: "15px",
-          lineHeight: "20px",
+          textStyle: "subhead",
           fontWeight: "650",
           textAlign: "left",
           "& svg": { fontSize: "19px", color: "wait", flex: "none" },
         },
-        props.large && { fontSize: "17px", lineHeight: "22px", px: "14px", py: "12px" },
+        props.large && { textStyle: "body", px: "14px", py: "12px" },
       )}
     >
       <WarningIcon />
@@ -257,7 +225,7 @@ const pillBase = css.raw({
   height: "28px",
   px: "10px",
   borderRadius: "14px",
-  fontSize: "15px",
+  textStyle: "subhead",
   fontWeight: "650",
   whiteSpace: "nowrap",
   fontVariantNumeric: "tabular-nums",
@@ -329,7 +297,7 @@ export function Segmented<T extends string>(props: {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "6px",
-                fontSize: "16px",
+                textStyle: "callout",
                 fontWeight: "600",
                 color: "inkMuted",
                 cursor: "pointer",
@@ -366,7 +334,7 @@ export function Failed(props: { text: string | undefined }) {
   return (
     <Show when={props.text}>
       {(text) => (
-        <p class={css({ pb: "12px", color: "owes", fontSize: "15px", textAlign: "center" })}>
+        <p class={css({ pb: "12px", color: "owes", textStyle: "subhead", textAlign: "center" })}>
           {text()}
         </p>
       )}
@@ -500,7 +468,7 @@ export function Sheet(props: {
           },
         })}
       />
-      <h2 class={css(title3, { pt: "6px", pb: "18px" })}>{props.title}</h2>
+      <h2 class={css({ textStyle: "title3", pt: "6px", pb: "18px" })}>{props.title}</h2>
       <Show when={props.prompt}>{(prompt) => <div class={css(sheetPrompt)}>{prompt()}</div>}</Show>
       {props.children}
     </dialog>

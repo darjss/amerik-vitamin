@@ -13,9 +13,7 @@ import {
   act,
   appear,
   button,
-  headline,
   large,
-  largeTitle,
   panel,
   Pill,
   Problem,
@@ -24,8 +22,6 @@ import {
   small,
   sub,
   TabBar,
-  title2,
-  title3,
   top,
 } from "../ui";
 import { HomeSkeleton } from "../skeletons";
@@ -50,7 +46,8 @@ export default function Home() {
         <Loading fallback={<HomeSkeleton />}>
           <div class={css(appear)}>
             <h1
-              class={css(largeTitle, {
+              class={css({
+                textStyle: "largeTitle",
                 px: "20px",
                 pt: "28px",
                 fontSize: "32px",
@@ -66,13 +63,13 @@ export default function Home() {
                 when={home().toShip > 0}
                 fallback={
                   <div class={css({ p: "20px" })}>
-                    <h2 class={css(title3)}>Илгээх захиалга алга</h2>
+                    <h2 class={css({ textStyle: "title3" })}>Илгээх захиалга алга</h2>
                     <p class={css(sub, { mt: "2px" })}>Шинэ захиалга ирэхэд энд гарна</p>
                   </div>
                 }
               >
                 <div class={css({ px: "20px", pt: "20px" })}>
-                  <h2 class={css(title3)}>Өнөөдөр савлах</h2>
+                  <h2 class={css({ textStyle: "title3" })}>Өнөөдөр савлах</h2>
                   <p class={css(sub, { mt: "2px", fontVariantNumeric: "tabular-nums" })}>
                     {home().toShip} илгээмж · {home().toShipPieces} ширхэг
                   </p>
@@ -119,7 +116,7 @@ export default function Home() {
             <Show when={home().awaitingPayment > 0}>
               <section class={css(section)}>
                 <div class={css(sectionHead)}>
-                  <h2 class={css(title2)}>Хийх</h2>
+                  <h2 class={css({ textStyle: "title2" })}>Хийх</h2>
                 </div>
                 <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
                   <span
@@ -138,7 +135,9 @@ export default function Home() {
                     <BankIcon />
                   </span>
                   <div class={css({ flex: 1, minWidth: 0 })}>
-                    <div class={css(headline)}>{home().awaitingPayment} төлбөр хүлээж байна</div>
+                    <div class={css({ textStyle: "headline" })}>
+                      {home().awaitingPayment} төлбөр хүлээж байна
+                    </div>
                     <div class={css(sub)}>Шилжүүлэг ирсэн эсэхийг шалгах</div>
                   </div>
                   <a href="/orders?view=awaiting" class={css(button, act, small)}>
@@ -150,7 +149,7 @@ export default function Home() {
 
             <section class={css(section)}>
               <div class={css(sectionHead)}>
-                <h2 class={css(title2)}>Мөнгө</h2>
+                <h2 class={css({ textStyle: "title2" })}>Мөнгө</h2>
               </div>
               <div class={css({ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "16px" })}>
                 <div>
@@ -167,14 +166,14 @@ export default function Home() {
             <Show when={home().lowStock.length > 0}>
               <section class={css(section)}>
                 <div class={css(sectionHead)}>
-                  <h2 class={css(title2)}>Дуусаж байна</h2>
+                  <h2 class={css({ textStyle: "title2" })}>Дуусаж байна</h2>
                   <a
                     href="/products"
                     class={css({
                       display: "inline-flex",
                       alignItems: "center",
                       gap: "2px",
-                      fontSize: "15px",
+                      textStyle: "subhead",
                       fontWeight: "600",
                       py: "12px",
                       my: "-12px",
@@ -197,7 +196,7 @@ export default function Home() {
                       >
                         <Tile product={product()} size={56} />
                         <div class={css({ flex: 1, minWidth: 0 })}>
-                          <div class={css(headline)}>{product().name}</div>
+                          <div class={css({ textStyle: "headline" })}>{product().name}</div>
                           <div class={css(sub)}>
                             {product().brand} · {product().count} ш
                           </div>
