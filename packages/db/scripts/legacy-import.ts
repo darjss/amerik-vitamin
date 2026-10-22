@@ -23,8 +23,8 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schema from "effect/Schema";
 
-import { Database, dieOnDatabaseError, transaction } from "./database.ts";
-import { customers, orderEvents, orders, payments } from "./schema.ts";
+import { Database, dieOnDatabaseError, transaction } from "../src/database.ts";
+import { customers, orderEvents, orders, payments } from "../src/schema.ts";
 
 /**
  * Copies vit-store's customers, orders and successful payments into `shop`,
