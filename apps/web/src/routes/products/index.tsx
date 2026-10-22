@@ -9,49 +9,34 @@ import {
   For,
   Loading,
   refresh,
-  Show,
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
 import SearchIcon from "~icons/ph/magnifying-glass";
-import MinusIcon from "~icons/ph/minus-bold";
-import PlusIcon from "~icons/ph/plus-bold";
 
-import { ApiClient } from "../api/client";
-import { runEffect, RuntimeContext } from "../api/solid-effect";
-import { Sheet, TabBar } from "../chrome";
-import { failureText, matches, money } from "../format";
+import { ApiClient } from "../../api/client";
+import { runEffect, RuntimeContext } from "../../api/solid-effect";
+import { TabBar } from "../../chrome";
+import { failureText, matches, money } from "../../format";
+import { StepperSheet, stockText } from "../../product-parts";
 import {
-  act,
   button,
-  Failed,
-  field,
   headline,
   largeTitle,
   panel,
   Problem,
-  round,
   searchBox,
   small,
   sub,
   Tile,
   top,
-  wide,
-} from "../ui";
-
-// Null until the first count or receipt.
-const stockText = (stock: number | null) => {
-  if (stock === null) return "Тоолоогүй";
-
-  return stock === 0 ? "Дууссан" : `${stock}`;
-};
+} from "../../ui";
 
 export default function Products() {
   const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
   const runtime = useContext(RuntimeContext);
   const [query, setQuery] = createSignal("");
   const [counting, setCounting] = createSignal<ProductRow>();
-  const [counted, setCounted] = createSignal(0);
   const [busy, setBusy] = createOptimistic(false);
   const [failed, setFailed] = createSignal<string>();
 
@@ -60,7 +45,6 @@ export default function Products() {
 
   const open = (product: ProductRow) => {
     setFailed(undefined);
-    setCounted(product.stock ?? 0);
     setCounting(product);
   };
 
@@ -104,7 +88,7 @@ export default function Products() {
               {(product) => (
                 <div class={css({ display: "flex", gap: "14px", alignItems: "center", py: "6px" })}>
                   <Tile product={product()} size={64} />
-                  <div class={css({ flex: 1, minWidth: 0 })}>
+                  <a href={`/products/${product().id}`} class={css({ flex: 1, minWidth: 0 })}>
                     <div class={css(headline)}>{product().name}</div>
                     <div class={css(sub)}>
                       {product().brand} · {product().count} ш
@@ -119,7 +103,7 @@ export default function Products() {
                     >
                       {money(product().price)}
                     </div>
-                  </div>
+                  </a>
                   <button
                     type="button"
                     aria-label={`${product().name} тоолох`}
@@ -140,63 +124,21 @@ export default function Products() {
         </Loading>
       </Errored>
 
-      <Sheet
+      <StepperSheet
         open={counting() !== undefined}
         title={counting()?.name ?? ""}
+        prompt={`${counting()?.brand ?? ""} · ${counting()?.count ?? 0} ш. Тавиур дээр хэд байна?`}
+        start={counting()?.stock ?? 0}
+        min={0}
+        busy={busy()}
+        failed={failed()}
         onClose={() => setCounting(undefined)}
-      >
-        <Show when={counting()}>
-          {(product) => (
-            <>
-              <p class={css(sub, { pb: "18px", mt: "-10px" })}>
-                {product().brand} · {product().count} ш. Тавиур дээр хэд байна?
-              </p>
-              <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
-                <button
-                  type="button"
-                  aria-label="Хасах"
-                  disabled={counted() <= 0}
-                  onClick={() => setCounted((value) => Math.max(0, value - 1))}
-                  class={css(round, { width: "56px", height: "56px", fontSize: "22px" })}
-                >
-                  <MinusIcon />
-                </button>
-                <input
-                  inputmode="numeric"
-                  value={counted()}
-                  onInput={(event) =>
-                    setCounted(Number(event.currentTarget.value.replaceAll(/\D/gu, "")))
-                  }
-                  class={css(field, {
-                    flex: 1,
-                    textAlign: "center",
-                    fontSize: "30px",
-                    fontWeight: "700",
-                    fontVariantNumeric: "tabular-nums",
-                  })}
-                />
-                <button
-                  type="button"
-                  aria-label="Нэмэх"
-                  onClick={() => setCounted((value) => value + 1)}
-                  class={css(round, { width: "56px", height: "56px", fontSize: "22px" })}
-                >
-                  <PlusIcon />
-                </button>
-              </div>
-              <Failed text={failed()} />
-              <button
-                type="button"
-                disabled={busy()}
-                onClick={() => save(product(), counted())}
-                class={css(button, act, wide)}
-              >
-                Хадгалах
-              </button>
-            </>
-          )}
-        </Show>
-      </Sheet>
+        onSave={(stock) => {
+          const product = counting();
+
+          if (product !== undefined) void save(product, stock);
+        }}
+      />
       <TabBar />
     </main>
   );

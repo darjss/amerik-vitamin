@@ -5,7 +5,7 @@ import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 
 import { Authenticated } from "./auth.ts";
 import { Home } from "./home.ts";
-import { OrderId, OrderNumber, PaymentId } from "./ids.ts";
+import { OrderId, OrderNumber, PaymentId, ProductId } from "./ids.ts";
 import {
   Customer,
   CustomerNotFound,
@@ -25,7 +25,15 @@ import {
   RefundExceedsPaid,
   WrongOrderStatus,
 } from "./order.ts";
-import { CountStock, ProductRow, ProductUnavailable } from "./product.ts";
+import {
+  ArchiveProduct,
+  CountStock,
+  ProductDetail,
+  ProductRow,
+  ProductUnavailable,
+  ReceiveStock,
+  SetPrice,
+} from "./product.ts";
 
 export class DatabaseUnavailable extends Schema.TaggedError<DatabaseUnavailable>()(
   "DatabaseUnavailable",
@@ -76,6 +84,18 @@ const Dashboard = RpcGroup.make(
     success: Schema.Struct({ stock: Schema.Int, change: Schema.Int }),
     error: ProductUnavailable,
   }),
+  Rpc.make("getProduct", {
+    payload: { productId: ProductId },
+    success: ProductDetail,
+    error: ProductUnavailable,
+  }),
+  Rpc.make("receiveStock", {
+    payload: ReceiveStock,
+    success: Schema.Struct({ stock: Schema.Int }),
+    error: ProductUnavailable,
+  }),
+  Rpc.make("setPrice", { payload: SetPrice, error: ProductUnavailable }),
+  Rpc.make("archiveProduct", { payload: ArchiveProduct, error: ProductUnavailable }),
 ).middleware(Authenticated);
 
 export class Api extends RpcGroup.make(

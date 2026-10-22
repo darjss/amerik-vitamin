@@ -53,6 +53,16 @@ export {
   WrongOrderStatus,
 } from "./order.ts";
 
-export { Home } from "./home.ts";
+export { Home, LOW_STOCK } from "./home.ts";
 
-export { CountStock, ProductForm, ProductRow, ProductUnavailable } from "./product.ts";
+export {
+  ArchiveProduct,
+  CountStock,
+  ProductDetail,
+  ProductForm,
+  ProductRow,
+  ProductUnavailable,
+  ReceiveStock,
+  SetPrice,
+  StockMove,
+} from "./product.ts";

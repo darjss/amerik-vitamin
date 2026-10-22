@@ -1,14 +1,11 @@
-import type {
-  OrderSource,
-  PaymentTerms,
-  PlaceOrder,
-  ProductId,
-  ProductRow,
-} from "@amerik/contracts";
-import { useNavigate } from "@solidjs/router";
+import { ProductId } from "@amerik/contracts";
+import type { OrderSource, PaymentTerms, PlaceOrder, ProductRow } from "@amerik/contracts";
+import { useNavigate, useSearchParams } from "@solidjs/router";
 import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
   action,
   createMemo,
@@ -20,6 +17,7 @@ import {
   latest,
   Loading,
   Show,
+  untrack,
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
@@ -105,7 +103,17 @@ export default function NewOrder() {
   const [source, setSource] = createSignal<OrderSource>("messenger_human");
   const [terms, setTerms] = createSignal<PaymentTerms>("prepay");
   const [query, setQuery] = createSignal("");
-  const [cart, setCart] = createStore<Record<ProductId, number>>({});
+  const [params] = useSearchParams<{ add?: string }>();
+
+  // The product page's Захиалах opens here with that product already in the cart.
+  const added = untrack(() =>
+    Option.getOrUndefined(Schema.decodeUnknownOption(ProductId)(params.add)),
+  );
+
+  const [cart, setCart] = createStore<Record<ProductId, number>>(
+    added === undefined ? {} : { [added]: 1 },
+  );
+
   const [busy, setBusy] = createOptimistic(false);
   const [failed, setFailed] = createSignal<string>();
 

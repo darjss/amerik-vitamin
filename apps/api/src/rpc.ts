@@ -13,8 +13,8 @@ import {
   placeOrder,
   recordPayment,
 } from "./orders";
-import { listProducts } from "./products";
-import { countStock } from "./stock";
+import { archiveProduct, getProduct, listProducts, setPrice } from "./products";
+import { countStock, receiveStock } from "./stock";
 
 /** Every write's actor is the signed-in admin, never a value from the client. */
 const actor = CurrentUser.useSync((user) => user.email);
@@ -34,6 +34,10 @@ export const ApiHandlers = Api.toLayer({
   markDelivered: ({ orderId }) => Effect.flatMap(actor, (email) => markDelivered(orderId, email)),
   cancelOrder: ({ orderId }) => Effect.flatMap(actor, (email) => cancelOrder(orderId, email)),
   countStock: (input) => Effect.flatMap(actor, (email) => countStock(input, email)),
+  getProduct: ({ productId }) => getProduct(productId),
+  receiveStock: (input) => Effect.flatMap(actor, (email) => receiveStock(input, email)),
+  setPrice: (input) => setPrice(input),
+  archiveProduct: (input) => archiveProduct(input),
 });
 
 export const HideDefectsLive = Layer.succeed(

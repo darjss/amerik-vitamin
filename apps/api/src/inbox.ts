@@ -1,4 +1,4 @@
-import { OrderNotFound } from "@amerik/contracts";
+import { LOW_STOCK, OrderNotFound } from "@amerik/contracts";
 import type { ListOrders, OrderId, OrderLineView, OrderQueue } from "@amerik/contracts";
 import { Database, dieOnDatabaseError, schema } from "@amerik/db";
 import {
@@ -186,9 +186,6 @@ const queueCounts = Effect.fn("queueCounts")(function* queueCounts() {
 
   return { toShip: toShip?.orders ?? 0, awaitingPayment: awaitingPayment?.orders ?? 0 };
 });
-
-/** At or below this many bottles, a product shows as running out. */
-const LOW_STOCK = 3;
 
 const card = {
   productId: products.id,

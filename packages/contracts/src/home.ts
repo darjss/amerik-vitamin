@@ -2,6 +2,9 @@ import * as Schema from "effect/Schema";
 
 import { ProductId } from "./ids.ts";
 
+/** At or below this many bottles, a product shows as running out. */
+export const LOW_STOCK = 3;
+
 const ProductCard = Schema.Struct({
   productId: ProductId,
   name: Schema.String,
