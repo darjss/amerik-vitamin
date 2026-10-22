@@ -34,6 +34,7 @@ import { failureText, matches, money } from "../../format";
 import { PriceSheet, StockSheet, stockButton, stockText } from "../../product-parts";
 import type { StockMode } from "../../product-parts";
 import {
+  appear,
   button,
   chip,
   chipOn,
@@ -41,7 +42,6 @@ import {
   Failed,
   headline,
   largeTitle,
-  panel,
   press,
   Problem,
   round,
@@ -52,6 +52,7 @@ import {
   Tile,
   top,
 } from "../../ui";
+import { ListSkeleton } from "../../skeletons";
 
 /** The stock views. Each one but Бүгд shows only when it has products. */
 const views = [
@@ -141,13 +142,14 @@ export default function Products() {
     return [...tally].map(([name, count]) => ({ name, count }));
   });
 
-  const shown = () =>
+  const shown = createMemo(() =>
     products().filter(
       (product) =>
         inView(view(), product) &&
         (params.brand === undefined || product.brand === params.brand) &&
         matches(product, query()),
-    );
+    ),
+  );
 
   const close = () => {
     setStocking(undefined);
@@ -227,117 +229,119 @@ export default function Products() {
       </label>
 
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(panel, { m: "20px 16px", height: "320px" })} />}>
-          <nav class={css(chipRow, { pt: "14px" })}>
-            <For each={views.filter(({ key }) => key === "all" || counts()[key] > 0)}>
-              {(candidate) => (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setParams({
-                      view: candidate.key === "all" ? undefined : candidate.key,
-                      brand: undefined,
-                    })
-                  }
-                  class={css(
-                    chip,
-                    view() === candidate.key &&
-                      (candidate.key !== "all" || params.brand === undefined) &&
-                      chipOn,
-                  )}
-                >
-                  <Show when={candidate.dot}>
-                    {(dot) => (
-                      <span
-                        class={css(
-                          { width: "9px", height: "9px", borderRadius: "50%" },
-                          dots[dot()],
-                        )}
-                      />
+        <Loading fallback={<ListSkeleton />}>
+          <div class={css(appear)}>
+            <nav class={css(chipRow, { pt: "14px" })}>
+              <For each={views.filter(({ key }) => key === "all" || counts()[key] > 0)}>
+                {(candidate) => (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setParams({
+                        view: candidate.key === "all" ? undefined : candidate.key,
+                        brand: undefined,
+                      })
+                    }
+                    class={css(
+                      chip,
+                      view() === candidate.key &&
+                        (candidate.key !== "all" || params.brand === undefined) &&
+                        chipOn,
                     )}
-                  </Show>
-                  {candidate.label}
-                  <b>{counts()[candidate.key]}</b>
-                </button>
-              )}
-            </For>
-            <span
-              aria-hidden="true"
-              class={css({ flex: "none", width: "1px", my: "8px", bg: "ink/12" })}
-            />
-            <For each={brands()} keyed={(brand) => brand.name}>
-              {(brand) => (
-                <button
-                  type="button"
-                  aria-pressed={params.brand === brand().name ? "true" : "false"}
-                  onClick={() =>
-                    setParams({ brand: params.brand === brand().name ? undefined : brand().name })
-                  }
-                  class={css(chip, params.brand === brand().name && chipOn)}
-                >
-                  {brand().name}
-                  <b>{brand().count}</b>
-                </button>
-              )}
-            </For>
-          </nav>
-
-          <div class={css({ display: "grid", gap: "4px", px: "16px", pt: "14px" })}>
-            <Show
-              when={shown().length > 0}
-              fallback={
-                <p class={css(sub, { py: "24px", textAlign: "center" })}>Бараа олдсонгүй.</p>
-              }
-            >
-              <For each={shown()} keyed={(product) => product.id}>
-                {(product) => (
-                  <div
-                    class={css({ display: "flex", gap: "14px", alignItems: "center", py: "8px" })}
                   >
-                    <Tile product={product()} size={68} />
-                    <div class={css({ flex: 1, minWidth: 0 })}>
-                      <a href={`/products/${product().id}`} class={css({ display: "block" })}>
-                        <div class={css(headline)}>{product().name}</div>
-                        <div class={css(sub)}>
-                          {product().brand} · {product().count} ш
-                        </div>
-                      </a>
-                      <div class={css({ display: "flex", gap: "8px", mt: "4px" })}>
-                        <button
-                          type="button"
-                          aria-label={`${product().name} үнэ өөрчлөх`}
-                          onClick={() => openPrice(product())}
-                          class={css(rowChip, { fontVariantNumeric: "tabular-nums" })}
-                        >
-                          {money(product().price)}
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`${product().name} үйлдэл`}
-                          onClick={() => openActions(product())}
-                          class={css(rowChip, { width: "40px", px: 0, fontSize: "18px" })}
-                        >
-                          <MoreIcon />
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      aria-label={`${product().name} үлдэгдэл`}
-                      onClick={() => openStock(product())}
-                      class={css(
-                        button,
-                        small,
-                        { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
-                        stockButton(product().stock),
+                    <Show when={candidate.dot}>
+                      {(dot) => (
+                        <span
+                          class={css(
+                            { width: "9px", height: "9px", borderRadius: "50%" },
+                            dots[dot()],
+                          )}
+                        />
                       )}
-                    >
-                      {stockText(product().stock)}
-                    </button>
-                  </div>
+                    </Show>
+                    {candidate.label}
+                    <b>{counts()[candidate.key]}</b>
+                  </button>
                 )}
               </For>
-            </Show>
+              <span
+                aria-hidden="true"
+                class={css({ flex: "none", width: "1px", my: "8px", bg: "ink/12" })}
+              />
+              <For each={brands()} keyed={(brand) => brand.name}>
+                {(brand) => (
+                  <button
+                    type="button"
+                    aria-pressed={params.brand === brand().name ? "true" : "false"}
+                    onClick={() =>
+                      setParams({ brand: params.brand === brand().name ? undefined : brand().name })
+                    }
+                    class={css(chip, params.brand === brand().name && chipOn)}
+                  >
+                    {brand().name}
+                    <b>{brand().count}</b>
+                  </button>
+                )}
+              </For>
+            </nav>
+
+            <div class={css({ display: "grid", gap: "4px", px: "16px", pt: "14px" })}>
+              <Show
+                when={shown().length > 0}
+                fallback={
+                  <p class={css(sub, { py: "24px", textAlign: "center" })}>Бараа олдсонгүй.</p>
+                }
+              >
+                <For each={shown()} keyed={(product) => product.id}>
+                  {(product) => (
+                    <div
+                      class={css({ display: "flex", gap: "14px", alignItems: "center", py: "8px" })}
+                    >
+                      <Tile product={product()} size={68} />
+                      <div class={css({ flex: 1, minWidth: 0 })}>
+                        <a href={`/products/${product().id}`} class={css({ display: "block" })}>
+                          <div class={css(headline)}>{product().name}</div>
+                          <div class={css(sub)}>
+                            {product().brand} · {product().count} ш
+                          </div>
+                        </a>
+                        <div class={css({ display: "flex", gap: "8px", mt: "4px" })}>
+                          <button
+                            type="button"
+                            aria-label={`${product().name} үнэ өөрчлөх`}
+                            onClick={() => openPrice(product())}
+                            class={css(rowChip, { fontVariantNumeric: "tabular-nums" })}
+                          >
+                            {money(product().price)}
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${product().name} үйлдэл`}
+                            onClick={() => openActions(product())}
+                            class={css(rowChip, { width: "40px", px: 0, fontSize: "18px" })}
+                          >
+                            <MoreIcon />
+                          </button>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label={`${product().name} үлдэгдэл`}
+                        onClick={() => openStock(product())}
+                        class={css(
+                          button,
+                          small,
+                          { minWidth: "64px", px: "14px", fontVariantNumeric: "tabular-nums" },
+                          stockButton(product().stock),
+                        )}
+                      >
+                        {stockText(product().stock)}
+                      </button>
+                    </div>
+                  )}
+                </For>
+              </Show>
+            </div>
           </div>
         </Loading>
       </Errored>

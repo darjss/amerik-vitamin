@@ -4,7 +4,7 @@ import { useSearchParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import { createMemo, Errored, For, Loading, refresh, Show, useContext } from "solid-js";
+import { createMemo, Errored, For, isPending, Loading, refresh, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
 import ClockIcon from "~icons/ph/clock-bold";
 import SearchIcon from "~icons/ph/magnifying-glass";
@@ -18,6 +18,7 @@ import { daysBetween, phone } from "../../format";
 import { HeldSteps, nextStep } from "../../steps";
 import {
   act,
+  appear,
   button,
   chip,
   chipOn,
@@ -37,6 +38,7 @@ import {
   Tile,
   top,
 } from "../../ui";
+import { ListSkeleton } from "../../skeletons";
 
 const views = [
   { key: "to_ship", label: "Илгээх", count: "toShip", input: { queue: "to_ship" } },
@@ -171,170 +173,183 @@ export default function Orders() {
       </nav>
 
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<div class={css(panel, { m: "20px 16px", height: "300px" })} />}>
-          <Show when={view().key === "to_ship" && params.q === undefined && orders().length > 0}>
-            <div
-              class={css(panel, {
-                display: "flex",
-                alignItems: "center",
-                gap: "12px",
-                mx: "16px",
-                mt: "16px",
-                p: "12px 12px 12px 14px",
-              })}
-            >
-              <span class={css({ display: "flex", flex: "none", "& > * + *": { ml: "-12px" } })}>
-                <For each={thumbs()} keyed={(line) => line.productId}>
-                  {(line) => <Tile product={line()} size={40} still />}
-                </For>
-              </span>
-              <div class={css({ flex: 1, minWidth: 0, fontVariantNumeric: "tabular-nums" })}>
-                <div class={css(headline)}>{orders().length} илгээмж</div>
-                <div class={css(sub)}>{pieces()} ширхэг</div>
-              </div>
-              <a href="/pack" class={css(button, act, small)}>
-                Савлах
-              </a>
-            </div>
-          </Show>
-
-          <Show
-            when={orders().length > 0}
-            fallback={
-              <p class={css(sub, { px: "20px", py: "48px", textAlign: "center" })}>Захиалга алга</p>
-            }
+        <Loading fallback={<ListSkeleton chips={false} />}>
+          {/* A new filter keeps the old list on screen, dimmed, until the new one lands. */}
+          <div
+            class={css(appear, {
+              transition: "opacity .2s ease",
+              "&[data-pending]": { opacity: 0.55 },
+            })}
+            data-pending={isPending(() => orders()) || undefined}
           >
-            <div
-              class={css({
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr)",
-                gap: "10px",
-                px: "16px",
-                pt: "14px",
-              })}
+            <Show when={view().key === "to_ship" && params.q === undefined && orders().length > 0}>
+              <div
+                class={css(panel, {
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  mx: "16px",
+                  mt: "16px",
+                  p: "12px 12px 12px 14px",
+                })}
+              >
+                <span class={css({ display: "flex", flex: "none", "& > * + *": { ml: "-12px" } })}>
+                  <For each={thumbs()} keyed={(line) => line.productId}>
+                    {(line) => <Tile product={line()} size={40} still />}
+                  </For>
+                </span>
+                <div class={css({ flex: 1, minWidth: 0, fontVariantNumeric: "tabular-nums" })}>
+                  <div class={css(headline)}>{orders().length} илгээмж</div>
+                  <div class={css(sub)}>{pieces()} ширхэг</div>
+                </div>
+                <a href="/pack" class={css(button, act, small)}>
+                  Савлах
+                </a>
+              </div>
+            </Show>
+
+            <Show
+              when={orders().length > 0}
+              fallback={
+                <p class={css(sub, { px: "20px", py: "48px", textAlign: "center" })}>
+                  Захиалга алга
+                </p>
+              }
             >
-              <For each={orders()} keyed={(order) => order.id}>
-                {(order) => (
-                  <div
-                    class={css(
-                      {
-                        position: "relative",
-                        mx: "-12px",
-                        px: "12px",
-                        pt: "14px",
-                        pb: "16px",
-                        borderRadius: "22px",
-                        transition: "transform .56s {easings.spring}, background .2s ease",
-                        _active: {
-                          bg: "ink/5",
-                          transform: "scale(.985)",
-                          transition: "transform .12s ease-out, background 0s",
+              <div
+                class={css({
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr)",
+                  gap: "10px",
+                  px: "16px",
+                  pt: "14px",
+                })}
+              >
+                <For each={orders()} keyed={(order) => order.id}>
+                  {(order) => (
+                    <div
+                      class={css(
+                        {
+                          position: "relative",
+                          mx: "-12px",
+                          px: "12px",
+                          pt: "14px",
+                          pb: "16px",
+                          borderRadius: "22px",
+                          transition: "transform .56s {easings.spring}, background .2s ease",
+                          _active: {
+                            bg: "ink/5",
+                            transform: "scale(.985)",
+                            transition: "transform .12s ease-out, background 0s",
+                          },
                         },
-                      },
-                      secondsLeft(order().id) !== undefined && { bg: "selSoft" },
-                    )}
-                  >
-                    {/* The whole order opens its page; photos and the step button sit above it. */}
-                    <a
-                      href={`/orders/${order().id}`}
-                      aria-label={`#${order().number}`}
-                      class={css({ position: "absolute", inset: 0, borderRadius: "22px" })}
-                    />
-                    <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                      <b
-                        class={css({
-                          mr: "auto",
-                          fontSize: "21px",
-                          lineHeight: "26px",
-                          fontWeight: "700",
-                          fontVariantNumeric: "tabular-nums",
-                        })}
-                      >
-                        <Show when={order().customerPhone} fallback="Утасгүй">
-                          {(digits) => <>{phone(digits())}</>}
-                        </Show>
-                      </b>
-                      <Show when={waitingDays(order(), now())}>
-                        {(days) => (
-                          <Pill tone="wait">
-                            <ClockIcon />
-                            {days()} хоног
-                          </Pill>
-                        )}
-                      </Show>
-                      <Money order={order()} />
-                    </div>
-                    <Show
-                      when={secondsLeft(order().id)}
-                      fallback={
-                        <div
-                          class={css(sub, {
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            mt: "5px",
-                            "& svg": { fontSize: "16px", flex: "none" },
+                        secondsLeft(order().id) !== undefined && { bg: "selSoft" },
+                      )}
+                    >
+                      {/* The whole order opens its page; photos and the step button sit above it. */}
+                      <a
+                        href={`/orders/${order().id}`}
+                        aria-label={`#${order().number}`}
+                        class={css({ position: "absolute", inset: 0, borderRadius: "22px" })}
+                      />
+                      <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
+                        <b
+                          class={css({
+                            mr: "auto",
+                            fontSize: "21px",
+                            lineHeight: "26px",
+                            fontWeight: "700",
+                            fontVariantNumeric: "tabular-nums",
                           })}
                         >
-                          <MapPinIcon />
-                          <span
-                            class={css({
-                              whiteSpace: "nowrap",
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                            })}
-                          >
-                            {order().address ?? "Хаяггүй"}
-                          </span>
-                        </div>
-                      }
-                    >
-                      {(left) => (
-                        <div class={css(sub, { mt: "5px", color: "sel", fontWeight: "600" })}>
-                          {left()} секундын дараа {nextStep(order())?.label}
-                        </div>
-                      )}
-                    </Show>
-                    <Show when={failure(order().id)}>
-                      {(text) => (
-                        <div class={css(sub, { mt: "5px", color: "owes", fontWeight: "600" })}>
-                          {text()}
-                        </div>
-                      )}
-                    </Show>
-                    <Show when={order().notes}>
-                      {(notes) => (
-                        <div class={css({ mt: "10px" })}>
-                          <Note>{notes()}</Note>
-                        </div>
-                      )}
-                    </Show>
-                    <div
-                      class={css({
-                        display: "flex",
-                        alignItems: "flex-end",
-                        justifyContent: "space-between",
-                        gap: "10px",
-                        mt: "16px",
-                      })}
-                    >
-                      <div class={css({ display: "flex", flexWrap: "wrap", gap: "10px" })}>
-                        <For each={order().lines} keyed={(line) => line.productId}>
-                          {(line) => <Tile product={line()} size={56} quantity={line().quantity} />}
-                        </For>
+                          <Show when={order().customerPhone} fallback="Утасгүй">
+                            {(digits) => <>{phone(digits())}</>}
+                          </Show>
+                        </b>
+                        <Show when={waitingDays(order(), now())}>
+                          {(days) => (
+                            <Pill tone="wait">
+                              <ClockIcon />
+                              {days()} хоног
+                            </Pill>
+                          )}
+                        </Show>
+                        <Money order={order()} />
                       </div>
                       <Show
-                        when={nextStep(order())}
-                        fallback={<Pill tone="neutral">{statusText[order().status]}</Pill>}
+                        when={secondsLeft(order().id)}
+                        fallback={
+                          <div
+                            class={css(sub, {
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              mt: "5px",
+                              "& svg": { fontSize: "16px", flex: "none" },
+                            })}
+                          >
+                            <MapPinIcon />
+                            <span
+                              class={css({
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              })}
+                            >
+                              {order().address ?? "Хаяггүй"}
+                            </span>
+                          </div>
+                        }
                       >
-                        <StepButton order={order()} reload={reload} />
+                        {(left) => (
+                          <div class={css(sub, { mt: "5px", color: "sel", fontWeight: "600" })}>
+                            {left()} секундын дараа {nextStep(order())?.label}
+                          </div>
+                        )}
                       </Show>
+                      <Show when={failure(order().id)}>
+                        {(text) => (
+                          <div class={css(sub, { mt: "5px", color: "owes", fontWeight: "600" })}>
+                            {text()}
+                          </div>
+                        )}
+                      </Show>
+                      <Show when={order().notes}>
+                        {(notes) => (
+                          <div class={css({ mt: "10px" })}>
+                            <Note>{notes()}</Note>
+                          </div>
+                        )}
+                      </Show>
+                      <div
+                        class={css({
+                          display: "flex",
+                          alignItems: "flex-end",
+                          justifyContent: "space-between",
+                          gap: "10px",
+                          mt: "16px",
+                        })}
+                      >
+                        <div class={css({ display: "flex", flexWrap: "wrap", gap: "10px" })}>
+                          <For each={order().lines} keyed={(line) => line.productId}>
+                            {(line) => (
+                              <Tile product={line()} size={56} quantity={line().quantity} />
+                            )}
+                          </For>
+                        </div>
+                        <Show
+                          when={nextStep(order())}
+                          fallback={<Pill tone="neutral">{statusText[order().status]}</Pill>}
+                        >
+                          <StepButton order={order()} reload={reload} />
+                        </Show>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </For>
-            </div>
-          </Show>
+                  )}
+                </For>
+              </div>
+            </Show>
+          </div>
         </Loading>
       </Errored>
       <TabBar />

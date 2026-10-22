@@ -3,6 +3,12 @@ import * as Schema from "effect/Schema";
 import { OrderId, OrderNumber, ProductId, StockMoveId } from "./ids.ts";
 import { StockMoveReason, Tugrik } from "./order.ts";
 
+/**
+ * Where production product photos are served (apps/api/infra/images.ts). No
+ * "v2" in it, so the URLs stored in `products.images` survive the cutover.
+ */
+export const IMAGE_HOST = "img.amerikvitamin.mn";
+
 /** What the bottle holds, one of the six identity fields on a product. */
 export const ProductForm = Schema.Literals([
   "softgel",

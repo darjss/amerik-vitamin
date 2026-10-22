@@ -2,6 +2,8 @@ import { createContext, createSignal, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { css } from "styled-system/css";
 
+import { sized, srcset } from "./format";
+
 export type Product = { image: string | null; name: string; brand: string; count: number };
 
 /** Shows a product photo full size. Look-alike bottles are told apart there. */
@@ -45,7 +47,8 @@ export function ZoomProvider(props: { children: JSX.Element }) {
               <Show when={product().image}>
                 {(src) => (
                   <img
-                    src={src()}
+                    src={sized(src(), 1200)}
+                    srcset={srcset(src(), 400)}
                     alt={`${product().brand} ${product().name}`}
                     class={css({ width: "100%", maxHeight: "60dvh", objectFit: "contain" })}
                   />
