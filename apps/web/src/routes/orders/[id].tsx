@@ -334,7 +334,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
               type="button"
               aria-label="Хаяг хуулах"
               onClick={() => void copy(address())}
-              class={css(round.raw(), copied() && { bg: "paidBg", color: "paid" })}
+              class={css(round.raw(), copied() === "copied" && { bg: "paidBg", color: "paid" })}
             >
               <CopyIcon />
             </button>

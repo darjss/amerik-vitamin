@@ -1,6 +1,6 @@
 import { stockLevel } from "@amerik/contracts";
 import type { ProductRow } from "@amerik/contracts";
-import { useSearchParams } from "@solidjs/router";
+import { useLocation, useSearchParams } from "@solidjs/router";
 import { createMemo, createSignal, Errored, For, Loading, Show } from "solid-js";
 import { css } from "styled-system/css";
 import ArchiveIcon from "~icons/ph/archive";
@@ -34,6 +34,7 @@ import {
   tones,
   top,
 } from "../../ui";
+import { copyText } from "../../words";
 import { ListSkeleton } from "../../skeletons";
 
 /** The stock views, keyed by stock level. Each one but Бүгд shows only when it has products. */
@@ -83,6 +84,7 @@ export default function Products() {
   const products = createMemo(() => runEffect(ApiClient.use((api) => api.listProducts())));
   // In the URL, so coming back from a product keeps the filters.
   const [params, setParams] = useSearchParams<{ view?: string; brand?: string; q?: string }>();
+  const location = useLocation();
   const [stocking, setStocking] = createSignal<ProductRow>();
   const [stockMode, setStockMode] = createSignal<StockMode>("count");
   const [pricing, setPricing] = createSignal<ProductRow>();
@@ -99,14 +101,24 @@ export default function Products() {
     ),
   );
 
-  const brands = createMemo(() =>
-    [
+  // A selected brand keeps its chip at 0, so an empty list still says why.
+  const brands = createMemo(() => {
+    const tally = [
       ...Map.groupBy(
         products().filter((product) => inView(view(), product)),
         (product) => product.brand,
       ),
-    ].map(([name, list]) => ({ name, count: list.length })),
-  );
+    ].map(([name, list]) => ({ name, count: list.length }));
+
+    const selected = params.brand;
+
+    return selected === undefined || tally.some((brand) => brand.name === selected)
+      ? tally
+      : [...tally, { name: selected, count: 0 }];
+  });
+
+  // The product page's × comes back here with the same filters.
+  const back = () => JSON.stringify({ back: `/products${location.search}` });
 
   const shown = createMemo(() =>
     products().filter(
@@ -171,7 +183,11 @@ export default function Products() {
         <Loading fallback={<ListSkeleton />}>
           <div class={css(appear)}>
             <nav class={css(chipRow, { pt: "14px" })}>
-              <For each={views.filter(({ key }) => key === "all" || counts()[key] > 0)}>
+              <For
+                each={views.filter(
+                  ({ key }) => key === "all" || counts()[key] > 0 || view() === key,
+                )}
+              >
                 {(candidate) => (
                   <button
                     type="button"
@@ -237,7 +253,11 @@ export default function Products() {
                     >
                       <Tile product={product()} size={68} />
                       <div class={css({ flex: 1, minWidth: 0 })}>
-                        <a href={`/products/${product().id}`} class={css({ display: "block" })}>
+                        <a
+                          href={`/products/${product().id}`}
+                          state={back()}
+                          class={css({ display: "block" })}
+                        >
                           <div class={css({ textStyle: "headline" })}>{product().name}</div>
                           <div class={css(sub)}>
                             {product().brand} · {product().count} ш
@@ -316,13 +336,13 @@ export default function Products() {
               </button>
               <button
                 type="button"
-                class={css(actionRow, copied() && { bg: "paidBg", color: "paid" })}
+                class={css(actionRow, copied() === "copied" && { bg: "paidBg", color: "paid" })}
                 onClick={() =>
                   void copy(`${product().brand} ${product().name}\n${money(product().price)}`)
                 }
               >
                 <CopyIcon />
-                {copied() ? "Хуулсан" : "Нэр, үнэ хуулах"}
+                {copyText[copied() ?? "idle"]}
               </button>
               <a href={`/products/${product().id}`} class={css(actionRow)}>
                 <InfoIcon />

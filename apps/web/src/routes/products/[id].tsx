@@ -1,7 +1,8 @@
 import { ProductId, stockLevel } from "@amerik/contracts";
 import type { ProductDetail, StockMove } from "@amerik/contracts";
-import { useParams } from "@solidjs/router";
+import { useLocation, useParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
+import * as Predicate from "effect/Predicate";
 import * as Schema from "effect/Schema";
 import { createMemo, createSignal, Errored, For, Loading, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
@@ -37,13 +38,23 @@ import {
   sub,
 } from "../../ui";
 import type { Icon } from "../../ui";
-import { formText, reasonText, stockAsk } from "../../words";
+import { copyText, formText, reasonText, stockAsk } from "../../words";
 
 type SheetKind = "count" | "receive" | "price" | "menu";
 
 export default function ProductPage() {
   const params = useParams();
+  const location = useLocation();
   const productId = () => Schema.decodeUnknownSync(ProductId)(params.id);
+
+  // The list passes its URL in the link's state, so × keeps her filters.
+  const back = () => {
+    const state = location.state;
+
+    return Predicate.hasProperty(state, "back") && Predicate.isString(state.back)
+      ? state.back
+      : "/products";
+  };
 
   const product = createMemo(() => {
     const id = productId();
@@ -68,7 +79,7 @@ export default function ProductPage() {
         <Loading fallback={<DetailSkeleton photo />}>
           <div class={css(appear)}>
             <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-              <a href="/products" aria-label="Хаах" class={round({ tone: "glass" })}>
+              <a href={back()} aria-label="Хаах" class={round({ tone: "glass" })}>
                 <CloseIcon />
               </a>
               <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>
@@ -379,11 +390,11 @@ function QuickActions(props: { product: ProductDetail; onOpen: (sheet: SheetKind
         class={css(
           button.raw(),
           { mx: "16px", mt: "10px", width: "calc(100% - 32px)" },
-          copied() && { bg: "paidBg", color: "paid", boxShadow: "none" },
+          copied() === "copied" && { bg: "paidBg", color: "paid", boxShadow: "none" },
         )}
       >
         <CopyIcon />
-        {copied() ? "Хуулсан" : "Нэр, үнэ хуулах"}
+        {copyText[copied() ?? "idle"]}
       </button>
     </>
   );

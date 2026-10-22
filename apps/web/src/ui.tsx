@@ -31,8 +31,9 @@ export const sectionHead = css.raw({
   mb: "14px",
 });
 
+// No fill mode: a kept final opacity would override the pending dim on the orders list.
 export const appear = css.raw({
-  animation: "appear .25s ease-out both",
+  animation: "appear .25s ease-out",
   _motionReduce: { animation: "none" },
 });
 
@@ -286,20 +287,24 @@ export function SaveButton(props: {
 /** Copies text for a Messenger chat; `copied` holds for 2 seconds after each copy. */
 export const createCopied = () => {
   // Every copy notifies, so a second one within 2 seconds restarts the timer.
-  const [copied, setCopied] = createSignal(false, { equals: false });
+  // A browser that refuses the clipboard says so instead of doing nothing.
+  const [copied, setCopied] = createSignal<"copied" | "failed" | undefined>(undefined, {
+    equals: false,
+  });
 
-  createEffect(copied, (on) => {
-    if (!on) return;
+  createEffect(copied, (state) => {
+    if (state === undefined) return;
 
-    const reset = setTimeout(() => setCopied(false), 2000);
+    const reset = setTimeout(() => setCopied(undefined), 2000);
 
     return () => clearTimeout(reset);
   });
 
-  const copy = async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-  };
+  const copy = (text: string) =>
+    navigator.clipboard.writeText(text).then(
+      () => setCopied("copied"),
+      () => setCopied("failed"),
+    );
 
   return { copied, copy };
 };

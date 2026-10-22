@@ -68,3 +68,10 @@ export const methodText: Record<PaymentMethod, string> = {
   transfer: "Шилжүүлэг",
   cash: "Бэлэн",
 };
+
+/** The name-and-price copy button, by what the last copy did. */
+export const copyText = {
+  idle: "Нэр, үнэ хуулах",
+  copied: "Хуулсан",
+  failed: "Хуулж чадсангүй",
+};
