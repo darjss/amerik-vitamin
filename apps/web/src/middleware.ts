@@ -18,7 +18,7 @@ const noindex = async (_event: RequestEvent, next: () => Promise<Response>) => {
   });
 };
 
-const dashboardPages = /^\/(?:orders(?:\/.*)?|products|pack)?$/u;
+const dashboardPages = /^\/(?:(?:orders|products)(?:\/.*)?|pack)?$/u;
 
 const sessionCookie = /(?:^|;\s*)(?:__Secure-)?better-auth\.session_token=/u;
 
