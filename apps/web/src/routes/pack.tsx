@@ -1,18 +1,7 @@
 import type { OrderNumber, OrderSummary, ProductId } from "@amerik/contracts";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import {
-  action,
-  createMemo,
-  createOptimistic,
-  createSignal,
-  createStore,
-  Errored,
-  For,
-  Loading,
-  Show,
-  useContext,
-} from "solid-js";
+import { createMemo, createSignal, createStore, Errored, For, Loading, Show } from "solid-js";
 import { css } from "styled-system/css";
 import CheckIcon from "~icons/ph/check-bold";
 import MapPinIcon from "~icons/ph/map-pin";
@@ -20,10 +9,11 @@ import TruckIcon from "~icons/ph/truck-bold";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../api/client";
-import { runEffect, RuntimeContext } from "../api/solid-effect";
+import { createWrite, runEffect } from "../api/solid-effect";
 import { money, phone } from "../format";
 import { advance, Money } from "../orders";
 import { Tile } from "../photos";
+import { DetailSkeleton } from "../skeletons";
 import {
   act,
   appear,
@@ -41,7 +31,6 @@ import {
   title2,
   wide,
 } from "../ui";
-import { DetailSkeleton } from "../skeletons";
 
 const key = (order: OrderSummary, productId: ProductId) => `${order.id}:${productId}`;
 
@@ -69,8 +58,6 @@ export default function Pack() {
 
   const tickedCount = (order: OrderSummary) =>
     order.lines.filter((line) => isTicked(order, line.productId)).length;
-
-  const allTicked = (order: OrderSummary) => tickedCount(order) === order.lines.length;
 
   const tick = (order: OrderSummary, productId: ProductId) =>
     setTicked((draft) => {
@@ -147,168 +134,13 @@ export default function Pack() {
 
             <Show when={current()} fallback={<Hand packed={packed()} total={orders().length} />}>
               {(order) => (
-                <>
-                  <div class={css({ px: "20px", pt: "14px" })}>
-                    <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                      <b
-                        class={css({
-                          mr: "auto",
-                          fontSize: "28px",
-                          lineHeight: "34px",
-                          fontWeight: "700",
-                          fontVariantNumeric: "tabular-nums",
-                        })}
-                      >
-                        {phoneText(order())}
-                      </b>
-                      <Money order={order()} />
-                    </div>
-                    <div
-                      class={css(sub, {
-                        display: "flex",
-                        gap: "6px",
-                        alignItems: "flex-start",
-                        mt: "6px",
-                        fontSize: "16px",
-                        "& svg": { flex: "none", mt: "2px" },
-                      })}
-                    >
-                      <MapPinIcon />
-                      <span>{order().address ?? "Хаяггүй"}</span>
-                    </div>
-                    <Show when={order().notes}>
-                      {(notes) => (
-                        <div class={css({ mt: "12px" })}>
-                          <Note large>{notes()}</Note>
-                        </div>
-                      )}
-                    </Show>
-                  </div>
-
-                  <div class={css(panel, { mx: "16px", mt: "20px", overflow: "hidden" })}>
-                    <For each={order().lines} keyed={(line) => line.productId}>
-                      {(line) => (
-                        <button
-                          type="button"
-                          aria-pressed={isTicked(order(), line().productId) ? "true" : "false"}
-                          onClick={() => tick(order(), line().productId)}
-                          class={css({
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "14px",
-                            width: "100%",
-                            textAlign: "left",
-                            p: "14px 16px 14px 14px",
-                            cursor: "pointer",
-                            transition: "background .2s ease",
-                            _active: { bg: "ink/4" },
-                            "& + &": { boxShadow: "inset 0 .5px 0 {colors.line}" },
-                          })}
-                        >
-                          <span
-                            class={css({ transition: "opacity .25s ease" })}
-                            style={{ opacity: isTicked(order(), line().productId) ? 0.5 : 1 }}
-                          >
-                            <Tile product={line()} size={112} still />
-                          </span>
-                          <span
-                            class={css(
-                              {
-                                flex: 1,
-                                minWidth: 0,
-                                alignSelf: "stretch",
-                                display: "flex",
-                                flexDirection: "column",
-                                py: "4px",
-                              },
-                              isTicked(order(), line().productId) && { color: "inkMuted" },
-                            )}
-                          >
-                            <span
-                              class={css({
-                                fontSize: "18px",
-                                lineHeight: "23px",
-                                fontWeight: "650",
-                                letterSpacing: "-0.015em",
-                              })}
-                            >
-                              {line().name}
-                            </span>
-                            <span class={css(sub, { mt: "3px" })}>
-                              {line().brand} · {line().count} ш
-                            </span>
-                            <span
-                              class={css({
-                                mt: "auto",
-                                fontSize: "30px",
-                                lineHeight: "34px",
-                                fontWeight: "750",
-                                letterSpacing: "-0.02em",
-                                fontVariantNumeric: "tabular-nums",
-                              })}
-                            >
-                              <small
-                                class={css({
-                                  fontSize: "20px",
-                                  fontWeight: "600",
-                                  color: "inkMuted",
-                                  mr: "1px",
-                                })}
-                              >
-                                ×
-                              </small>
-                              {line().quantity}
-                            </span>
-                          </span>
-                          <span
-                            class={css(
-                              {
-                                width: "34px",
-                                height: "34px",
-                                flex: "none",
-                                borderRadius: "10px",
-                                display: "grid",
-                                placeItems: "center",
-                                fontSize: "20px",
-                                color: "transparent",
-                                boxShadow: "inset 0 0 0 2px {colors.tick}",
-                                transition:
-                                  "background .15s ease, box-shadow .15s ease, color .15s ease",
-                              },
-                              isTicked(order(), line().productId) && {
-                                bg: "sel",
-                                boxShadow: "none",
-                                color: "white",
-                              },
-                            )}
-                          >
-                            <CheckIcon />
-                          </span>
-                        </button>
-                      )}
-                    </For>
-                  </div>
-
-                  <Dock>
-                    <div class={css({ display: "flex", gap: "10px" })}>
-                      <button
-                        type="button"
-                        onClick={() => next(order(), false)}
-                        class={css(button, large, { flex: 1 })}
-                      >
-                        Алгасах
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!allTicked(order())}
-                        onClick={() => next(order(), true)}
-                        class={css(button, act, large, { flex: 1.6 })}
-                      >
-                        Савласан
-                      </button>
-                    </div>
-                  </Dock>
-                </>
+                <Parcel
+                  order={order()}
+                  isTicked={(productId) => isTicked(order(), productId)}
+                  allTicked={tickedCount(order()) === order().lines.length}
+                  onTick={(productId) => tick(order(), productId)}
+                  onNext={(done) => next(order(), done)}
+                />
               )}
             </Show>
           </div>
@@ -318,10 +150,195 @@ export default function Pack() {
   );
 }
 
+/** One parcel: who it goes to, its bottles to tick, then Савласан or Алгасах. */
+function Parcel(props: {
+  order: OrderSummary;
+  isTicked: (productId: ProductId) => boolean;
+  allTicked: boolean;
+  onTick: (productId: ProductId) => void;
+  onNext: (done: boolean) => void;
+}) {
+  return (
+    <>
+      <div class={css({ px: "20px", pt: "14px" })}>
+        <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
+          <b
+            class={css({
+              mr: "auto",
+              fontSize: "28px",
+              lineHeight: "34px",
+              fontWeight: "700",
+              fontVariantNumeric: "tabular-nums",
+            })}
+          >
+            {phoneText(props.order)}
+          </b>
+          <Money order={props.order} />
+        </div>
+        <div
+          class={css(sub, {
+            display: "flex",
+            gap: "6px",
+            alignItems: "flex-start",
+            mt: "6px",
+            fontSize: "16px",
+            "& svg": { flex: "none", mt: "2px" },
+          })}
+        >
+          <MapPinIcon />
+          <span>{props.order.address ?? "Хаяггүй"}</span>
+        </div>
+        <Show when={props.order.notes}>
+          {(notes) => (
+            <div class={css({ mt: "12px" })}>
+              <Note large>{notes()}</Note>
+            </div>
+          )}
+        </Show>
+      </div>
+
+      <div class={css(panel, { mx: "16px", mt: "20px", overflow: "hidden" })}>
+        <For each={props.order.lines} keyed={(line) => line.productId}>
+          {(line) => (
+            <button
+              type="button"
+              aria-pressed={props.isTicked(line().productId) ? "true" : "false"}
+              onClick={() => props.onTick(line().productId)}
+              class={css({
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+                width: "100%",
+                textAlign: "left",
+                p: "14px 16px 14px 14px",
+                cursor: "pointer",
+                transition: "background .2s ease",
+                _active: { bg: "ink/4" },
+                "& + &": { boxShadow: "inset 0 .5px 0 {colors.line}" },
+              })}
+            >
+              <span
+                class={css({ transition: "opacity .25s ease" })}
+                style={{ opacity: props.isTicked(line().productId) ? 0.5 : 1 }}
+              >
+                <Tile product={line()} size={112} still />
+              </span>
+              <span
+                class={css(
+                  {
+                    flex: 1,
+                    minWidth: 0,
+                    alignSelf: "stretch",
+                    display: "flex",
+                    flexDirection: "column",
+                    py: "4px",
+                  },
+                  props.isTicked(line().productId) && { color: "inkMuted" },
+                )}
+              >
+                <span
+                  class={css({
+                    fontSize: "18px",
+                    lineHeight: "23px",
+                    fontWeight: "650",
+                    letterSpacing: "-0.015em",
+                  })}
+                >
+                  {line().name}
+                </span>
+                <span class={css(sub, { mt: "3px" })}>
+                  {line().brand} · {line().count} ш
+                </span>
+                <span
+                  class={css({
+                    mt: "auto",
+                    fontSize: "30px",
+                    lineHeight: "34px",
+                    fontWeight: "750",
+                    letterSpacing: "-0.02em",
+                    fontVariantNumeric: "tabular-nums",
+                  })}
+                >
+                  <small
+                    class={css({
+                      fontSize: "20px",
+                      fontWeight: "600",
+                      color: "inkMuted",
+                      mr: "1px",
+                    })}
+                  >
+                    ×
+                  </small>
+                  {line().quantity}
+                </span>
+              </span>
+              <span
+                class={css(
+                  {
+                    width: "34px",
+                    height: "34px",
+                    flex: "none",
+                    borderRadius: "10px",
+                    display: "grid",
+                    placeItems: "center",
+                    fontSize: "20px",
+                    color: "transparent",
+                    boxShadow: "inset 0 0 0 2px {colors.tick}",
+                    transition: "background .15s ease, box-shadow .15s ease, color .15s ease",
+                  },
+                  props.isTicked(line().productId) && {
+                    bg: "sel",
+                    boxShadow: "none",
+                    color: "white",
+                  },
+                )}
+              >
+                <CheckIcon />
+              </span>
+            </button>
+          )}
+        </For>
+      </div>
+
+      <Dock>
+        <div class={css({ display: "flex", gap: "10px" })}>
+          <button
+            type="button"
+            onClick={() => props.onNext(false)}
+            class={css(button, large, { flex: 1 })}
+          >
+            Алгасах
+          </button>
+          <button
+            type="button"
+            disabled={!props.allTicked}
+            onClick={() => props.onNext(true)}
+            class={css(button, act, large, { flex: 1.6 })}
+          >
+            Савласан
+          </button>
+        </div>
+      </Dock>
+    </>
+  );
+}
+
+const disc = css.raw({
+  width: "64px",
+  height: "64px",
+  mx: "auto",
+  mb: "18px",
+  borderRadius: "50%",
+  display: "grid",
+  placeItems: "center",
+  fontSize: "32px",
+  bg: "paidBg",
+  color: "paid",
+});
+
 /** The end of the pass: check the pile against the list, then hand it all to TU. */
 function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
-  const runtime = useContext(RuntimeContext);
-  const [busy, setBusy] = createOptimistic(false);
+  const { write, busy } = createWrite();
   const [result, setResult] = createSignal<{ sent: number; failed: ReadonlyArray<OrderNumber> }>();
 
   const collect = () =>
@@ -329,12 +346,10 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
       .filter((order) => order.terms === "cod")
       .reduce((total, order) => total + Math.max(order.balance, 0), 0);
 
-  // Runs to the last parcel even if she leaves the page. Each parcel's Exit is
-  // kept, so this never fails; a failed one stays in Илгээх for another try.
-  const handAll = action(async function* handAll(parcels: ReadonlyArray<OrderSummary>) {
-    setBusy(true);
-
-    const handed = await runtime.runPromise(
+  // Each parcel's Exit is kept, so this never fails; a failed one stays in
+  // Илгээх for another try.
+  const handAll = (parcels: ReadonlyArray<OrderSummary>) =>
+    void write(
       Effect.forEach(
         parcels,
         (parcel) =>
@@ -344,26 +359,11 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
           ),
         { concurrency: 4 },
       ),
+      (handed) => {
+        const failed = handed.flatMap(({ number, exit }) => (Exit.isFailure(exit) ? [number] : []));
+        setResult({ sent: parcels.length - failed.length, failed });
+      },
     );
-
-    yield;
-
-    const failed = handed.flatMap(({ number, exit }) => (Exit.isFailure(exit) ? [number] : []));
-    setResult({ sent: parcels.length - failed.length, failed });
-  });
-
-  const disc = css.raw({
-    width: "64px",
-    height: "64px",
-    mx: "auto",
-    mb: "18px",
-    borderRadius: "50%",
-    display: "grid",
-    placeItems: "center",
-    fontSize: "32px",
-    bg: "paidBg",
-    color: "paid",
-  });
 
   return (
     <Show
