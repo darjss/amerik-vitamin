@@ -15,6 +15,7 @@ export const listProducts = Effect.fn("listProducts")(function* listProducts() {
     .select({
       id: products.id,
       name: products.name,
+      nameMn: products.nameMn,
       brand: brands.name,
       count: products.count,
       images: products.images,
@@ -41,18 +42,23 @@ export const getProduct = Effect.fn("getProduct")(function* getProduct(productId
     .select({
       id: products.id,
       name: products.name,
+      nameMn: products.nameMn,
       brand: brands.name,
       category: categories.name,
       potency: products.potency,
       count: products.count,
       form: products.form,
       flavor: products.flavor,
+      base: products.base,
       price: products.price,
       stock: products.stock,
+      gtin: products.gtin,
       images: products.images,
       description: products.description,
+      label: products.label,
       servingSize: products.servingSize,
       servings: products.servings,
+      dailyUnits: products.dailyUnits,
       archivedAt: products.archivedAt,
     })
     .from(products)
@@ -128,18 +134,24 @@ export const catalogOptions = Effect.fn("catalogOptions")(function* catalogOptio
   return { brands: brandRows.map((brand) => brand.name), categories: categoryRows };
 });
 
-/** The shop's product with this ASIN, if it has one. */
+/** The shop's product with this ASIN or GTIN, if it has one. */
 export const existingProduct = Effect.fn("existingProduct")(function* existingProduct(
   asin: string | null,
+  gtin: string | null,
 ) {
-  if (asin === null) return null;
+  if (asin === null && gtin === null) return null;
 
   const db = yield* Database;
 
   const [row] = yield* db
     .select({ id: products.id })
     .from(products)
-    .where(eq(products.asin, asin))
+    .where(
+      or(
+        asin === null ? undefined : eq(products.asin, asin),
+        gtin === null ? undefined : eq(products.gtin, gtin),
+      ),
+    )
     .limit(1)
     .pipe(dieOnDatabaseError);
 
@@ -200,12 +212,23 @@ export const createProduct = Effect.fn("createProduct")(function* createProduct(
     eq(products.count, input.count),
     eq(products.form, input.form),
     same(products.flavor, input.flavor),
+    same(products.base, input.base),
   );
 
   const [existing] = yield* db
     .select({ id: products.id })
     .from(products)
-    .where(input.asin === null ? identity : or(identity, eq(products.asin, input.asin)))
+    .where(
+      or(
+        identity,
+        and(
+          eq(products.brandId, brand.id),
+          or(eq(products.name, input.name), eq(products.nameMn, input.nameMn)),
+        ),
+        input.asin === null ? undefined : eq(products.asin, input.asin),
+        input.gtin === null ? undefined : eq(products.gtin, input.gtin),
+      ),
+    )
     .limit(1);
 
   if (existing !== undefined) return yield* new DuplicateProduct({ productId: existing.id });
@@ -228,16 +251,20 @@ export const createProduct = Effect.fn("createProduct")(function* createProduct(
     count: input.count,
     form: input.form,
     flavor: input.flavor,
+    base: input.base,
     name: input.name,
-    // Two products can share a display name; the id's tail tells their pages apart.
+    nameMn: input.nameMn,
+    // Names are unique per brand, but two brands can still slug the same.
     slug: taken === undefined ? slug : `${slug}-${id.slice(-6)}`,
     price: input.price,
     asin: input.asin,
+    gtin: input.gtin,
     servingSize: input.servingSize,
     servings: input.servings,
     dailyUnits: input.dailyUnits,
     images: [...input.images],
     description: input.description,
+    label: input.label,
     createdAt: now,
   });
 
