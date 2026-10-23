@@ -97,6 +97,11 @@ const samePrompt = (wanted: string, page: AmazonPage) =>
 Amazon page: ${JSON.stringify({ title: page.title, brand: page.brand, facts: page.facts })}
 Is the page this exact product: same brand, same strength, one bottle with the same count, and the same carrier oil when ours names one? Return {"same": boolean, "why": "short reason"}.`;
 
+const ownFactsPrompt = (page: AmazonPage) =>
+  `Amazon listing: ${page.title}
+Supplement facts read off its page: ${JSON.stringify(page.facts)}
+Are these facts this listing's own product: its active ingredients at its strength? Amazon pages carry other products' panels, so vitamin D3 facts on a turmeric listing are not. Return {"same": boolean, "why": "short reason"}.`;
+
 const iherbPrompt = (wanted: string, listing: string) =>
   `We want this exact product:
 ${wanted}
@@ -106,6 +111,7 @@ ${listing}
 
 Is the listing this exact product? It must have the same brand, the same amount of each active ingredient per serving, the same count and the same form.
 When the product we want lists other ingredients, the carrier oil must be the same too: the same vitamins in sunflower seed oil and in coconut oil are two different products.
+It must be the same formula: a listing whose title names an ingredient ours doesn't, or leaves out one ours names, is a different product (a plain Myo + D-Chiro Inositol is not the one "with MTHF Folate + Vitamin D3").
 Then read the listing's label as printed, in English, whether or not it is the same product.
 Return JSON:
 {"same": boolean, "why": "short reason",
@@ -136,7 +142,7 @@ Return the shop's catalog fields as JSON:
  "dailyUnits": units per day as an integer or null}
 Rules:
 - line: without brand, strength, count, form, flavor or carrier oil, and without marketing words like High Absorption or Advanced unless they are the trade name. Keep a trade name whole, with words like Kid's in it (Ultimate Omega, Super Enzymes, PepZin GI, Kid's Super Daily D3 + K2).
-- potency: one consistent style, numbers with thousands commas, one unit per amount (IU when the label gives both mcg and IU), several actives joined with " / " in label order, no words like "per serving" or "per capsule", e.g. "5,000 IU / 100 mcg", "1,500 mg / 1,200 mg / 1,000 mg". Null only for a blend with no headline amount.
+- potency: the strength printed on the front of the bottle, at most three amounts in the front's order, numbers with thousands commas, one unit per amount (IU when the label gives both mcg and IU), joined with " / ", no words like "per serving" or "per capsule", e.g. "5,000 IU / 100 mcg", "1,500 mg / 1,200 mg / 1,000 mg". Never every supplement facts row: a B complex, a multi-ingredient formula or a blend without one headline amount is null. Leave out minor additions like black pepper extract, and give a compound's amount, not its elemental part (magnesium glycinate 400 mg, not 60 mg / 400 mg).
 - form "drops" is a dropper bottle; count is then the drops in the bottle. Other liquids are "liquid" with count in mL. A powder's count is its grams. Otherwise count is the pieces.
 - servingSize is units per serving, servings is servings per container, dailyUnits is units per day at the label's lowest stated adult dose (servingSize times the times per day).
 - base: the carrier oil when the active ingredient sits in one, e.g. "sunflower seed oil", "coconut oil", "MCT oil", "olive oil", "soybean oil". Null when the oil is itself the product (fish oil, krill oil) or there is no carrier.
@@ -263,7 +269,9 @@ const findOnAmazon = (bottle: Bottle) =>
 /**
  * The printed label from the first iHerb listing the model calls the same
  * product. iHerb titles leave out potency and carrier oil, so the pick reads
- * each listing's label. Without a match, Amazon's own facts stand in.
+ * each listing's label. Without a match, Amazon's facts stand in once the
+ * model agrees they are the listing's own; Firecrawl sometimes reads a panel
+ * from another product on the page.
  */
 const findLabel = (bottle: Bottle | null, page: AmazonPage | null) =>
   Effect.gen(function* () {
@@ -302,6 +310,8 @@ const findLabel = (bottle: Bottle | null, page: AmazonPage | null) =>
     }
 
     if (page?.facts === null || page?.facts === undefined) return null;
+
+    if (!(yield* model.json(Same, ownFactsPrompt(page))).same) return null;
 
     const { servingsPerContainer, ...label } = page.facts;
 
