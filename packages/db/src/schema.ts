@@ -20,6 +20,7 @@ import type {
   OutboxId,
   PaymentId,
   ProductId,
+  ProductLabel,
   QPayInvoiceId,
   StockMoveId,
   UserId,
@@ -106,7 +107,9 @@ export const products = shop.table(
     count: integer("count").notNull(),
     form: productForm("form").notNull(),
     flavor: text("flavor"),
+    base: text("base"),
     name: text("name").notNull(),
+    nameMn: text("name_mn").notNull(),
     slug: text("slug").notNull().unique(),
     price: integer("price").notNull(),
     stock: integer("stock"),
@@ -121,13 +124,25 @@ export const products = shop.table(
       .notNull()
       .default(sql`'{}'`),
     description: text("description"),
+    label: jsonb("label").$type<ProductLabel>(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
   },
   (table) => [
     unique("products_identity")
-      .on(table.brandId, table.line, table.potency, table.count, table.form, table.flavor)
+      .on(
+        table.brandId,
+        table.line,
+        table.potency,
+        table.count,
+        table.form,
+        table.flavor,
+        table.base,
+      )
       .nullsNotDistinct(),
+    // The bot and her lists show brand and name together, so each pair is unique.
+    unique("products_name").on(table.brandId, table.name),
+    unique("products_name_mn").on(table.brandId, table.nameMn),
     index("products_category_idx").on(table.categoryId),
     check("products_price_check", sql`${table.price} >= 0`),
     check("products_count_check", sql`${table.count} > 0`),
