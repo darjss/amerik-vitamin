@@ -16,6 +16,7 @@ export const formText: Record<ProductForm, string> = {
   lozenge: "Хөхдөг шахмал",
   powder: "Нунтаг",
   liquid: "Шингэн",
+  drops: "Дусал",
   other: "Бусад",
 };
 
