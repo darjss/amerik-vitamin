@@ -16,6 +16,7 @@ This file holds only what no tool can check. When you see the same mistake twice
 - How a library works, before reading `node_modules`: [docs/LIBRARIES.md](docs/LIBRARIES.md).
 - Solid components or reactivity: load the `solidjs-v2` skill, and read the diagnostics list in LIBRARIES.
 - Effect workflows, layers or schemas: load the `effect` skill. Installed package types win over examples.
+- Alchemy stacks, Workers, bindings or `alchemy dev`: load the `alchemy` skill. It targets beta.83, so check this repo's installed version against it.
 - Writing or reviewing any code (errors, unknown data, types, run edges, database, tests): [docs/CONVENTIONS.md](docs/CONVENTIONS.md).
 - Where code goes, request scope, adding an operation or table: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - Effect reads in Solid: [docs/SOLID-EFFECT-BINDING.md](docs/SOLID-EFFECT-BINDING.md).
