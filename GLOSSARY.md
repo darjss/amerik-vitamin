@@ -5,8 +5,16 @@ The shop's language: what it sells, who buys, and how an order moves. Rules abou
 ## Catalog
 
 **Product**:
-One sellable SKU, identified by brand, line, potency, count, form and flavor. D3+K2 5,000 IU 300 softgels and D3+K2 10,000 IU 300 softgels are two products.
+One sellable SKU, identified by brand, line, potency, count, form, flavor and base. D3+K2 5,000 IU 300 softgels and D3+K2 10,000 IU 300 softgels are two products, and so are the same D3+K2 in sunflower seed oil and in coconut oil. Its English and Mongolian names are built from those fields, so no two products share a name.
 _Avoid_: variant, item, listing, SKU row
+
+**Base**:
+The carrier oil a softgel or liquid's active ingredient sits in, e.g. coconut oil. Empty when the oil is the product itself, as in fish oil.
+_Avoid_: carrier, oil variant
+
+**Label**:
+The bottle's printed panel in English: supplement facts per serving, other ingredients, allergens, free-of claims, suggested use, warnings and certifications. Read from the product's iHerb listing, or its Amazon page when iHerb has none.
+_Avoid_: ingredients text, specs
 
 **Collage**:
 A price-labelled grid of product photos that mom posts to Facebook. The catalog is read from collages.
