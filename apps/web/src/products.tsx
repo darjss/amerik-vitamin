@@ -1,12 +1,12 @@
-import type { StockLevel } from "@amerik/contracts";
-import { createSignal, Show, untrack } from "solid-js";
+import type { ProductLabel, StockLevel } from "@amerik/contracts";
+import { createSignal, For, Show, untrack } from "solid-js";
 import { css } from "styled-system/css";
 import MinusIcon from "~icons/ph/minus-bold";
 import PlusIcon from "~icons/ph/plus-bold";
 
 import { digits, money, thousands } from "./format";
 import { round } from "./styles";
-import { field, SaveButton, Segmented, Sheet, sheetPrompt } from "./ui";
+import { field, SaveButton, Segmented, Sheet, sheetPrompt, sub } from "./ui";
 import type { Tone } from "./ui";
 
 /** Null until the first count or receipt. */
@@ -177,5 +177,50 @@ function NumberInput(props: NumberProps) {
         {props.price && value() > 0 ? `${money(value())} болгох` : "Хадгалах"}
       </SaveButton>
     </>
+  );
+}
+
+const cell = css.raw({ py: "7px", verticalAlign: "top", textAlign: "right", whiteSpace: "nowrap" });
+
+/** The Supplement Facts table as printed, in English. Shared by the product page and the draft. */
+export function FactsTable(props: { label: ProductLabel }) {
+  return (
+    <div class={css({ display: "grid", gap: "6px" })}>
+      <p class={css(sub)}>Нэг удаагийн хэмжээ: {props.label.servingSize}</p>
+      <Show when={props.label.facts.length > 0}>
+        <table
+          class={css({
+            width: "100%",
+            borderCollapse: "collapse",
+            textStyle: "callout",
+            fontVariantNumeric: "tabular-nums",
+          })}
+        >
+          <thead class={css(sub, { textStyle: "footnote" })}>
+            <tr>
+              <th class={css({ textAlign: "left", fontWeight: "inherit" })} />
+              <th class={css(cell, { fontWeight: "inherit" })}>Хэмжээ</th>
+              <th class={css(cell, { fontWeight: "inherit", pl: "12px" })}>%DV</th>
+            </tr>
+          </thead>
+          <tbody>
+            <For each={props.label.facts} keyed={false}>
+              {(fact) => (
+                <tr>
+                  <td class={css({ py: "7px", pr: "12px" })}>{fact().name}</td>
+                  <td class={css(cell, { fontWeight: "600" })}>{fact().amount}</td>
+                  <td class={css(cell, { pl: "12px", color: "inkMuted" })}>
+                    {fact().dailyValue ?? ""}
+                  </td>
+                </tr>
+              )}
+            </For>
+          </tbody>
+        </table>
+        <Show when={props.label.facts.some((fact) => fact.dailyValue?.includes("†"))}>
+          <p class={css(sub, { textStyle: "footnote" })}>† Өдрийн хэрэгцээ тогтоогоогүй</p>
+        </Show>
+      </Show>
+    </div>
   );
 }
