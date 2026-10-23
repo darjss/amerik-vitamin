@@ -12,7 +12,7 @@ import { FetchHttpClient, HttpClient, HttpServerRequest, HttpServerResponse } fr
 
 import { imageOrigin, ProductImages } from "../infra/images";
 import type { AmazonPage } from "./firecrawl";
-import { Firecrawl, firecrawlConfig } from "./firecrawl";
+import { Facts, Firecrawl, firecrawlConfig } from "./firecrawl";
 import type { Part } from "./model";
 import { Model, modelConfig, WRITER } from "./model";
 import { catalogOptions, existingProduct } from "./products";
@@ -33,7 +33,7 @@ export type DraftInput = {
 const retried = { retries: { limit: 3, delay: "10 seconds", backoff: "exponential" } } as const;
 
 /** What the model reads off a bottle photo. */
-const Label = Schema.Struct({
+const Bottle = Schema.Struct({
   brand: Schema.String,
   product: Schema.String,
   strength: Schema.String,
@@ -41,7 +41,7 @@ const Label = Schema.Struct({
   query: Schema.String,
 });
 
-type Label = typeof Label.Type;
+type Bottle = typeof Bottle.Type;
 
 const Fields = Schema.Struct({
   brand: Schema.String,
@@ -51,52 +51,96 @@ const Fields = Schema.Struct({
   count: Schema.Int,
   form: ProductForm,
   flavor: Schema.NullOr(Schema.String),
-  name: Schema.String,
+  base: Schema.NullOr(Schema.String),
   servingSize: Schema.NullOr(Schema.Int),
   servings: Schema.NullOr(Schema.Int),
   dailyUnits: Schema.NullOr(Schema.Int),
 });
 
-const Copy = Schema.Struct({ description: Schema.String, note: Schema.String });
+type Fields = typeof Fields.Type;
+
+const Copy = Schema.Struct({
+  description: Schema.String,
+  note: Schema.String,
+  lineMn: Schema.String,
+  flavorMn: Schema.NullOr(Schema.String),
+  baseMn: Schema.NullOr(Schema.String),
+});
 
 const Indexes = Schema.Struct({ indexes: Schema.Array(Schema.Int) });
 
 const Same = Schema.Struct({ same: Schema.Boolean, why: Schema.String });
 
-const readLabelPrompt = `This is a photo of a dietary supplement bottle or box.
+/** The model's verdict on one iHerb listing, and the label it reads off it. */
+const IherbLabel = Schema.Struct({
+  same: Schema.Boolean,
+  why: Schema.String,
+  gtin: Schema.NullOr(Schema.String),
+  label: Facts,
+});
+
+const readBottlePrompt = `This is a photo of a dietary supplement bottle or box.
 Read the label. Return JSON:
-{"brand": "brand as printed", "product": "product name as printed", "strength": "amount per serving as printed, or empty",
+{"brand": "brand as printed", "product": "product name as printed, with the carrier oil if the label names one", "strength": "amount per serving as printed, or empty",
  "count": units in the bottle as an integer or null, "query": "an Amazon search for this exact bottle: brand, product, strength, count"}`;
 
-const pickPrompt = (label: string, results: ReadonlyArray<{ title: string }>) =>
-  `We want this exact product: ${label}
-Amazon search results:
+const pickPrompt = (wanted: string, store: string, results: ReadonlyArray<{ title: string }>) =>
+  `We want this exact product: ${wanted}
+${store} search results:
 ${results.map((result, index) => `${index} | ${result.title}`).join("\n")}
 
-Which results could be this exact product: same brand, same strength, one bottle with the same count? A multi-pack or another count is not it.
+Which results could be this exact product: same brand, same strength, one bottle with the same count? A multi-pack or another count is not it. A title that leaves out the strength can still be it.
 Return {"indexes": [up to 3 result numbers, most likely first]}, or an empty list.`;
 
-const samePrompt = (label: string, page: AmazonPage) =>
-  `We want this exact product: ${label}
+const samePrompt = (wanted: string, page: AmazonPage) =>
+  `We want this exact product: ${wanted}
 Amazon page: ${JSON.stringify({ title: page.title, brand: page.brand, facts: page.facts })}
-Is the page this exact product: same brand, same strength, one bottle with the same count? Return {"same": boolean, "why": "short reason"}.`;
+Is the page this exact product: same brand, same strength, one bottle with the same count, and the same carrier oil when ours names one? Return {"same": boolean, "why": "short reason"}.`;
+
+const iherbPrompt = (wanted: string, listing: string) =>
+  `We want this exact product:
+${wanted}
+
+An iHerb listing, as markdown:
+${listing}
+
+Is the listing this exact product? It must have the same brand, the same amount of each active ingredient per serving, the same count and the same form.
+When the product we want lists other ingredients, the carrier oil must be the same too: the same vitamins in sunflower seed oil and in coconut oil are two different products.
+Then read the listing's label as printed, in English, whether or not it is the same product.
+Return JSON:
+{"same": boolean, "why": "short reason",
+ "gtin": "the UPC digits from the listing, or null",
+ "label": {"servingSize": "as printed, e.g. 2 Softgels", "servingsPerContainer": number or null,
+  "facts": [{"name": "Supplement Facts row name as printed", "amount": "amount per serving as printed", "dailyValue": "% daily value as printed, † when not established, or null when blank"}],
+  "otherIngredients": ["each other ingredient as printed"],
+  "allergens": ["what the label says it contains, e.g. Fish (anchovy), Soy"],
+  "freeOf": ["what the label says it is free of, e.g. Gluten, Dairy"],
+  "suggestedUse": "as printed, or null", "warnings": "as printed, or null",
+  "certifications": ["seals and certifications the listing names, e.g. Non-GMO Project Verified, cGMP, third-party tested"]}}`;
 
 const fieldsPrompt = (facts: string, input: DraftInput) => `Supplement product facts:
 ${facts}
 
+The label, when there is one, is the source of truth for amounts, serving size, servings and ingredients.
 Return the shop's catalog fields as JSON:
 {"brand": "the brand; when it is one of ${JSON.stringify(input.brands)}, spell it exactly that way",
  "category": one of ${input.categories.map((category) => `"${category.slug}" (${category.name})`).join(", ")},
- "line": "the product line without brand, strength or count, in English, e.g. Magnesium Glycinate",
- "potency": "strength per serving as printed, or null",
- "count": units in the bottle as an integer (for a powder, the grams),
+ "line": "the product line in English, e.g. Magnesium Glycinate",
+ "potency": "the main amount or amounts per serving, e.g. 5,000 IU / 100 mcg, or null",
+ "count": how many the bottle holds as an integer,
  "form": one of ${ProductForm.literals.map((form) => `"${form}"`).join(", ")},
  "flavor": "flavor if it has one, else null",
- "name": "display name without the brand, in English: line, potency, count and form, e.g. Magnesium Glycinate 200 mg, 240 tablets",
+ "base": "the carrier oil, or null",
  "servingSize": units per serving as an integer or null,
  "servings": servings per container as an integer or null,
- "dailyUnits": units per day at the label's dose as an integer or null}
-Use "kids" only for a product made for children.`;
+ "dailyUnits": units per day as an integer or null}
+Rules:
+- line: without brand, strength, count, form, flavor or carrier oil, and without marketing words like High Absorption or Advanced unless they are the trade name. Keep a trade name whole, with words like Kid's in it (Ultimate Omega, Super Enzymes, PepZin GI, Kid's Super Daily D3 + K2).
+- potency: one consistent style, numbers with thousands commas, one unit per amount (IU when the label gives both mcg and IU), several actives joined with " / " in label order, no words like "per serving" or "per capsule", e.g. "5,000 IU / 100 mcg", "1,500 mg / 1,200 mg / 1,000 mg". Null only for a blend with no headline amount.
+- form "drops" is a dropper bottle; count is then the drops in the bottle. Other liquids are "liquid" with count in mL. A powder's count is its grams. Otherwise count is the pieces.
+- servingSize is units per serving, servings is servings per container, dailyUnits is units per day at the label's lowest stated adult dose (servingSize times the times per day).
+- base: the carrier oil when the active ingredient sits in one, e.g. "sunflower seed oil", "coconut oil", "MCT oil", "olive oil", "soybean oil". Null when the oil is itself the product (fish oil, krill oil) or there is no carrier.
+- Use "kids" only for a product made for children.`;
 
 // Health claims are the line this shop never crosses (AGENTS.md). Any of
 // these sends the copy back once; a second hit goes to her form as `bannedWords`.
@@ -107,6 +151,7 @@ const bannedIn = (description: string) => [...new Set(description.match(claims) 
 
 const copyPrompt = (
   facts: string,
+  fields: Fields,
   retry: ReadonlyArray<string>,
 ) => `Write a product description in Mongolian (Cyrillic) for a small Ulaanbaatar shop that sells American supplements. Customers read it on their phones.
 
@@ -125,7 +170,12 @@ Rules:
 - A serving is "нэг удаагийн хэмжээ". Translate ingredient sources into Mongolian.
 - If facts disagree (servings times serving size isn't the count), trust the count, skip the days estimate, and explain the conflict in "note" in Mongolian. Never mention it in the description.
 ${retry.length > 0 ? `\nYour last version used banned words or characters: ${retry.join(", ")}. Rewrite without them.` : ""}
-Return JSON: {"description": "...", "note": "a doubt for the shop owner in Mongolian, or empty"}`;
+Also put the shop's catalog fields into natural Mongolian Cyrillic, brand and trade names in Latin letters:
+line ${JSON.stringify(fields.line)}, flavor ${JSON.stringify(fields.flavor)}, carrier oil ${JSON.stringify(fields.base)}.
+Return JSON: {"description": "...", "note": "a doubt for the shop owner in Mongolian, or empty",
+ "lineMn": "the line alone, without form, strength, count, flavor or oil, e.g. Магнийн глицинат, Д3 + К2 аминдэм; a trade name stays whole in Latin, e.g. Ultimate Omega, Kid's Super Daily D3 + K2",
+ "flavorMn": "the flavor as a noun that reads before амттай, e.g. Нимбэг, or null when there is no flavor",
+ "baseMn": "the carrier oil as short as the English, in the form that says where it sits, e.g. кокосын тосонд, MCT тосонд, or null when there is no carrier oil"}`;
 
 const photosPrompt = `These are one supplement's Amazon photos, numbered from 0.
 Keep only photos where the product is the subject: the bottle or box from the front, back or side, the label, the supplement facts panel, or capsules next to the bottle.
@@ -133,23 +183,32 @@ Drop lifestyle photos with people, brand-story, sustainability, partner or chari
 Put the clearest front-of-bottle photo first. Keep at least one if any shows the bottle.
 Return {"indexes": [photo numbers in display order]}.`;
 
-const describe = (label: Label) =>
-  [label.brand, label.product, label.strength, label.count === null ? "" : `${label.count} count`]
+const describe = (bottle: Bottle) =>
+  [
+    bottle.brand,
+    bottle.product,
+    bottle.strength,
+    bottle.count === null ? "" : `${bottle.count} count`,
+  ]
     .filter(Boolean)
     .join(" ");
 
-/** The label read plus the Amazon page, as the facts the field and copy prompts get. */
-const factsText = (label: Label | null, page: AmazonPage | null) =>
+/** The photo read, the Amazon page and the printed label, as the facts the field and copy prompts get. */
+const factsText = (
+  bottle: Bottle | null,
+  page: AmazonPage | null,
+  printed: Effect.Success<ReturnType<typeof findLabel>>,
+) =>
   JSON.stringify(
     {
-      bottlePhoto: label,
+      bottlePhoto: bottle,
       amazon: page && {
         title: page.title,
         brand: page.brand,
         category: page.category,
         description: page.description.slice(0, 3000),
-        facts: page.facts,
       },
+      label: printed && { ...printed.label, servingsPerContainer: printed.servingsPerContainer },
     },
     null,
     1,
@@ -157,7 +216,7 @@ const factsText = (label: Label | null, page: AmazonPage | null) =>
 
 type Bucket = Cloudflare.R2.ReadWriteBucketClient;
 
-const readLabel = (bucket: Bucket, key: string) =>
+const readBottle = (bucket: Bucket, key: string) =>
   Effect.gen(function* () {
     const object = yield* bucket.get(key);
 
@@ -166,24 +225,27 @@ const readLabel = (bucket: Bucket, key: string) =>
     const jpeg = Base64.encode(yield* object.bytes());
 
     const content: ReadonlyArray<Part> = [
-      { type: "text", text: readLabelPrompt },
+      { type: "text", text: readBottlePrompt },
       { type: "image_url", image_url: { url: `data:image/jpeg;base64,${jpeg}` } },
     ];
 
-    return yield* (yield* Model).json(Label, content);
+    return yield* (yield* Model).json(Bottle, content);
   });
 
-/** Amazon search, the model's picks, then each pick's page checked against the label. */
-const findOnAmazon = (label: Label) =>
+/** Amazon search, the model's picks, then each pick's page checked against the photo. */
+const findOnAmazon = (bottle: Bottle) =>
   Effect.gen(function* () {
     const firecrawl = yield* Firecrawl;
     const model = yield* Model;
-    const wanted = describe(label);
-    const results = yield* firecrawl.searchAmazon(label.query || wanted);
+    const wanted = describe(bottle);
+    const results = yield* firecrawl.searchAmazon(bottle.query || wanted);
 
     if (results.length === 0) return null;
 
-    const { indexes } = yield* model.json(Indexes, pickPrompt(wanted, results.slice(0, 16)));
+    const { indexes } = yield* model.json(
+      Indexes,
+      pickPrompt(wanted, "Amazon", results.slice(0, 16)),
+    );
 
     for (const index of indexes.slice(0, 3)) {
       const result = results[index];
@@ -198,17 +260,107 @@ const findOnAmazon = (label: Label) =>
     return null;
   });
 
-const writeCopy = (facts: string) =>
+/**
+ * The printed label from the first iHerb listing the model calls the same
+ * product. iHerb titles leave out potency and carrier oil, so the pick reads
+ * each listing's label. Without a match, Amazon's own facts stand in.
+ */
+const findLabel = (bottle: Bottle | null, page: AmazonPage | null) =>
+  Effect.gen(function* () {
+    const firecrawl = yield* Firecrawl;
+    const model = yield* Model;
+
+    const wanted = JSON.stringify({
+      bottlePhoto: bottle,
+      amazon: page && { title: page.title, brand: page.brand, facts: page.facts },
+    });
+
+    const query = page === null ? (bottle === null ? "" : describe(bottle)) : page.title;
+    const results = query === "" ? [] : yield* firecrawl.searchIherb(query);
+
+    const { indexes } =
+      results.length === 0
+        ? { indexes: [] }
+        : yield* model.json(Indexes, pickPrompt(wanted, "iHerb", results));
+
+    for (const index of indexes.slice(0, 3)) {
+      const result = results[index];
+
+      if (result === undefined) continue;
+
+      const listing = yield* firecrawl.iherbPage(result.url);
+
+      if (listing === null) continue;
+
+      const read = yield* model.json(IherbLabel, iherbPrompt(wanted, listing));
+
+      if (read.same) {
+        const { servingsPerContainer, ...label } = read.label;
+
+        return { label: { ...label, source: result.url }, servingsPerContainer, gtin: read.gtin };
+      }
+    }
+
+    if (page?.facts === null || page?.facts === undefined) return null;
+
+    const { servingsPerContainer, ...label } = page.facts;
+
+    return { label: { ...label, source: page.url }, servingsPerContainer, gtin: null };
+  });
+
+const writeCopy = (facts: string, fields: Fields) =>
   Effect.gen(function* () {
     const model = yield* Model;
-    const first = yield* model.json(Copy, copyPrompt(facts, []), WRITER);
+    const first = yield* model.json(Copy, copyPrompt(facts, fields, []), WRITER);
     const hits = bannedIn(first.description);
 
     const copy =
-      hits.length === 0 ? first : yield* model.json(Copy, copyPrompt(facts, hits), WRITER);
+      hits.length === 0 ? first : yield* model.json(Copy, copyPrompt(facts, fields, hits), WRITER);
 
     return { ...copy, bannedWords: bannedIn(copy.description) };
   });
+
+/** What `count` counts for each form, in English and Mongolian. */
+const units = {
+  softgel: ["softgels", "зөөлөн капсул"],
+  capsule: ["capsules", "капсул"],
+  tablet: ["tablets", "шахмал"],
+  chewable: ["chewable tablets", "зажилдаг шахмал"],
+  gummy: ["gummies", "гамми"],
+  lozenge: ["lozenges", "хөхдөг шахмал"],
+  powder: ["g powder", "г нунтаг"],
+  liquid: ["mL liquid", "мл шингэн"],
+  drops: ["drops", "дусал"],
+  other: ["units", "ширхэг"],
+} satisfies Record<ProductForm, readonly [string, string]>;
+
+/**
+ * The English and Mongolian names. Each identity field appears, so two
+ * products never share a name (products_name, products_name_mn).
+ */
+const productNames = (
+  fields: Fields,
+  mn: { readonly lineMn: string; readonly flavorMn: string | null; readonly baseMn: string | null },
+) => {
+  const [unitEn, unitMn] = units[fields.form];
+
+  const potencyMn = fields.potency
+    ?.replaceAll(/\bmcg\b/gu, "мкг")
+    .replaceAll(/\bmg\b/gu, "мг")
+    .replaceAll(/\bmL\b/gu, "мл");
+
+  const name =
+    `${fields.line}${fields.potency ? ` ${fields.potency}` : ""}, ${fields.count} ${unitEn}` +
+    (fields.flavor ? `, ${fields.flavor} flavor` : "") +
+    (fields.base ? `, in ${fields.base}` : "");
+
+  const nameMn =
+    `${mn.lineMn}${potencyMn ? ` ${potencyMn}` : ""}, ${fields.count} ${unitMn}` +
+    (mn.flavorMn ? `, ${mn.flavorMn} амттай` : "") +
+    (mn.baseMn ? `, ${mn.baseMn}` : "");
+
+  return { name, nameMn };
+};
 
 /** The model keeps the product shots; each is copied into the shop's own bucket. */
 const keepPhotos = (bucket: Bucket, origin: string, page: AmazonPage, prefix: string) =>
@@ -314,7 +466,11 @@ export const getDraft = Effect.fn("getDraft")(function* getDraft(draftId: DraftI
   if (status.status === "complete") {
     const draft = yield* Schema.decodeUnknownEffect(ProductDraft)(status.output).pipe(Effect.orDie);
 
-    return { _tag: "ready" as const, draft, existing: yield* existingProduct(draft.asin) };
+    return {
+      _tag: "ready" as const,
+      draft,
+      existing: yield* existingProduct(draft.asin, draft.gtin),
+    };
   }
 
   if (status.status === "errored" || status.status === "terminated") {
@@ -351,25 +507,26 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
       const { task } = Cloudflare.Workflows;
       const photo = Predicate.isTagged(input.source, "photo") ? input.source : null;
 
-      const label =
-        photo === null ? null : yield* task("read-photo", readLabel(bucket, photo.key), retried);
+      const bottle =
+        photo === null ? null : yield* task("read-photo", readBottle(bucket, photo.key), retried);
 
       const page = yield* task(
         "find-amazon",
         Match.valueTags(input.source, {
           amazon: ({ url }) => Firecrawl.use((it) => it.amazonPage(url)),
-          photo: () => (label === null ? Effect.succeed(null) : findOnAmazon(label)),
+          photo: () => (bottle === null ? Effect.succeed(null) : findOnAmazon(bottle)),
         }),
         retried,
       );
 
       // A run's error reaches `getDraft` as only a name and a message, so the
       // message carries the reason.
-      if (page === null && label === null) {
+      if (page === null && bottle === null) {
         return yield* Effect.die(new Error("not_a_product_page"));
       }
 
-      const facts = factsText(label, page);
+      const printed = yield* task("label", findLabel(bottle, page), retried);
+      const facts = factsText(bottle, page, printed);
 
       const fields = yield* task(
         "fields",
@@ -377,7 +534,11 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
         retried,
       );
 
-      const copy = yield* task("copy", writeCopy(facts), retried);
+      const { lineMn, flavorMn, baseMn, ...copy } = yield* task(
+        "copy",
+        writeCopy(facts, fields),
+        retried,
+      );
 
       const fromAmazon =
         page === null
@@ -394,9 +555,12 @@ export class ProductDraftWorkflow extends Cloudflare.Workflow<ProductDraftWorkfl
 
       const draft: ProductDraft = {
         ...fields,
+        ...productNames(fields, { lineMn, flavorMn, baseMn }),
         ...copy,
         images,
         asin: page?.asin ?? null,
+        gtin: printed?.gtin ?? null,
+        label: printed?.label ?? null,
         amazonUrl: page?.url ?? null,
         amazonTitle: page?.title ?? null,
         amazonCents: page?.cents ?? null,

@@ -1,3 +1,4 @@
+import { ProductLabel } from "@amerik/contracts";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Data from "effect/Data";
@@ -6,6 +7,7 @@ import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { FetchHttpClient, HttpClient, HttpClientRequest, HttpClientResponse } from "effect/http";
 
 import { callOutside } from "./outside";
@@ -35,21 +37,21 @@ const Product = Schema.Struct({
   ),
 });
 
-/** The label facts Firecrawl's `json` format reads off the page for us. */
-const Facts = Schema.Struct({
-  servingSize: Schema.String.annotate({ description: "Serving size as printed, e.g. 2 capsules" }),
+/**
+ * The printed label as read off a listing, before we know its source. Firecrawl's
+ * `json` format fills it from an Amazon page, the model from an iHerb page.
+ */
+export const Facts = Schema.Struct({
+  ...Struct.omit(ProductLabel.fields, ["source"]),
   servingsPerContainer: Schema.NullOr(Schema.Finite),
-  supplementFacts: Schema.Array(
-    Schema.Struct({ name: Schema.String, amount: Schema.String }),
-  ).annotate({ description: "Supplement Facts rows with the amount per serving" }),
-  directions: Schema.String.annotate({ description: "Suggested use as printed" }),
-  otherIngredients: Schema.String,
-  freeOf: Schema.Array(Schema.String).annotate({
-    description: "What the label says it is free of",
-  }),
 });
 
 export type Facts = typeof Facts.Type;
+
+const factsPrompt = `Read this supplement's label as printed, in English: serving size, servings per container,
+every Supplement Facts row (name, amount per serving, % daily value or null), other ingredients one per item,
+allergens it says it contains, what it says it is free of, suggested use, warnings, and certifications or seals
+the listing names (e.g. Non-GMO Project Verified, cGMP, third-party tested). Use null or an empty list for what isn't there, never "None".`;
 
 const SearchResults = Schema.Struct({
   results: Schema.Array(
@@ -72,6 +74,37 @@ const PageData = Schema.Struct({
   json: Schema.optional(Facts),
   metadata: Schema.optional(Schema.Struct({ url: Schema.optional(Schema.String) })),
 });
+
+const WebResults = Schema.Struct({
+  data: Schema.Struct({
+    web: Schema.optional(Schema.Array(Schema.Struct({ url: Schema.String, title: Schema.String }))),
+  }),
+});
+
+// One iHerb listing shows up under country hosts (uk., ng.) and as /r/ review
+// pages; the /pr/ path on www is the product page.
+const iherbListing = (url: string) => {
+  const path = /^https:\/\/(?:[a-z]+\.)?iherb\.com(\/pr\/[^?#]+)/u.exec(url)?.[1];
+
+  return path === undefined ? null : `https://www.iherb.com${path}`;
+};
+
+/**
+ * The part of an iHerb page that holds the label: the title, then "Product
+ * information" (overview, UPC, suggested use, other ingredients, warnings,
+ * Supplement facts table) up to "Similar items to consider". The overview
+ * stays because certifications are often only listed there.
+ */
+const labelPart = (markdown: string) => {
+  const start = markdown.indexOf("## Product information");
+
+  if (start === -1) return null;
+
+  const end = markdown.indexOf("## Similar items to consider", start);
+  const title = /^# .+$/mu.exec(markdown)?.[0] ?? "";
+
+  return `${title}\n\n${markdown.slice(start, end === -1 ? undefined : end)}`.slice(0, 12_000);
+};
 
 const asinOf = (url: string) => /\/(?:dp|gp\/product)\/([A-Z0-9]{10})/u.exec(url)?.[1];
 
@@ -120,22 +153,25 @@ const make = Effect.fn("Firecrawl.make")(function* make(key: Redacted.Redacted) 
     HttpClient.filterStatusOk,
   );
 
+  const send = <S extends Schema.Top>(answer: S, request: HttpClientRequest.HttpClientRequest) =>
+    http.execute(request.pipe(HttpClientRequest.bearerToken(Redacted.value(key)))).pipe(
+      Effect.flatMap(HttpClientResponse.schemaBodyJson(answer)),
+      callOutside("2 minutes", (reason) => new FirecrawlUnavailable({ reason })),
+    );
+
   const scrape = <S extends Schema.Top>(
     data: S,
     url: string,
-    formats: ReadonlyArray<"product" | ReturnType<typeof jsonFormat>>,
+    formats: ReadonlyArray<"product" | "markdown" | ReturnType<typeof jsonFormat>>,
+    options: { readonly onlyMainContent?: boolean } = {},
   ) =>
-    Effect.gen(function* () {
-      const response = yield* http.execute(
-        HttpClientRequest.post("https://api.firecrawl.dev/v2/scrape").pipe(
-          HttpClientRequest.bearerToken(Redacted.value(key)),
-          // Amazon shows US listings and prices to a US visitor.
-          HttpClientRequest.bodyJsonUnsafe({ url, formats, location: { country: "US" } }),
-        ),
-      );
-
-      return (yield* HttpClientResponse.schemaBodyJson(Scraped(data))(response)).data;
-    }).pipe(callOutside("2 minutes", (reason) => new FirecrawlUnavailable({ reason })));
+    send(
+      Scraped(data),
+      HttpClientRequest.post("https://api.firecrawl.dev/v2/scrape").pipe(
+        // Amazon and iHerb show US listings and prices to a US visitor.
+        HttpClientRequest.bodyJsonUnsafe({ url, formats, ...options, location: { country: "US" } }),
+      ),
+    ).pipe(Effect.map((scraped) => scraped.data));
 
   /** Amazon's own search, read into a result list. It finds far more than a web search. */
   const searchAmazon = Effect.fn("Firecrawl.searchAmazon")(function* searchAmazon(query: string) {
@@ -155,18 +191,42 @@ const make = Effect.fn("Firecrawl.make")(function* make(key: Redacted.Redacted) 
 
   /** One listing: Firecrawl's product extractor plus the supplement facts. */
   const amazonPage = Effect.fn("Firecrawl.amazonPage")(function* amazonPage(url: string) {
-    const data = yield* scrape(PageData, url, [
-      "product",
-      jsonFormat(
-        Facts,
-        "Read the Supplement Facts panel and the label details of this supplement.",
-      ),
-    ]);
+    const data = yield* scrape(PageData, url, ["product", jsonFormat(Facts, factsPrompt)]);
 
     return toPage(url, data);
   });
 
-  return { searchAmazon, amazonPage };
+  /** A web search for iHerb listings, which carry the label and UPC. */
+  const searchIherb = Effect.fn("Firecrawl.searchIherb")(function* searchIherb(query: string) {
+    const { data } = yield* send(
+      WebResults,
+      HttpClientRequest.post("https://api.firecrawl.dev/v2/search").pipe(
+        HttpClientRequest.bodyJsonUnsafe({ query: `site:iherb.com ${query}`, limit: 5 }),
+      ),
+    );
+
+    const listings = (data.web ?? []).flatMap((result) => {
+      const url = iherbListing(result.url);
+
+      return url === null ? [] : [[url, { url, title: result.title }] as const];
+    });
+
+    return [...new Map(listings).values()];
+  });
+
+  /** An iHerb listing's label part as markdown. Null when the page has none. */
+  const iherbPage = Effect.fn("Firecrawl.iherbPage")(function* iherbPage(url: string) {
+    const data = yield* scrape(
+      Schema.Struct({ markdown: Schema.optional(Schema.String) }),
+      url,
+      ["markdown"],
+      { onlyMainContent: true },
+    );
+
+    return data?.markdown === undefined ? null : labelPart(data.markdown);
+  });
+
+  return { searchAmazon, amazonPage, searchIherb, iherbPage };
 });
 
 export class Firecrawl extends Context.Service<
