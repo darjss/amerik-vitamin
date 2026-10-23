@@ -2,13 +2,14 @@ import { priceFromAmazon, ProductForm } from "@amerik/contracts";
 import type { CatalogOptions, NewProduct, ProductDraft, ProductId } from "@amerik/contracts";
 import { useNavigate } from "@solidjs/router";
 import * as Effect from "effect/Effect";
-import { createSignal, createStore, For, Show, untrack } from "solid-js";
+import { createSignal, createStore, For, Show, snapshot, untrack } from "solid-js";
 import { css } from "styled-system/css";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "./api/client";
 import { createWrite } from "./api/solid-effect";
 import { digits, money, sized, srcset, thousands } from "./format";
+import { FactsTable } from "./products";
 import { chip, round } from "./styles";
 import { Dock, field, Note, panel, SaveButton, section, sectionHead, sub } from "./ui";
 import { formText } from "./words";
@@ -77,6 +78,7 @@ export function DraftForm(props: {
       draft.count,
       draft.form,
       draft.flavor,
+      draft.base,
       draft.asin,
     ].join("|");
 
@@ -94,6 +96,8 @@ export function DraftForm(props: {
     if (draft.brand.trim() === "") return "Брэнд";
 
     if (draft.name.trim() === "") return "Нэр";
+
+    if (draft.nameMn.trim() === "") return "Монгол нэр";
 
     if (draft.count <= 0) return "Ширхэг";
 
@@ -130,7 +134,7 @@ export function DraftForm(props: {
       images: [...draft.images],
       asin: draft.asin,
       gtin: draft.gtin,
-      label: draft.label,
+      label: snapshot(draft.label),
       price: draft.price,
       stock: draft.stock,
     };
@@ -268,6 +272,10 @@ export function DraftForm(props: {
           Нэр
           <input class={css(input)} {...bind("name", String)} />
         </label>
+        <label class={css(label)}>
+          Монгол нэр
+          <input class={css(input)} {...bind("nameMn", String)} />
+        </label>
         <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
           <label class={css(label)}>
             Тун
@@ -377,6 +385,20 @@ export function DraftForm(props: {
         </label>
       </section>
 
+      <Show when={draft.label}>
+        {(printed) => (
+          <section class={css(section, { mt: "22px", display: "grid", gap: "8px" })}>
+            <div class={css(sectionHead, { mb: "2px" })}>
+              <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Найрлага</h2>
+            </div>
+            <FactsTable label={printed()} />
+            <Show when={printed().otherIngredients.join(", ")}>
+              {(other) => <p class={css(sub)}>Бусад найрлага: {other()}</p>}
+            </Show>
+          </section>
+        )}
+      </Show>
+
       <section class={css(section, { mt: "18px" })}>
         <details>
           <summary class={css(sub, { cursor: "pointer", py: "6px" })}>Бусад мэдээлэл</summary>
@@ -389,6 +411,14 @@ export function DraftForm(props: {
               <label class={css(label)}>
                 Амт
                 <input class={css(input)} {...bind("flavor", (text) => text || null)} />
+              </label>
+              <label class={css(label)}>
+                Суурь тос
+                <input
+                  class={css(input)}
+                  placeholder="coconut oil"
+                  {...bind("base", (text) => text || null)}
+                />
               </label>
               <label class={css(label)}>
                 Нэг удаагийн хэмжээ

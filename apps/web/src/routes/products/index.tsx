@@ -259,6 +259,7 @@ export default function Products() {
                           class={css({ display: "block" })}
                         >
                           <div class={css({ textStyle: "headline" })}>{product().name}</div>
+                          <div class={css({ textStyle: "subhead" })}>{product().nameMn}</div>
                           <div class={css(sub)}>
                             {product().brand} · {product().count} ш
                           </div>
