@@ -10,7 +10,10 @@ import { StockMoveReason, Tugrik } from "./order.ts";
  */
 export const IMAGE_HOST = "img.amerikvitamin.mn";
 
-/** What the bottle holds, one of the six identity fields on a product. */
+/**
+ * What the bottle holds, one of the identity fields on a product. It sets what
+ * `count` counts: pieces, grams of a powder, mL of a liquid, or drops.
+ */
 export const ProductForm = Schema.Literals([
   "softgel",
   "capsule",
@@ -20,10 +23,44 @@ export const ProductForm = Schema.Literals([
   "lozenge",
   "powder",
   "liquid",
+  "drops",
   "other",
 ]);
 
 export type ProductForm = typeof ProductForm.Type;
+
+/** One Supplement Facts row as printed: "Vitamin D3 (as Cholecalciferol)", "5,000 IU", "625%". */
+export const LabelFact = Schema.Struct({
+  name: Schema.String,
+  amount: Schema.String,
+  /** "625%", "†" when no daily value is set, or null when the label leaves it blank. */
+  dailyValue: Schema.NullOr(Schema.String),
+});
+
+export type LabelFact = typeof LabelFact.Type;
+
+/**
+ * The bottle's label in English as printed, read from its iHerb or Amazon
+ * listing. The Messenger bot answers ingredient and dosage questions from it.
+ */
+export const ProductLabel = Schema.Struct({
+  /** As printed, e.g. "2 Softgels" or "1 Scoop (5 g)". */
+  servingSize: Schema.String,
+  facts: Schema.Array(LabelFact),
+  otherIngredients: Schema.Array(Schema.String),
+  /** What the label says it contains, e.g. "Fish (anchovy)", "Soy". */
+  allergens: Schema.Array(Schema.String),
+  /** What the label says it is free of, e.g. "Gluten", "Dairy". */
+  freeOf: Schema.Array(Schema.String),
+  suggestedUse: Schema.NullOr(Schema.String),
+  warnings: Schema.NullOr(Schema.String),
+  /** Seals the listing names, e.g. "Non-GMO Project Verified", "cGMP". */
+  certifications: Schema.Array(Schema.String),
+  /** The listing it was read from. */
+  source: Schema.String,
+});
+
+export type ProductLabel = typeof ProductLabel.Type;
 
 /** A hand count sets stock to `counted`. The first count of an unknown (null) stock is one too. */
 export const CountStock = Schema.Struct({
@@ -71,18 +108,23 @@ export type StockMove = typeof StockMove.Type;
 export const ProductDetail = Schema.Struct({
   id: ProductId,
   name: Schema.String,
+  nameMn: Schema.String,
   brand: Schema.String,
   category: Schema.String,
   potency: Schema.NullOr(Schema.String),
   count: Schema.Int,
   form: ProductForm,
   flavor: Schema.NullOr(Schema.String),
+  base: Schema.NullOr(Schema.String),
   price: Schema.Int,
   stock: Schema.NullOr(Schema.Int),
+  gtin: Schema.NullOr(Schema.String),
   images: Schema.Array(Schema.String),
   description: Schema.NullOr(Schema.String),
+  label: Schema.NullOr(ProductLabel),
   servingSize: Schema.NullOr(Schema.Int),
   servings: Schema.NullOr(Schema.Int),
+  dailyUnits: Schema.NullOr(Schema.Int),
   archivedAt: Schema.NullOr(Schema.Date),
   /** Bottles sold in the last 30 days, net of cancels and edits. */
   sold30: Schema.Int,
@@ -95,6 +137,7 @@ export type ProductDetail = typeof ProductDetail.Type;
 export const ProductRow = Schema.Struct({
   id: ProductId,
   name: Schema.String,
+  nameMn: Schema.String,
   brand: Schema.String,
   count: Schema.Int,
   image: Schema.NullOr(Schema.String),
@@ -111,7 +154,7 @@ export class ProductUnavailable extends Schema.TaggedError<ProductUnavailable>()
   { productId: ProductId },
 ) {}
 
-/** A product with the same identity (brand, line, potency, count, form, flavor) or ASIN exists. */
+/** A product with the same identity (brand, line, potency, count, form, flavor, base), ASIN, GTIN or name exists. */
 export class DuplicateProduct extends Schema.TaggedError<DuplicateProduct>()("DuplicateProduct", {
   productId: ProductId,
 }) {}
@@ -158,13 +201,24 @@ const ProductFields = {
   count: Schema.Int,
   form: ProductForm,
   flavor: Schema.NullOr(Schema.String),
+  /**
+   * The carrier oil when the active ingredient sits in one, e.g. "coconut oil".
+   * Part of identity: Micro Ingredients sells the same D3 + K2 in two oils.
+   */
+  base: Schema.NullOr(Schema.String),
+  /** English, built from the identity fields, so no two products share it. */
   name: Schema.String,
+  /** The same name in Mongolian Cyrillic, the way customers write it. */
+  nameMn: Schema.String,
   servingSize: Schema.NullOr(Schema.Int),
   servings: Schema.NullOr(Schema.Int),
   dailyUnits: Schema.NullOr(Schema.Int),
   description: Schema.String,
   images: Schema.Array(Schema.String),
   asin: Schema.NullOr(Schema.String),
+  /** The UPC or EAN under the barcode. */
+  gtin: Schema.NullOr(Schema.String),
+  label: Schema.NullOr(ProductLabel),
 };
 
 /** The AI's draft: the form fields, plus what she needs to judge it. */
@@ -214,6 +268,7 @@ export const NewProduct = Schema.Struct({
   brand: Trimmed,
   line: Trimmed,
   name: Trimmed,
+  nameMn: Trimmed,
   count: Schema.Int.check(Schema.isGreaterThan(0)),
   description: Schema.NullOr(Schema.String),
   price: Tugrik.check(Schema.isGreaterThan(0)),
