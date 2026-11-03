@@ -1,5 +1,5 @@
 import { ProductId, stockLevel } from "@amerik/contracts";
-import type { ProductDetail, StockMove } from "@amerik/contracts";
+import type { ProductDetail, ProductLabel, StockMove } from "@amerik/contracts";
 import { useLocation, useParams } from "@solidjs/router";
 import * as DateTime from "effect/DateTime";
 import * as Predicate from "effect/Predicate";
@@ -19,7 +19,7 @@ import { ApiClient } from "../../api/client";
 import { createWrite, runEffect } from "../../api/solid-effect";
 import { money, sized, srcset, when } from "../../format";
 import { Zoom } from "../../photos";
-import { NumberSheet, stockText, stockTone } from "../../products";
+import { FactsTable, NumberSheet, stockText, stockTone } from "../../products";
 import { DetailSkeleton } from "../../skeletons";
 import { button, press, round } from "../../styles";
 import {
@@ -100,6 +100,7 @@ export default function ProductPage() {
             <StockPanel stock={product().stock} sold30={product().sold30} />
             <QuickActions product={product()} onOpen={open} />
             <Facts product={product()} />
+            <Show when={product().label}>{(label) => <Label label={label()} />}</Show>
             <Show when={product().description}>
               {(description) => <Description text={description()} />}
             </Show>
@@ -252,6 +253,9 @@ function Heading(props: { product: ProductDetail; onPrice: () => void }) {
       >
         {props.product.name}
       </h1>
+      <p class={css({ textStyle: "callout", color: "inkMuted", mt: "4px", textWrap: "balance" })}>
+        {props.product.nameMn}
+      </p>
       <div class={css({ display: "flex", alignItems: "center", gap: "10px", mt: "12px" })}>
         <button
           type="button"
@@ -408,8 +412,11 @@ const facts = (product: ProductDetail) =>
     ["Ширхэг", `${product.count}`],
     ["Нэг удаагийн хэмжээ", product.servingSize === null ? null : `${product.servingSize} ш`],
     ["Хэдэн удаа", product.servings === null ? null : `${product.servings}`],
+    ["Өдөрт", product.dailyUnits === null ? null : `${product.dailyUnits} ш`],
     ["Амт", product.flavor],
+    ["Суурь тос", product.base],
     ["Ангилал", product.category],
+    ["Бар код", product.gtin],
   ].flatMap(([label, value]) => (value ? [{ label, value }] : []));
 
 function Facts(props: { product: ProductDetail }) {
@@ -437,6 +444,52 @@ function Facts(props: { product: ProductDetail }) {
           )}
         </For>
       </dl>
+    </section>
+  );
+}
+
+/** The label's text parts in listing order, skipping what it doesn't print. */
+const labelParts = (label: ProductLabel) =>
+  [
+    ["Бусад найрлага", label.otherIngredients.join(", ")],
+    ["Агуулсан", label.allergens.join(", ")],
+    ["Агуулаагүй", label.freeOf.join(", ")],
+    ["Хэрэглэх заавар", label.suggestedUse],
+    ["Анхааруулга", label.warnings],
+  ].flatMap(([title, text]) => (text ? [{ title, text }] : []));
+
+function Label(props: { label: ProductLabel }) {
+  return (
+    <section class={css(section)}>
+      <div class={css(sectionHead)}>
+        <h2 class={css({ textStyle: "title2" })}>Найрлага</h2>
+      </div>
+      <div class={css({ display: "grid", gap: "18px" })}>
+        <FactsTable label={props.label} />
+        <For each={labelParts(props.label)} keyed={(part) => part.title}>
+          {(part) => (
+            <div>
+              <h3 class={css({ textStyle: "headline", mb: "4px" })}>{part().title}</h3>
+              <p class={css({ textStyle: "callout" })}>{part().text}</p>
+            </div>
+          )}
+        </For>
+        <Show when={props.label.certifications.length > 0}>
+          <div class={css({ display: "flex", flexWrap: "wrap", gap: "6px" })}>
+            <For each={props.label.certifications} keyed={false}>
+              {(certification) => <Pill tone="neutral">{certification()}</Pill>}
+            </For>
+          </div>
+        </Show>
+        <a
+          href={props.label.source}
+          target="_blank"
+          rel="noreferrer"
+          class={css(sub, { textStyle: "footnote", textDecoration: "underline" })}
+        >
+          Эх сурвалж: {URL.parse(props.label.source)?.hostname ?? props.label.source}
+        </a>
+      </div>
     </section>
   );
 }

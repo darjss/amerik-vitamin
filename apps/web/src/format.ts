@@ -45,8 +45,10 @@ export const phone = (digits: string) => digits.replace(/^(\d{4})(\d{4})$/u, "$1
 /** "8855-1290" → "88551290" */
 export const digits = (text: string) => text.replaceAll(/\D/gu, "");
 
-export const matches = (product: { brand: string; name: string }, query: string) =>
-  `${product.brand} ${product.name}`.toLowerCase().includes(query.trim().toLowerCase());
+export const matches = (product: { brand: string; name: string; nameMn: string }, query: string) =>
+  `${product.brand} ${product.name} ${product.nameMn}`
+    .toLowerCase()
+    .includes(query.trim().toLowerCase());
 
 const day = (date: Date) => {
   const parts = DateTime.toParts(DateTime.makeZonedUnsafe(date, { timeZone: zone }));
