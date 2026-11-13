@@ -9,7 +9,7 @@ import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "./api/client";
 import { createWrite } from "./api/solid-effect";
-import { digits, money, sized, srcset, thousands } from "./format";
+import { digits, dollars, money, sized, srcset, thousands } from "./format";
 import { FactsTable } from "./products";
 import { chip, round } from "./styles";
 import { Dock, groupHead, hairline, Note, panel, SaveButton, sub } from "./ui";
@@ -377,8 +377,7 @@ export function DraftForm(props: {
         <Show when={draft.amazonCents}>
           {(cents) => (
             <>
-              Amazon дээр ${(cents() / 100).toFixed(2)}, тооцоолсон үнэ{" "}
-              {money(priceFromAmazon(cents()))}.{" "}
+              Amazon дээр {dollars(cents())}, тооцоолсон үнэ {money(priceFromAmazon(cents()))}.{" "}
             </>
           )}
         </Show>

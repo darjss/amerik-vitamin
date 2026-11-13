@@ -87,6 +87,20 @@ export const dayTitle = (date: Date, now: Date) => {
   return `${WEEKDAYS[weekDay]} ${month}/${dayOfMonth}`;
 };
 
+/** A batch's order days: "2026-10-19", "2026-10-25" → "10/19–10/25", one day → "10/19". */
+export const dayRange = (from: string, to: string) => {
+  const short = (isoDay: string) => {
+    const [, month, dayOfMonth] = isoDay.split("-").map(Number);
+
+    return `${month}/${dayOfMonth}`;
+  };
+
+  return from === to ? short(from) : `${short(from)}–${short(to)}`;
+};
+
+/** 1899 → "$18.99" */
+export const dollars = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
 /** { weekday: "Бямба", date: "10-р сарын 18" } */
 export const longDate = (date: Date) => {
   const { weekDay, month, day: dayOfMonth } = day(date);
@@ -105,6 +119,8 @@ export const failureText = (
       Match.value(error).pipe(
         Match.tag("Unauthorized", () => "Дахин нэвтэрнэ үү."),
         Match.tag("WrongOrderStatus", () => "Захиалга аль хэдийн өөрчлөгдсөн байна."),
+        Match.tag("NothingOpen", () => "Энэ бараа аль хэдийн тоологдсон байна."),
+        Match.tag("BatchNotFound", () => "Ачаа өөрчлөгдсөн байна. Ачаа хэсгээс дахин нээнэ үү."),
         Match.tag("RpcClientError", () => "Интернэт тасарсан. Дахин оролдоно уу."),
         Match.orElse(() => fallback),
       ),

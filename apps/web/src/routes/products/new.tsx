@@ -7,7 +7,16 @@ import * as Option from "effect/Option";
 import * as Predicate from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
-import { createMemo, createSignal, Errored, For, Loading, onSettled, Show } from "solid-js";
+import {
+  createMemo,
+  createSignal,
+  Errored,
+  For,
+  Loading,
+  onSettled,
+  Show,
+  untrack,
+} from "solid-js";
 import { css } from "styled-system/css";
 import CameraIcon from "~icons/ph/camera";
 import CaretRightIcon from "~icons/ph/caret-right-bold";
@@ -43,9 +52,10 @@ const toJpeg = async (file: File) => {
 };
 
 export default function NewProductPage() {
-  const [params, setParams] = useSearchParams<{ draft?: string; manual?: string }>();
+  // A batch's product the shop doesn't sell yet comes with its Amazon link in `url`.
+  const [params, setParams] = useSearchParams<{ draft?: string; manual?: string; url?: string }>();
   const options = createMemo(() => runEffect(ApiClient.use((api) => api.catalogOptions())));
-  const [url, setUrl] = createSignal("");
+  const [url, setUrl] = createSignal(untrack(() => params.url ?? ""));
   const { write, busy, failed } = createWrite();
 
   const draftId = () => Option.getOrUndefined(Schema.decodeUnknownOption(DraftId)(params.draft));

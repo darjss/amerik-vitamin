@@ -1,16 +1,20 @@
 import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
-import { createEffect, For, Loading, Show } from "solid-js";
+import { createEffect, createMemo, Errored, For, Loading, Show } from "solid-js";
 import { css } from "styled-system/css";
 import CaretLeftIcon from "~icons/ph/caret-left-bold";
 import MoreIcon from "~icons/ph/dots-three-bold";
 import HouseFillIcon from "~icons/ph/house-fill";
 import HouseIcon from "~icons/ph/house";
+import PackageFillIcon from "~icons/ph/package-fill";
+import PackageIcon from "~icons/ph/package";
 import PillFillIcon from "~icons/ph/pill-fill";
 import PillIcon from "~icons/ph/pill";
 import ReceiptFillIcon from "~icons/ph/receipt-fill";
 import ReceiptIcon from "~icons/ph/receipt";
 
+import { ApiClient } from "./api/client";
+import { runEffect } from "./api/solid-effect";
 import { press, round } from "./styles";
 import { frosted, glassBar } from "./ui";
 import type { Icon } from "./ui";
@@ -218,14 +222,35 @@ const tab = css.raw({
 
 const activeTab = css.raw({ bg: "butter", color: "ink" });
 
+const badge = css.raw({
+  position: "absolute",
+  top: "-6px",
+  left: "14px",
+  minWidth: "18px",
+  height: "18px",
+  px: "5px",
+  borderRadius: "9px",
+  bg: "ink",
+  color: "page",
+  fontSize: "11px",
+  lineHeight: "18px",
+  fontWeight: "700",
+  textAlign: "center",
+  fontVariantNumeric: "tabular-nums",
+});
+
 const tabs = [
   { href: "/", label: "Нүүр", Icon: HouseIcon, Active: HouseFillIcon },
   { href: "/orders", label: "Захиалга", Icon: ReceiptIcon, Active: ReceiptFillIcon },
+  { href: "/arrivals", label: "Ачаа", Icon: PackageIcon, Active: PackageFillIcon },
   { href: "/products", label: "Бараа", Icon: PillIcon, Active: PillFillIcon },
 ] satisfies ReadonlyArray<{ href: string; label: string; Icon: Icon; Active: Icon }>;
 
 export function TabBar() {
   const location = useLocation();
+  const batches = createMemo(() => runEffect(ApiClient.use((api) => api.listBatches())));
+  // Ачаа's badge: batches with units still to count.
+  const toCount = () => batches().filter((batch) => batch.open > 0).length;
 
   const at = (path: string) =>
     path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
@@ -253,9 +278,19 @@ export function TabBar() {
       <For each={tabs}>
         {(link) => (
           <a href={link.href} class={css(press, tab, at(link.href) && activeTab)}>
-            <Show when={at(link.href)} fallback={<link.Icon />}>
-              <link.Active />
-            </Show>
+            <span class={css({ position: "relative", display: "flex" })}>
+              <Show when={at(link.href)} fallback={<link.Icon />}>
+                <link.Active />
+              </Show>
+              {/* A badge that can't load stays off; the tab still works. */}
+              <Errored fallback={null}>
+                <Loading fallback={null}>
+                  <Show when={link.href === "/arrivals" && toCount()}>
+                    {(count) => <b class={css(badge)}>{count()}</b>}
+                  </Show>
+                </Loading>
+              </Errored>
+            </span>
             {link.label}
           </a>
         )}
