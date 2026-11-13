@@ -74,6 +74,19 @@ export const when = (date: Date, now: Date) => {
   return `${month}/${dayOfMonth}`;
 };
 
+/** A day heading: "Өнөөдөр", "Өчигдөр", then "Пүрэв 11/6". */
+export const dayTitle = (date: Date, now: Date) => {
+  const gap = daysBetween(date, now);
+
+  if (gap === 0) return "Өнөөдөр";
+
+  if (gap === 1) return "Өчигдөр";
+
+  const { weekDay, month, day: dayOfMonth } = day(date);
+
+  return `${WEEKDAYS[weekDay]} ${month}/${dayOfMonth}`;
+};
+
 /** { weekday: "Бямба", date: "10-р сарын 18" } */
 export const longDate = (date: Date) => {
   const { weekDay, month, day: dayOfMonth } = day(date);
