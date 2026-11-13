@@ -5,14 +5,20 @@ import {
   priceFromAmazon,
   SupplierOrderId,
 } from "@amerik/contracts";
-import type { BatchStatus, CloseBatch, ReceiveBatch, SupplierOrderInput } from "@amerik/contracts";
+import type {
+  BatchStatus,
+  CloseBatch,
+  ReceiveBatch,
+  ShopProduct,
+  SupplierOrderInput,
+} from "@amerik/contracts";
 import { Database, dieOnDatabaseError, moveStock, schema, transaction } from "@amerik/db";
 import { and, asc, between, eq, inArray, isNull, lt, lte } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 
-const { products, supplierOrderLines, supplierOrders } = schema;
+const { brands, products, supplierOrderLines, supplierOrders } = schema;
 
 /**
  * Adds or refreshes supplier orders, matched on Amazon's order number, so a
@@ -120,6 +126,34 @@ const batchesOf = (days: ReadonlyArray<string>) => {
   return batches;
 };
 
+/**
+ * A line's matched product. Drizzle nulls `product` when the line has none, but
+ * only for an object of one table's columns, so the brand comes beside it.
+ */
+const shopProductColumns = {
+  product: {
+    id: products.id,
+    name: products.name,
+    nameMn: products.nameMn,
+    count: products.count,
+    images: products.images,
+    price: products.price,
+  },
+  brand: brands.name,
+};
+
+const shopProduct = (line: {
+  product: (Omit<ShopProduct, "image" | "brand"> & { images: ReadonlyArray<string> }) | null;
+  brand: string | null;
+}) => {
+  if (line.product === null) return null;
+
+  const { images, ...product } = line.product;
+
+  // Every product has a brand, so it's null only with the product.
+  return { ...product, brand: line.brand ?? "", image: images[0] ?? null };
+};
+
 /** Units still coming on a line. A closed line has none. */
 const openUnits = (line: { qty: number; received: number; closedAt: Date | null }) =>
   line.closedAt === null ? line.qty - line.received : 0;
@@ -149,15 +183,18 @@ export const listBatches = Effect.fn("listBatches")(function* listBatches() {
   const lines = yield* db
     .select({
       day: supplierOrders.orderedOn,
-      productId: supplierOrderLines.productId,
+      orderId: supplierOrderLines.orderId,
       asin: supplierOrderLines.asin,
       qty: supplierOrderLines.qty,
       received: supplierOrderLines.received,
       closedAt: supplierOrderLines.closedAt,
+      ...shopProductColumns,
     })
     .from(supplierOrderLines)
     .innerJoin(supplierOrders, eq(supplierOrders.id, supplierOrderLines.orderId))
-    .orderBy(asc(supplierOrders.orderedOn))
+    .leftJoin(products, eq(products.id, supplierOrderLines.productId))
+    .leftJoin(brands, eq(brands.id, products.brandId))
+    .orderBy(asc(supplierOrders.orderedOn), asc(supplierOrders.number))
     .pipe(dieOnDatabaseError);
 
   return batchesOf([...new Set(lines.map((line) => line.day))])
@@ -171,14 +208,24 @@ export const listBatches = Effect.fn("listBatches")(function* listBatches() {
       const status: BatchStatus =
         open === 0 ? "arrived" : received === 0 ? "ordered" : "partly_arrived";
 
+      const matched = new Map(
+        inBatch.flatMap((line) => {
+          const product = shopProduct(line);
+
+          return product === null ? [] : [[product.id, product] as const];
+        }),
+      );
+
       return {
         from,
         to,
-        products: new Set(inBatch.map((line) => line.productId ?? line.asin)).size,
+        orders: new Set(inBatch.map((line) => line.orderId)).size,
+        products: new Set(inBatch.map((line) => line.product?.id ?? line.asin)).size,
         ordered,
         received,
         open,
         status,
+        photos: [...matched.values()].filter((product) => product.image !== null),
       };
     });
 });
@@ -196,17 +243,12 @@ export const getBatch = Effect.fn("getBatch")(function* getBatch(batch: string) 
       received: supplierOrderLines.received,
       closedAt: supplierOrderLines.closedAt,
       unitCostCents: supplierOrderLines.unitCostCents,
-      product: {
-        id: products.id,
-        name: products.name,
-        nameMn: products.nameMn,
-        images: products.images,
-        price: products.price,
-      },
+      ...shopProductColumns,
     })
     .from(supplierOrderLines)
     .innerJoin(supplierOrders, eq(supplierOrders.id, supplierOrderLines.orderId))
     .leftJoin(products, eq(products.id, supplierOrderLines.productId))
+    .leftJoin(brands, eq(brands.id, products.brandId))
     .where(between(supplierOrders.orderedOn, from, to))
     .orderBy(asc(supplierOrders.orderedOn), asc(supplierOrders.number))
     .pipe(dieOnDatabaseError);
@@ -217,24 +259,19 @@ export const getBatch = Effect.fn("getBatch")(function* getBatch(batch: string) 
     from,
     to,
     products: [...grouped].map((group) => {
-      const [{ product, asin, title }] = group;
+      const [first] = group;
+      const { asin, title } = first;
       const cost = group.findLast((line) => line.unitCostCents !== null)?.unitCostCents ?? null;
 
       return {
-        product:
-          product === null
-            ? null
-            : {
-                id: product.id,
-                name: product.name,
-                nameMn: product.nameMn,
-                image: product.images[0] ?? null,
-              },
+        product: shopProduct(first),
         asin,
         title,
+        ordered: group.reduce((total, line) => total + line.qty, 0),
         expected: group.reduce((total, line) => total + openUnits(line), 0),
         received: group.reduce((total, line) => total + line.received, 0),
-        suggestedPrice: product?.price ?? (cost === null ? null : priceFromAmazon(cost)),
+        unitCostCents: cost,
+        suggestedPrice: cost === null ? null : priceFromAmazon(cost),
       };
     }),
   };

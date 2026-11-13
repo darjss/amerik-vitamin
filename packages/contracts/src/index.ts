@@ -95,5 +95,6 @@ export {
   Day,
   NothingOpen,
   ReceiveBatch,
+  ShopProduct,
   SupplierOrderInput,
 } from "./supply.ts";
