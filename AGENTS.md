@@ -14,8 +14,9 @@ This file holds only what no tool can check. When you see the same mistake twice
 ## Read for the task
 
 - How a library works, before reading `node_modules`: [docs/LIBRARIES.md](docs/LIBRARIES.md).
-- Solid components or reactivity: [.agents/skills/solidjs-v2/SKILL.md](.agents/skills/solidjs-v2/SKILL.md), and the diagnostics list in LIBRARIES.
-- Effect workflows, layers or schemas: [.agents/skills/effect/SKILL.md](.agents/skills/effect/SKILL.md). Installed package types win over examples.
+- Solid components or reactivity: load the `solidjs-v2` skill, and read the diagnostics list in LIBRARIES.
+- Effect workflows, layers or schemas: load the `effect` skill. Installed package types win over examples.
+- Alchemy stacks, Workers, bindings or `alchemy dev`: load the `alchemy` skill. It targets beta.83, so check this repo's installed version against it.
 - Writing or reviewing any code (errors, unknown data, types, run edges, database, tests): [docs/CONVENTIONS.md](docs/CONVENTIONS.md).
 - Where code goes, request scope, adding an operation or table: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - Effect reads in Solid: [docs/SOLID-EFFECT-BINDING.md](docs/SOLID-EFFECT-BINDING.md).
@@ -33,7 +34,7 @@ This file holds only what no tool can check. When you see the same mistake twice
 - Reach for an established library before hand-rolling anything: webhook signatures, auth, parsing, retries.
 - New abstractions, helpers and test files need the owner's approval first. One RuleTester test per custom lint rule in `tools/oxlint/anti-slop/amerik` is pre-approved.
 - Never write unit tests after the code. Prefer end-to-end checks that leave a repeatable artifact. Before building a system you will test in isolation, write down every way it can fail, then write the code.
-- Use `vp` for everything pnpm or npx would do. Before you call a change done, run `vp check --quiet`, `vp run test` and the relevant `vp run build`, unpiped. Report missing tests or blocked checks as such.
+- Use `vp` for everything pnpm or npx would do. Before you call a change done, run `vp check --quiet`, `vp run test` and the relevant `vp run build`, unpiped. Report missing tests or blocked checks as such. `vp check` fails on warnings too, including `effecttsgo(...)` ones, so fix them. Ignore its "use `vpr check`" note, since the `check` script is the same `vp check`.
 - Pin every version exactly and keep it on the newest release past the release age. When the newest is too new, pin the one before it. Release-age settings and `minimumReleaseAgeExclude` stay untouched. Add packages with `vp add <pkg>@<exact version>`; if `vp add` writes a `minimumReleaseAgeExclude` entry, revert it and pick an older version.
 - Opus 5.5 plans, implements and reviews. Hand work to Sonnet or another model only when the owner asks, and then with an exact brief: files, interfaces, done-criteria.
 - PRs target `main`, the only merge target. Its required `check` must be green.
