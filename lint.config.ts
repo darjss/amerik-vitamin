@@ -103,6 +103,7 @@ export const lint = defineConfig({
                   "drizzle-orm/*",
                   "alchemy",
                   "alchemy/*",
+                  "@alchemy.run/*",
                 ],
                 message: "apps/web reaches data through the Api RPC in @amerik/contracts.",
               },
@@ -127,6 +128,7 @@ export const lint = defineConfig({
                   "drizzle-orm/*",
                   "alchemy",
                   "alchemy/*",
+                  "@alchemy.run/*",
                   "cloudflare:*",
                 ],
                 message:

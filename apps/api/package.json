@@ -8,6 +8,8 @@
     "test": "vp test --run --passWithNoTests"
   },
   "dependencies": {
+    "@alchemy.run/cloudflare": "catalog:",
+    "@alchemy.run/drizzle": "catalog:",
     "@amerik/contracts": "workspace:*",
     "@amerik/db": "workspace:*",
     "@better-auth/drizzle-adapter": "catalog:",
