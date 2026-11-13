@@ -9,6 +9,7 @@ import {
   StockMoveReason,
 } from "@amerik/contracts";
 import type {
+  AmazonOrderNumber,
   BankTransactionId,
   BrandId,
   CategoryId,
@@ -23,12 +24,14 @@ import type {
   ProductLabel,
   QPayInvoiceId,
   StockMoveId,
+  SupplierOrderId,
   UserId,
 } from "@amerik/contracts";
 import { sql } from "drizzle-orm";
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -395,6 +398,52 @@ export const bankTransactions = shop.table(
     index("bank_transactions_unmatched_idx")
       .on(table.happenedAt)
       .where(sql`payment_id is null`),
+  ],
+);
+
+/**
+ * What we bought from a supplier. Amazon's order number makes a re-import a
+ * no-op. Batches are clusters of `ordered_on` and never stored.
+ */
+export const supplierOrders = shop.table(
+  "supplier_orders",
+  {
+    id: uuid("id").$type<SupplierOrderId>().primaryKey(),
+    number: text("number").$type<AmazonOrderNumber>().notNull().unique(),
+    orderedOn: date("ordered_on", { mode: "string" }).notNull(),
+    totalCents: integer("total_cents"),
+  },
+  (table) => [index("supplier_orders_ordered_on_idx").on(table.orderedOn)],
+);
+
+/**
+ * One product on a supplier order. `received` fills as boxes arrive; a set
+ * `closed_at` means the rest is not coming. `unit_cost_cents` is known only for
+ * a one-product order with a total. `product_id` is null until the shop has the ASIN.
+ */
+export const supplierOrderLines = shop.table(
+  "supplier_order_lines",
+  {
+    orderId: uuid("order_id")
+      .$type<SupplierOrderId>()
+      .notNull()
+      .references(() => supplierOrders.id),
+    asin: text("asin").notNull(),
+    title: text("title").notNull(),
+    qty: integer("qty").notNull(),
+    unitCostCents: integer("unit_cost_cents"),
+    productId: uuid("product_id")
+      .$type<ProductId>()
+      .references(() => products.id),
+    received: integer("received").notNull().default(0),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.orderId, table.asin] }),
+    index("supplier_order_lines_product_idx").on(table.productId),
+    index("supplier_order_lines_asin_idx").on(table.asin),
+    check("supplier_order_lines_qty_check", sql`${table.qty} > 0`),
+    check("supplier_order_lines_received_check", sql`${table.received} between 0 and ${table.qty}`),
   ],
 );
 

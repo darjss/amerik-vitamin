@@ -8,8 +8,9 @@
     "skipLibCheck": true,
     "noEmit": true,
     "isolatedModules": true,
+    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "types": ["@cloudflare/workers-types", "node"]
   },
-  "include": ["src", "infra"]
+  "include": ["src", "infra", "scripts"]
 }

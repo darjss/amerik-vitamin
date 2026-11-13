@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "import-amazon": "node --env-file-if-exists=../../.env scripts/import-amazon-orders.ts",
     "test": "vp test --run --passWithNoTests"
   },
   "dependencies": {

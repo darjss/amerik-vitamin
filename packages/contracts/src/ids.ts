@@ -62,6 +62,17 @@ export const OutboxId = uuidV7("OutboxId");
 
 export type OutboxId = typeof OutboxId.Type;
 
+export const SupplierOrderId = uuidV7("SupplierOrderId");
+
+export type SupplierOrderId = typeof SupplierOrderId.Type;
+
+/** Amazon's number for one of our orders, `114-2194147-0284238`. */
+export const AmazonOrderNumber = Schema.String.check(
+  Schema.isPattern(/^[0-9]{3}-[0-9]{7}-[0-9]{7}$/u),
+).pipe(Schema.brand("AmazonOrderNumber"));
+
+export type AmazonOrderNumber = typeof AmazonOrderNumber.Type;
+
 /** QPay's id for an invoice we created. */
 export const QPayInvoiceId = Schema.NonEmptyString.pipe(Schema.brand("QPayInvoiceId"));
 
