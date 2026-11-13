@@ -2,9 +2,9 @@ import { existsSync } from "node:fs";
 
 import * as Alchemy from "alchemy";
 import { AlchemyContext } from "alchemy/AlchemyContext";
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Command from "alchemy/Command";
-import * as Docker from "alchemy/Docker";
+import * as Docker from "@alchemy.run/docker";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";

@@ -1,5 +1,5 @@
 import { AlchemyContext } from "alchemy/AlchemyContext";
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Command from "alchemy/Command";
 import * as Output from "alchemy/Output";
 import { retain } from "alchemy/RemovalPolicy";
