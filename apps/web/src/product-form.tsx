@@ -4,14 +4,15 @@ import { useNavigate } from "@solidjs/router";
 import * as Effect from "effect/Effect";
 import { createSignal, createStore, For, Show, snapshot, untrack } from "solid-js";
 import { css } from "styled-system/css";
+import CaretRightIcon from "~icons/ph/caret-right-bold";
 import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "./api/client";
 import { createWrite } from "./api/solid-effect";
-import { digits, money, sized, srcset, thousands } from "./format";
+import { digits, dollars, money, sized, srcset, thousands } from "./format";
 import { FactsTable } from "./products";
 import { chip, round } from "./styles";
-import { Dock, field, Note, panel, SaveButton, section, sectionHead, sub } from "./ui";
+import { Dock, groupHead, hairline, Note, panel, SaveButton, sub } from "./ui";
 import { formText } from "./words";
 
 const optionalInt = (text: string) => (digits(text) === "" ? null : Number(digits(text)));
@@ -44,10 +45,34 @@ export const blank: ProductDraft = {
   note: "",
 };
 
-const label = css.raw(sub, { display: "grid", gap: "6px" });
+/** A field in a white panel: its name small above what she types. */
+const fieldRow = css.raw(hairline, {
+  display: "grid",
+  gap: "2px",
+  minWidth: 0,
+  px: "16px",
+  py: "10px",
+  textStyle: "footnote",
+  fontWeight: "600",
+  color: "inkMuted",
+  "& input, & textarea": {
+    width: "100%",
+    bg: "transparent",
+    outline: "none",
+    textStyle: "body",
+    fontWeight: "500",
+    color: "ink",
+    resize: "none",
+    fieldSizing: "content",
+    _placeholder: { color: "inkMuted", fontWeight: "400" },
+  },
+});
 
-/** A text field; the ink color keeps typed text dark inside the muted label. */
-export const input = css.raw(field, { color: "ink" });
+/** The second field of a row split in two: a line on its left instead of above. */
+const sideField = css.raw({
+  boxShadow: "inset 1px 0 0 {colors.line}",
+  _before: { display: "none" },
+});
 
 /** The confirm form. She edits anything, adds the price, and saves. */
 export function DraftForm(props: {
@@ -167,10 +192,10 @@ export function DraftForm(props: {
   });
 
   return (
-    <div class={css({ display: "grid" })}>
+    <div class={css({ display: "grid", px: "16px" })}>
       <Show when={duplicate()}>
         {(productId) => (
-          <div class={css({ px: "16px", pt: "8px" })}>
+          <div class={css({ pt: "8px" })}>
             <Note large>
               Энэ бараа дэлгүүрт аль хэдийн байна.{" "}
               <a href={`/products/${productId()}`} class={css({ textDecoration: "underline" })}>
@@ -192,7 +217,7 @@ export function DraftForm(props: {
           .join(" ")}
       >
         {(note) => (
-          <div class={css({ px: "16px", pt: "8px" })}>
+          <div class={css({ pt: "8px" })}>
             <Note>{note()}</Note>
           </div>
         )}
@@ -204,9 +229,9 @@ export function DraftForm(props: {
             display: "flex",
             gap: "10px",
             overflowX: "auto",
+            mx: "-16px",
             px: "16px",
             pt: "12px",
-            pb: "6px",
             scrollbarWidth: "none",
           })}
         >
@@ -218,8 +243,7 @@ export function DraftForm(props: {
                   flex: "none",
                   width: "132px",
                   height: "132px",
-                  p: "8px",
-                  bg: "white",
+                  p: "10px",
                   "& img": { width: "100%", height: "100%", objectFit: "contain" },
                 })}
               >
@@ -251,7 +275,7 @@ export function DraftForm(props: {
 
       <Show when={draft.amazonTitle}>
         {(title) => (
-          <p class={css(sub, { px: "20px", pt: "8px" })}>
+          <p class={css(sub, { px: "4px", pt: "10px" })}>
             Amazon:{" "}
             <a href={draft.amazonUrl ?? undefined} class={css({ color: "ink" })}>
               {title()}
@@ -260,190 +284,174 @@ export function DraftForm(props: {
         )}
       </Show>
 
-      <section class={css(section, { mt: "20px", display: "grid", gap: "14px" })}>
-        <label class={css(label)}>
+      <h2 class={css(groupHead)}>Бараа</h2>
+      <div class={css(panel)}>
+        <label class={css(fieldRow)}>
           Брэнд
-          <input list="brands" class={css(input)} {...bind("brand", String)} />
+          <input list="brands" {...bind("brand", String)} />
           <datalist id="brands">
             <For each={props.options.brands}>{(brand) => <option value={brand} />}</For>
           </datalist>
         </label>
-        <label class={css(label)}>
-          Нэр
-          <input class={css(input)} {...bind("name", String)} />
-        </label>
-        <label class={css(label)}>
+        <label class={css(fieldRow)}>
           Монгол нэр
-          <input class={css(input)} {...bind("nameMn", String)} />
+          <textarea rows={2} {...bind("nameMn", String)} />
         </label>
-        <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
-          <label class={css(label)}>
+        <label class={css(fieldRow)}>
+          Нэр (англиар)
+          <textarea rows={2} {...bind("name", String)} />
+        </label>
+        <div class={css(hairline, { display: "grid", gridTemplateColumns: "1fr 1fr" })}>
+          <label class={css(fieldRow)}>
             Тун
-            <input
-              class={css(input)}
-              placeholder="1500 mcg"
-              {...bind("potency", (text) => text || null)}
-            />
+            <input placeholder="1500 mcg" {...bind("potency", (text) => text || null)} />
           </label>
-          <label class={css(label)}>
+          <label class={css(fieldRow, sideField)}>
             Ширхэг
-            <input
-              inputmode="numeric"
-              class={css(input)}
-              {...bind("count", (text) => Number(digits(text)))}
-            />
+            <input inputmode="numeric" {...bind("count", (text) => Number(digits(text)))} />
           </label>
         </div>
-      </section>
+      </div>
 
-      <section class={css(section, { mt: "22px" })}>
-        <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Хэлбэр</h2>
-        </div>
-        <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
-          <For each={ProductForm.literals}>
-            {(value) => (
-              <button
-                type="button"
-                onClick={() =>
-                  setDraft((next) => {
-                    next.form = value;
-                  })
-                }
-                class={css(chip.raw({ on: draft.form === value }), { height: "36px" })}
-              >
-                {formText[value]}
-              </button>
-            )}
-          </For>
-        </div>
-      </section>
-
-      <section class={css(section, { mt: "22px" })}>
-        <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Ангилал</h2>
-        </div>
-        <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
-          <For each={props.options.categories}>
-            {(category) => (
-              <button
-                type="button"
-                onClick={() =>
-                  setDraft((next) => {
-                    next.category = category.slug;
-                  })
-                }
-                class={css(chip.raw({ on: draft.category === category.slug }), { height: "36px" })}
-              >
-                {category.name}
-              </button>
-            )}
-          </For>
-        </div>
-      </section>
-
-      <section class={css(section, { mt: "22px", display: "grid", gap: "14px" })}>
-        <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
-          <label class={css(label)}>
-            Үнэ
-            <input
-              inputmode="numeric"
-              placeholder="0₮"
-              {...bind("price", (text) => Number(digits(text)))}
-              value={draft.price === 0 ? "" : `${thousands(draft.price)}₮`}
-              class={css(input, { fontWeight: "650", fontVariantNumeric: "tabular-nums" })}
-            />
-          </label>
-          <label class={css(label)}>
-            Үлдэгдэл
-            <input
-              inputmode="numeric"
-              placeholder="0"
-              {...bind("stock", (text) => Number(digits(text)))}
-              class={css(input, { fontVariantNumeric: "tabular-nums" })}
-            />
-          </label>
-        </div>
-        <Show when={draft.amazonCents}>
-          {(cents) => (
-            <p class={css(sub, { mt: "-6px" })}>
-              Amazon дээр ${(cents() / 100).toFixed(2)}, тооцоолсон үнэ{" "}
-              {money(priceFromAmazon(cents()))}. Үлдэгдэл хоосон бол тоолоогүй гэж нэмэгдэнэ.
-            </p>
+      <h2 class={css(groupHead)}>Хэлбэр</h2>
+      <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
+        <For each={ProductForm.literals}>
+          {(value) => (
+            <button
+              type="button"
+              onClick={() =>
+                setDraft((next) => {
+                  next.form = value;
+                })
+              }
+              class={chip({ on: draft.form === value })}
+            >
+              {formText[value]}
+            </button>
           )}
-        </Show>
-      </section>
+        </For>
+      </div>
 
-      <section class={css(section, { mt: "22px", display: "grid", gap: "8px" })}>
-        <label class={css(label)}>
-          Тайлбар
-          <textarea
-            rows={9}
-            {...bind("description", String)}
-            class={css(input, { lineHeight: "23px", resize: "vertical" })}
+      <h2 class={css(groupHead)}>Ангилал</h2>
+      <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
+        <For each={props.options.categories}>
+          {(category) => (
+            <button
+              type="button"
+              onClick={() =>
+                setDraft((next) => {
+                  next.category = category.slug;
+                })
+              }
+              class={chip({ on: draft.category === category.slug })}
+            >
+              {category.name}
+            </button>
+          )}
+        </For>
+      </div>
+
+      <h2 class={css(groupHead)}>Үнэ ба үлдэгдэл</h2>
+      <div class={css(panel, { display: "grid", gridTemplateColumns: "1fr 1fr" })}>
+        <label class={css(fieldRow)}>
+          Үнэ
+          <input
+            inputmode="numeric"
+            placeholder="0₮"
+            {...bind("price", (text) => Number(digits(text)))}
+            value={draft.price === 0 ? "" : `${thousands(draft.price)}₮`}
+            class={css({ fontWeight: "650", fontVariantNumeric: "tabular-nums" })}
           />
         </label>
-      </section>
+        <label class={css(fieldRow, sideField)}>
+          Үлдэгдэл
+          <input
+            inputmode="numeric"
+            placeholder="Тоолоогүй"
+            {...bind("stock", (text) => Number(digits(text)))}
+            class={css({ fontVariantNumeric: "tabular-nums" })}
+          />
+        </label>
+      </div>
+      <p class={css(sub, { px: "4px", pt: "8px" })}>
+        <Show when={draft.amazonCents}>
+          {(cents) => (
+            <>
+              Amazon дээр {dollars(cents())}, тооцоолсон үнэ {money(priceFromAmazon(cents()))}.{" "}
+            </>
+          )}
+        </Show>
+        Үлдэгдэл хоосон бол тоолоогүй гэж нэмэгдэнэ.
+      </p>
+
+      <h2 class={css(groupHead)}>Тайлбар</h2>
+      <label class={css(panel, fieldRow)}>
+        <span class={css({ srOnly: true })}>Тайлбар</span>
+        <textarea
+          {...bind("description", String)}
+          class={css({ minHeight: "180px", lineHeight: "1.45" })}
+        />
+      </label>
 
       <Show when={draft.label}>
         {(printed) => (
-          <section class={css(section, { mt: "22px", display: "grid", gap: "8px" })}>
-            <div class={css(sectionHead, { mb: "2px" })}>
-              <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Найрлага</h2>
+          <>
+            <h2 class={css(groupHead)}>Найрлага</h2>
+            <div class={css(panel, { p: "16px", display: "grid", gap: "12px" })}>
+              <FactsTable label={printed()} />
+              <Show when={printed().otherIngredients.join(", ")}>
+                {(other) => <p class={css(sub)}>Бусад найрлага: {other()}</p>}
+              </Show>
             </div>
-            <FactsTable label={printed()} />
-            <Show when={printed().otherIngredients.join(", ")}>
-              {(other) => <p class={css(sub)}>Бусад найрлага: {other()}</p>}
-            </Show>
-          </section>
+          </>
         )}
       </Show>
 
-      <section class={css(section, { mt: "18px" })}>
-        <details>
-          <summary class={css(sub, { cursor: "pointer", py: "6px" })}>Бусад мэдээлэл</summary>
-          <div class={css({ display: "grid", gap: "12px", pt: "10px" })}>
-            <label class={css(label)}>
-              Шугам (англиар, брэнд, тун, тоогүй)
-              <input class={css(input)} {...bind("line", String)} />
+      <details class={css({ mt: "20px", "&[open] summary svg": { transform: "rotate(90deg)" } })}>
+        <summary
+          class={css(groupHead, {
+            mt: 0,
+            listStyle: "none",
+            cursor: "pointer",
+            alignItems: "center",
+            "&::-webkit-details-marker": { display: "none" },
+            "& svg": { fontSize: "15px", transition: "transform 150ms ease" },
+          })}
+        >
+          Бусад мэдээлэл
+          <CaretRightIcon />
+        </summary>
+        <div class={css(panel)}>
+          <label class={css(fieldRow)}>
+            Шугам (англиар, брэнд, тун, тоогүй)
+            <input {...bind("line", String)} />
+          </label>
+          <div class={css(hairline, { display: "grid", gridTemplateColumns: "1fr 1fr" })}>
+            <label class={css(fieldRow)}>
+              Амт
+              <input {...bind("flavor", (text) => text || null)} />
             </label>
-            <div class={css({ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" })}>
-              <label class={css(label)}>
-                Амт
-                <input class={css(input)} {...bind("flavor", (text) => text || null)} />
-              </label>
-              <label class={css(label)}>
-                Суурь тос
-                <input
-                  class={css(input)}
-                  placeholder="coconut oil"
-                  {...bind("base", (text) => text || null)}
-                />
-              </label>
-              <label class={css(label)}>
-                Нэг удаагийн хэмжээ
-                <input
-                  inputmode="numeric"
-                  class={css(input)}
-                  {...bind("servingSize", optionalInt)}
-                />
-              </label>
-              <label class={css(label)}>
-                Хэдэн удаа
-                <input inputmode="numeric" class={css(input)} {...bind("servings", optionalInt)} />
-              </label>
-              <label class={css(label)}>
-                Өдөрт хэдэн ширхэг
-                <input
-                  inputmode="numeric"
-                  class={css(input)}
-                  {...bind("dailyUnits", optionalInt)}
-                />
-              </label>
-            </div>
+            <label class={css(fieldRow, sideField)}>
+              Суурь тос
+              <input placeholder="coconut oil" {...bind("base", (text) => text || null)} />
+            </label>
           </div>
-        </details>
-      </section>
+          <div class={css(hairline, { display: "grid", gridTemplateColumns: "1fr 1fr 1fr" })}>
+            <label class={css(fieldRow)}>
+              Нэг удаад
+              <input inputmode="numeric" {...bind("servingSize", optionalInt)} />
+            </label>
+            <label class={css(fieldRow, sideField)}>
+              Хэдэн удаа
+              <input inputmode="numeric" {...bind("servings", optionalInt)} />
+            </label>
+            <label class={css(fieldRow, sideField)}>
+              Өдөрт
+              <input inputmode="numeric" {...bind("dailyUnits", optionalInt)} />
+            </label>
+          </div>
+        </div>
+      </details>
 
       <Dock>
         <SaveButton

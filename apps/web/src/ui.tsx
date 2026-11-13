@@ -1,17 +1,10 @@
 import { Unauthorized } from "@amerik/contracts";
-import { useLocation } from "@solidjs/router";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createSignal, createUniqueId, For, Show } from "solid-js";
 import { css } from "styled-system/css";
-import HouseFillIcon from "~icons/ph/house-fill";
-import HouseIcon from "~icons/ph/house";
-import PillFillIcon from "~icons/ph/pill-fill";
-import PillIcon from "~icons/ph/pill";
-import ReceiptFillIcon from "~icons/ph/receipt-fill";
-import ReceiptIcon from "~icons/ph/receipt";
 import WarningIcon from "~icons/ph/warning-circle-fill";
 
-import { button, press } from "./styles";
+import { button } from "./styles";
 
 export type Icon = (props: JSX.SvgSVGAttributes<SVGSVGElement>) => JSX.Element;
 
@@ -73,6 +66,30 @@ export const hairline = css.raw({
   },
 });
 
+export const oneLine = css.raw({
+  minWidth: 0,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+});
+
+/** A full-width tap row in a white panel: an icon, then its label. */
+export const sheetRow = css.raw(hairline, {
+  display: "flex",
+  alignItems: "center",
+  gap: "14px",
+  width: "100%",
+  minHeight: "52px",
+  px: "16px",
+  textStyle: "body",
+  textAlign: "left",
+  cursor: "pointer",
+  transition: "background-color 120ms ease",
+  _active: { bg: "fill" },
+  _disabled: { color: "inkMuted", cursor: "default" },
+  "& svg": { flex: "none", fontSize: "22px" },
+});
+
 /** A panel's bold title, above it on the cream. */
 export const groupHead = css.raw({
   display: "flex",
@@ -87,7 +104,7 @@ export const groupHead = css.raw({
 });
 
 /** Content scrolls under it through frosted material. */
-const frosted = css.raw({
+export const frosted = css.raw({
   bg: "page/84",
   backdropFilter: "blur(16px) saturate(160%)",
 });
@@ -454,67 +471,5 @@ export function Dock(props: { children: JSX.Element }) {
     >
       {props.children}
     </div>
-  );
-}
-
-const tab = css.raw({
-  flex: 1,
-  borderRadius: "999px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "2px",
-  fontSize: "12px",
-  fontWeight: "600",
-  color: "ink/72",
-  "& svg": { fontSize: "22px" },
-});
-
-const activeTab = css.raw({ bg: "butter", color: "ink" });
-
-const tabs = [
-  { href: "/", label: "Нүүр", Icon: HouseIcon, Active: HouseFillIcon },
-  { href: "/orders", label: "Захиалга", Icon: ReceiptIcon, Active: ReceiptFillIcon },
-  { href: "/products", label: "Бараа", Icon: PillIcon, Active: PillFillIcon },
-] satisfies ReadonlyArray<{ href: string; label: string; Icon: Icon; Active: Icon }>;
-
-export function TabBar() {
-  const location = useLocation();
-
-  const at = (path: string) =>
-    path === "/" ? location.pathname === "/" : location.pathname.startsWith(path);
-
-  return (
-    <nav
-      class={css({
-        position: "fixed",
-        zIndex: 10,
-        left: "12px",
-        right: "12px",
-        bottom: "calc(env(safe-area-inset-bottom) + 10px)",
-        maxWidth: "480px",
-        mx: "auto",
-        height: "62px",
-        borderRadius: "999px",
-        display: "flex",
-        gap: "4px",
-        p: "6px",
-        bg: "card/82",
-        backdropFilter: "blur(18px) saturate(170%)",
-        boxShadow: "float",
-      })}
-    >
-      <For each={tabs}>
-        {(link) => (
-          <a href={link.href} class={css(press, tab, at(link.href) && activeTab)}>
-            <Show when={at(link.href)} fallback={<link.Icon />}>
-              <link.Active />
-            </Show>
-            {link.label}
-          </a>
-        )}
-      </For>
-    </nav>
   );
 }

@@ -7,47 +7,69 @@ import * as Schema from "effect/Schema";
 import { createMemo, createSignal, Errored, For, Loading, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
 import ArchiveIcon from "~icons/ph/archive";
+import CaretRightIcon from "~icons/ph/caret-right-bold";
 import CopyIcon from "~icons/ph/copy-bold";
 import HashIcon from "~icons/ph/hash";
-import MoreIcon from "~icons/ph/dots-three-bold";
 import PackageIcon from "~icons/ph/package";
 import BagIcon from "~icons/ph/shopping-bag-open";
 import TagIcon from "~icons/ph/tag";
-import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
 import { createWrite, runEffect } from "../../api/solid-effect";
+import { NavBar } from "../../bars";
 import { money, sized, srcset, when } from "../../format";
 import { Zoom } from "../../photos";
-import { FactsTable, NumberSheet, stockText, stockTone } from "../../products";
+import { FactsTable, NumberSheet, StockSheet, stockText, stockTone } from "../../products";
+import type { StockMode } from "../../products";
 import { DetailSkeleton } from "../../skeletons";
-import { button, press, round } from "../../styles";
+import { button, press } from "../../styles";
 import {
   appear,
   createCopied,
   Failed,
-  glassBar,
+  groupHead,
+  hairline,
   Note,
   panel,
   Pill,
   Problem,
   SaveButton,
-  section,
-  sectionHead,
   Sheet,
+  sheetRow,
   sub,
+  tones,
 } from "../../ui";
 import type { Icon } from "../../ui";
-import { copyText, formText, reasonText, stockAsk } from "../../words";
+import { copyText, formText, reasonText } from "../../words";
 
-type SheetKind = "count" | "receive" | "price" | "menu";
+type SheetKind = StockMode | "price" | "menu";
+
+/** A panel row: a label, what it holds on the right, and › when it opens something. */
+const row = css.raw(hairline, {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  width: "100%",
+  minHeight: "52px",
+  px: "16px",
+  py: "10px",
+  textAlign: "left",
+  fontVariantNumeric: "tabular-nums",
+});
+
+const tapRow = css.raw(row, {
+  cursor: "pointer",
+  transition: "background-color 120ms ease",
+  _active: { bg: "fill" },
+  "& > svg": { flex: "none", fontSize: "16px", color: "inkMuted" },
+});
 
 export default function ProductPage() {
   const params = useParams();
   const location = useLocation();
   const productId = () => Schema.decodeUnknownSync(ProductId)(params.id);
 
-  // The list passes its URL in the link's state, so × keeps her filters.
+  // The list passes its URL in the link's state, so ‹ keeps her filters.
   const back = () => {
     const state = location.state;
 
@@ -73,65 +95,49 @@ export default function ProductPage() {
 
   const close = () => open(undefined);
 
+  const stockMode = () => {
+    const current = sheet();
+
+    return current === "count" || current === "receive" ? current : undefined;
+  };
+
   return (
-    <main class={css({ pb: "60px" })}>
+    <main class={css({ maxWidth: "640px", mx: "auto", pb: "60px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<DetailSkeleton photo />}>
           <div class={css(appear)}>
-            <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-              <a href={back()} aria-label="Хаах" class={round({ tone: "glass" })}>
-                <CloseIcon />
-              </a>
-              <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>
-                {product().brand}
-              </b>
-              <button
-                type="button"
-                aria-label="Бусад үйлдэл"
-                onClick={() => open("menu")}
-                class={round({ tone: "glass" })}
-              >
-                <MoreIcon />
-              </button>
-            </header>
+            <NavBar
+              back={back()}
+              backLabel="Бараа"
+              title={product().brand}
+              onMore={() => open("menu")}
+            />
 
-            <Gallery product={product()} />
-            <Heading product={product()} onPrice={() => open("price")} />
-            <StockPanel stock={product().stock} sold30={product().sold30} />
-            <QuickActions product={product()} onOpen={open} />
-            <Facts product={product()} />
-            <Show when={product().label}>{(label) => <Label label={label()} />}</Show>
-            <Show when={product().description}>
-              {(description) => <Description text={description()} />}
-            </Show>
-            <History moves={product().moves} now={now()} />
+            <div class={css({ px: "16px" })}>
+              <Gallery product={product()} />
+              <Heading product={product()} />
+              <StockPanel product={product()} onOpen={open} />
+              <Facts product={product()} />
+              <Show when={product().label}>{(label) => <Label label={label()} />}</Show>
+              <Show when={product().description}>
+                {(description) => <Description text={description()} />}
+              </Show>
+              <History moves={product().moves} now={now()} />
+            </div>
 
-            <NumberSheet
-              open={sheet() === "count"}
-              title="Тоолох"
-              prompt="Тавиур дээр хэд байна?"
-              start={product().stock ?? 0}
-              min={0}
+            <StockSheet
+              product={stockMode() === undefined ? undefined : product()}
+              mode={stockMode() ?? "count"}
               busy={busy()}
               failed={failed()}
               onClose={close}
-              onSave={(counted) =>
+              onCount={(counted) =>
                 void write(
                   ApiClient.use((api) => api.countStock({ productId: productId(), counted })),
                   close,
                 )
               }
-            />
-            <NumberSheet
-              open={sheet() === "receive"}
-              title="Ирсэн бараа"
-              prompt={`Хэдэн ширхэг ирсэн бэ? Одоо ${stockText(product().stock)}.`}
-              start={1}
-              min={1}
-              busy={busy()}
-              failed={failed()}
-              onClose={close}
-              onSave={(received) =>
+              onReceive={(received) =>
                 void write(
                   ApiClient.use((api) => api.receiveStock({ productId: productId(), received })),
                   close,
@@ -174,8 +180,10 @@ export default function ProductPage() {
   );
 }
 
+/** The bottle on white, side by side when there are several; a tap shows one full size. */
 function Gallery(props: { product: ProductDetail }) {
   const zoom = useContext(Zoom);
+  const several = () => props.product.images.length > 1;
 
   return (
     <Show
@@ -183,9 +191,8 @@ function Gallery(props: { product: ProductDetail }) {
       fallback={
         <div
           class={css(panel, {
-            mx: "20px",
-            mt: "8px",
-            height: "180px",
+            mt: "6px",
+            height: "160px",
             display: "grid",
             placeItems: "center",
             color: "inkMuted",
@@ -196,15 +203,11 @@ function Gallery(props: { product: ProductDetail }) {
       }
     >
       <div
-        class={css({
+        class={css(panel, {
+          mt: "6px",
           display: "flex",
-          gap: "12px",
           overflowX: "auto",
           scrollSnapType: "x mandatory",
-          scrollPaddingInline: "20px",
-          px: "20px",
-          pt: "8px",
-          pb: "14px",
           scrollbarWidth: "none",
         })}
       >
@@ -214,20 +217,22 @@ function Gallery(props: { product: ProductDetail }) {
               type="button"
               aria-label={`Зураг ${index() + 1} томоор харах`}
               onClick={() => zoom({ ...props.product, image: src })}
-              class={css(panel, {
-                flex: "none",
-                width: "min(78vw, 340px)",
-                aspectRatio: "1",
-                p: "16px",
-                bg: "white",
-                scrollSnapAlign: "start",
-                cursor: "zoom-in",
-                "& img": { width: "100%", height: "100%", objectFit: "contain" },
-              })}
+              class={css(
+                {
+                  flex: "none",
+                  width: "100%",
+                  height: "300px",
+                  p: "16px",
+                  scrollSnapAlign: "start",
+                  cursor: "zoom-in",
+                  "& img": { width: "100%", height: "100%", objectFit: "contain" },
+                },
+                several() && { width: "80%", px: "8px" },
+              )}
             >
               <img
-                src={sized(src, 680)}
-                srcset={srcset(src, 340)}
+                src={sized(src, 640)}
+                srcset={srcset(src, 320)}
                 alt={`${props.product.brand} ${props.product.name}`}
                 loading={index() === 0 ? "eager" : "lazy"}
                 decoding="async"
@@ -240,82 +245,29 @@ function Gallery(props: { product: ProductDetail }) {
   );
 }
 
-function Heading(props: { product: ProductDetail; onPrice: () => void }) {
+function Heading(props: { product: ProductDetail }) {
   return (
-    <div class={css({ px: "20px", pt: "8px" })}>
+    <div class={css({ px: "4px", pt: "16px" })}>
+      <Show when={props.product.archivedAt !== null}>
+        <div class={css({ mb: "8px" })}>
+          <Pill tone="neutral">
+            <ArchiveIcon />
+            Архивласан
+          </Pill>
+        </div>
+      </Show>
       <h1
         class={css({
-          textStyle: "headline",
-          fontSize: "26px",
-          lineHeight: "32px",
+          fontSize: "22px",
+          lineHeight: "28px",
+          fontWeight: "700",
+          letterSpacing: "-0.01em",
           textWrap: "balance",
         })}
       >
-        {props.product.name}
-      </h1>
-      <p class={css({ textStyle: "body", color: "inkMuted", mt: "4px", textWrap: "balance" })}>
         {props.product.nameMn}
-      </p>
-      <div class={css({ display: "flex", alignItems: "center", gap: "10px", mt: "12px" })}>
-        <button
-          type="button"
-          aria-label="Үнэ өөрчлөх"
-          onClick={() => props.onPrice()}
-          class={css(press, {
-            fontSize: "28px",
-            lineHeight: "34px",
-            fontWeight: "700",
-            letterSpacing: "-0.02em",
-            fontVariantNumeric: "tabular-nums",
-          })}
-        >
-          {money(props.product.price)}
-        </button>
-        <span class={css({ flex: 1 })} />
-        <Show when={props.product.archivedAt !== null}>
-          <Pill tone="neutral">Архивласан</Pill>
-        </Show>
-      </div>
-    </div>
-  );
-}
-
-function StockPanel(props: { stock: number | null; sold30: number }) {
-  const level = () => stockLevel(props.stock);
-
-  return (
-    <div
-      class={css(panel, {
-        mx: "16px",
-        mt: "18px",
-        px: "20px",
-        py: "16px",
-        display: "flex",
-        alignItems: "center",
-        gap: "14px",
-      })}
-    >
-      <div class={css({ flex: 1 })}>
-        <div class={css(sub)}>Үлдэгдэл</div>
-        <div
-          class={css({
-            fontSize: "34px",
-            lineHeight: "40px",
-            fontWeight: "700",
-            fontVariantNumeric: "tabular-nums",
-          })}
-        >
-          {stockText(props.stock)}
-        </div>
-        <div class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
-          {props.sold30 > 0
-            ? `Сүүлийн 30 хоногт ${props.sold30} зарсан`
-            : "Сүүлийн 30 хоногт зараагүй"}
-        </div>
-      </div>
-      <Show when={stockAsk[level()]}>
-        {(ask) => <Pill tone={stockTone[level()]}>{ask()}</Pill>}
-      </Show>
+      </h1>
+      <p class={css(sub, { mt: "4px" })}>{props.product.name}</p>
     </div>
   );
 }
@@ -323,32 +275,40 @@ function StockPanel(props: { stock: number | null; sold30: number }) {
 const quickAction = css.raw(press, {
   display: "grid",
   justifyItems: "center",
-  alignContent: "center",
   gap: "6px",
-  height: "76px",
-  borderRadius: "18px",
-  bg: "card",
-  color: "ink",
-  boxShadow: "card",
+  py: "12px",
   textStyle: "footnote",
   fontWeight: "600",
-  "& svg": { fontSize: "24px" },
+  "& span": {
+    display: "grid",
+    placeItems: "center",
+    width: "44px",
+    height: "44px",
+    borderRadius: "50%",
+    bg: "fill",
+    fontSize: "22px",
+  },
 });
 
+/** One quick action: an icon on a fill circle, its word under it. */
 function QuickAction(props: { icon: Icon; label: string; onClick?: () => void; href?: string }) {
   return (
     <Show
       when={props.href}
       fallback={
         <button type="button" onClick={() => props.onClick?.()} class={css(quickAction)}>
-          <props.icon />
+          <span>
+            <props.icon />
+          </span>
           {props.label}
         </button>
       }
     >
       {(href) => (
         <a href={href()} class={css(quickAction)}>
-          <props.icon />
+          <span>
+            <props.icon />
+          </span>
           {props.label}
         </a>
       )}
@@ -356,35 +316,68 @@ function QuickAction(props: { icon: Icon; label: string; onClick?: () => void; h
   );
 }
 
-function QuickActions(props: { product: ProductDetail; onOpen: (sheet: SheetKind) => void }) {
+/** Price and what's left, each opening its pad, then the four things she does to a bottle. */
+function StockPanel(props: { product: ProductDetail; onOpen: (sheet: SheetKind) => void }) {
   const { copied, copy } = createCopied();
+  const level = () => stockLevel(props.product.stock);
 
   return (
     <>
-      <div
-        class={css({
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: "10px",
-          px: "16px",
-          mt: "14px",
-        })}
-      >
-        <QuickAction icon={HashIcon} label="Тоолох" onClick={() => props.onOpen("count")} />
-        <QuickAction icon={PackageIcon} label="Ирсэн" onClick={() => props.onOpen("receive")} />
-        <QuickAction icon={TagIcon} label="Үнэ" onClick={() => props.onOpen("price")} />
-        <Show
-          when={props.product.archivedAt === null}
-          fallback={
-            <QuickAction icon={ArchiveIcon} label="Сэргээх" onClick={() => props.onOpen("menu")} />
-          }
+      <div class={css(panel, { mt: "16px" })}>
+        <button type="button" onClick={() => props.onOpen("price")} class={css(tapRow)}>
+          <span class={css({ flex: 1, textStyle: "body" })}>Үнэ</span>
+          <b class={css({ textStyle: "headline", fontWeight: "700" })}>
+            {money(props.product.price)}
+          </b>
+          <CaretRightIcon />
+        </button>
+        <button type="button" onClick={() => props.onOpen("count")} class={css(tapRow)}>
+          <span class={css({ flex: 1 })}>
+            <span class={css({ display: "block", textStyle: "body" })}>Үлдэгдэл</span>
+            <span class={css(sub, { display: "block" })}>
+              {props.product.sold30 > 0
+                ? `30 хоногт ${props.product.sold30} зарсан`
+                : "30 хоногт зараагүй"}
+            </span>
+          </span>
+          <b
+            class={css(tones[stockTone[level()]], {
+              bg: "transparent",
+              textStyle: "headline",
+              fontWeight: "700",
+            })}
+          >
+            {stockText(props.product.stock)}
+          </b>
+          <CaretRightIcon />
+        </button>
+        <div
+          class={css(hairline, {
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            px: "4px",
+          })}
         >
-          <QuickAction
-            icon={BagIcon}
-            label="Захиалах"
-            href={`/orders/new?add=${props.product.id}`}
-          />
-        </Show>
+          <QuickAction icon={HashIcon} label="Тоолох" onClick={() => props.onOpen("count")} />
+          <QuickAction icon={PackageIcon} label="Ирсэн" onClick={() => props.onOpen("receive")} />
+          <QuickAction icon={TagIcon} label="Үнэ" onClick={() => props.onOpen("price")} />
+          <Show
+            when={props.product.archivedAt === null}
+            fallback={
+              <QuickAction
+                icon={ArchiveIcon}
+                label="Сэргээх"
+                onClick={() => props.onOpen("menu")}
+              />
+            }
+          >
+            <QuickAction
+              icon={BagIcon}
+              label="Захиалах"
+              href={`/orders/new?add=${props.product.id}`}
+            />
+          </Show>
+        </div>
       </div>
       <button
         type="button"
@@ -392,9 +385,9 @@ function QuickActions(props: { product: ProductDetail; onOpen: (sheet: SheetKind
           void copy(`${props.product.brand} ${props.product.name}\n${money(props.product.price)}`)
         }
         class={css(
-          button.raw(),
-          { mx: "16px", mt: "10px", width: "calc(100% - 32px)" },
-          copied() === "copied" && { bg: "okBg", color: "ok", boxShadow: "none" },
+          button.raw({ wide: true }),
+          { mt: "10px" },
+          copied() === "copied" && { bg: "okBg", color: "ok" },
         )}
       >
         <CopyIcon />
@@ -421,26 +414,21 @@ const facts = (product: ProductDetail) =>
 
 function Facts(props: { product: ProductDetail }) {
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "headline" })}>Мэдээлэл</h2>
-      </div>
-      <dl class={css({ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 16px" })}>
+    <section>
+      <h2 class={css(groupHead, { mt: "28px" })}>Мэдээлэл</h2>
+      <dl class={css(panel)}>
         <For each={facts(props.product)} keyed={(fact) => fact.label}>
           {(fact) => (
-            <>
-              <dt class={css(sub, { textStyle: "body" })}>{fact().label}</dt>
+            <div class={css(row, { minHeight: "46px" })}>
+              <dt class={css({ flex: "none", textStyle: "body", color: "inkMuted" })}>
+                {fact().label}
+              </dt>
               <dd
-                class={css({
-                  textStyle: "body",
-                  fontWeight: "550",
-                  textAlign: "right",
-                  fontVariantNumeric: "tabular-nums",
-                })}
+                class={css({ flex: 1, textStyle: "body", fontWeight: "550", textAlign: "right" })}
               >
                 {fact().value}
               </dd>
-            </>
+            </div>
           )}
         </For>
       </dl>
@@ -460,16 +448,16 @@ const labelParts = (label: ProductLabel) =>
 
 function Label(props: { label: ProductLabel }) {
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "headline" })}>Найрлага</h2>
-      </div>
-      <div class={css({ display: "grid", gap: "18px" })}>
+    <section>
+      <h2 class={css(groupHead)}>Найрлага</h2>
+      <div class={css(panel, { p: "16px", display: "grid", gap: "16px" })}>
         <FactsTable label={props.label} />
         <For each={labelParts(props.label)} keyed={(part) => part.title}>
           {(part) => (
             <div>
-              <h3 class={css({ textStyle: "headline", mb: "4px" })}>{part().title}</h3>
+              <h3 class={css({ textStyle: "subhead", fontWeight: "650", mb: "2px" })}>
+                {part().title}
+              </h3>
               <p class={css({ textStyle: "body" })}>{part().text}</p>
             </div>
           )}
@@ -496,11 +484,17 @@ function Label(props: { label: ProductLabel }) {
 
 function Description(props: { text: string }) {
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "headline" })}>Тайлбар</h2>
-      </div>
-      <div class={css({ display: "grid", gap: "12px", fontSize: "17px", lineHeight: "25px" })}>
+    <section>
+      <h2 class={css(groupHead)}>Тайлбар</h2>
+      <div
+        class={css(panel, {
+          p: "16px",
+          display: "grid",
+          gap: "12px",
+          textStyle: "body",
+          lineHeight: "1.45",
+        })}
+      >
         <For each={props.text.split(/\n+/u)}>{(paragraph) => <p>{paragraph}</p>}</For>
       </div>
     </section>
@@ -509,51 +503,60 @@ function Description(props: { text: string }) {
 
 function History(props: { moves: ReadonlyArray<StockMove>; now: Date }) {
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "headline" })}>Түүх</h2>
-      </div>
-      <Show when={props.moves.length > 0} fallback={<p class={css(sub)}>Хөдөлгөөн алга.</p>}>
-        <For each={props.moves} keyed={(move) => move.id}>
-          {(move) => <MoveRow move={move()} now={props.now} />}
-        </For>
+    <section>
+      <h2 class={css(groupHead)}>Түүх</h2>
+      <Show
+        when={props.moves.length > 0}
+        fallback={<p class={css(sub, { mx: "2px" })}>Хөдөлгөөн алга</p>}
+      >
+        <div class={css(panel)}>
+          <For each={props.moves} keyed={(move) => move.id}>
+            {(move) => <MoveRow move={move()} now={props.now} />}
+          </For>
+        </div>
       </Show>
     </section>
   );
 }
 
+/** One stock move; a sale or a cancel opens its order. */
 function MoveRow(props: { move: StockMove; now: Date }) {
-  return (
-    <div class={css({ display: "flex", alignItems: "baseline", gap: "12px", py: "9px" })}>
-      <div class={css({ flex: 1, minWidth: 0 })}>
-        <div class={css({ textStyle: "body", fontWeight: "550" })}>
+  const body = () => (
+    <>
+      <span class={css({ flex: 1, minWidth: 0 })}>
+        <span class={css({ display: "block", textStyle: "body" })}>
           {reasonText[props.move.reason]}
-          <Show when={props.move.orderId}>
-            {(orderId) => (
-              <a
-                href={`/orders/${orderId()}`}
-                class={css({ color: "ink", fontVariantNumeric: "tabular-nums" })}
-              >
-                {" "}
-                #{props.move.orderNumber}
-              </a>
-            )}
-          </Show>
-        </div>
-        <div class={css(sub)}>
+          <Show when={props.move.orderNumber}>{(number) => <> #{number()}</>}</Show>
+        </span>
+        <span class={css(sub, { display: "block" })}>
           {when(props.move.createdAt, props.now)}
           <Show when={props.move.note}>{(note) => <> · {note()}</>}</Show>
-        </div>
-      </div>
+        </span>
+      </span>
       <b
         class={css(
-          { textStyle: "body", fontVariantNumeric: "tabular-nums" },
+          { textStyle: "headline", fontWeight: "700" },
           props.move.change > 0 && { color: "ok" },
         )}
       >
-        {props.move.change > 0 ? `+${props.move.change}` : `−${-props.move.change}`}
+        {props.move.change > 0
+          ? `+${props.move.change}`
+          : props.move.change < 0
+            ? `−${-props.move.change}`
+            : "0"}
       </b>
-    </div>
+    </>
+  );
+
+  return (
+    <Show when={props.move.orderId} fallback={<div class={css(row)}>{body()}</div>}>
+      {(orderId) => (
+        <a href={`/orders/${orderId()}`} class={css(tapRow)}>
+          {body()}
+          <CaretRightIcon />
+        </a>
+      )}
+    </Show>
   );
 }
 
@@ -568,7 +571,7 @@ function MenuSheet(props: {
   return (
     <Sheet
       open={props.open}
-      title={props.product.name}
+      title={props.product.nameMn}
       prompt={
         props.product.archivedAt === null ? (
           <Note>Хуучин захиалгууд хэвээр үлдэнэ. Хүссэн үедээ сэргээж болно.</Note>
@@ -591,15 +594,17 @@ function MenuSheet(props: {
         }
       >
         <Failed text={props.failed} />
-        <button
-          type="button"
-          disabled={props.busy}
-          onClick={() => props.onArchive(true)}
-          class={css(button.raw({ wide: true }), { color: "owe" })}
-        >
-          <ArchiveIcon />
-          Архивлах
-        </button>
+        <div class={css(panel)}>
+          <button
+            type="button"
+            disabled={props.busy}
+            onClick={() => props.onArchive(true)}
+            class={css(sheetRow, { color: "owe" })}
+          >
+            <ArchiveIcon />
+            Архивлах
+          </button>
+        </div>
       </Show>
     </Sheet>
   );

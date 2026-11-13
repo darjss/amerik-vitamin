@@ -40,9 +40,11 @@ function Bone(props: { width: string; height: string; round?: boolean }) {
 
 function Row(props: { tile: number }) {
   return (
-    <div class={css({ display: "flex", alignItems: "center", gap: "14px", py: "8px" })}>
+    <div
+      class={css({ display: "flex", alignItems: "center", gap: "12px", px: "12px", py: "10px" })}
+    >
       <span
-        class={css(bone, { borderRadius: "17px" })}
+        class={css(bone, { borderRadius: "6px" })}
         style={{ width: `${props.tile}px`, height: `${props.tile}px` }}
       />
       <div class={css({ flex: 1, display: "grid", gap: "7px" })}>
@@ -56,22 +58,10 @@ function Row(props: { tile: number }) {
 }
 
 /** The products and orders lists. */
-export function ListSkeleton(props: { rows?: number; chips?: boolean }) {
+export function ListSkeleton() {
   return (
-    <div class={css(delayed)} aria-busy="true">
-      <Show when={props.chips ?? true}>
-        <div
-          class={css({ display: "flex", gap: "8px", px: "16px", pt: "14px", overflow: "hidden" })}
-        >
-          <Bone width="76px" height="40px" round />
-          <Bone width="96px" height="40px" round />
-          <Bone width="120px" height="40px" round />
-          <Bone width="90px" height="40px" round />
-        </div>
-      </Show>
-      <div class={css({ display: "grid", gap: "4px", px: "16px", pt: "14px" })}>
-        <Repeat count={props.rows ?? 7}>{() => <Row tile={68} />}</Repeat>
-      </div>
+    <div class={css(delayed, panel, { mt: "12px" })} aria-busy="true">
+      <Repeat count={7}>{() => <Row tile={76} />}</Repeat>
     </div>
   );
 }

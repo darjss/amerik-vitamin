@@ -140,6 +140,7 @@ export const ProductRow = Schema.Struct({
   nameMn: Schema.String,
   brand: Schema.String,
   count: Schema.Int,
+  form: ProductForm,
   image: Schema.NullOr(Schema.String),
   price: Schema.Int,
   stock: Schema.NullOr(Schema.Int),

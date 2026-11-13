@@ -3,7 +3,6 @@ import type {
   OrderStatus,
   PaymentMethod,
   ProductForm,
-  StockLevel,
   StockMoveReason,
 } from "@amerik/contracts";
 
@@ -18,14 +17,6 @@ export const formText: Record<ProductForm, string> = {
   liquid: "Шингэн",
   drops: "Дусал",
   other: "Бусад",
-};
-
-/** What the stock asks of her: reorder, reorder soon, or count it once. */
-export const stockAsk: Record<StockLevel, string | undefined> = {
-  out: "Захиалах",
-  low: "Дуусаж байна",
-  unknown: "Тоол",
-  ok: undefined,
 };
 
 export const reasonText: Record<StockMoveReason, string> = {

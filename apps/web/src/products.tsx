@@ -13,7 +13,7 @@ import type { Tone } from "./ui";
 export const stockText = (stock: number | null) => {
   if (stock === null) return "Тоолоогүй";
 
-  return stock === 0 ? "Дууссан" : `${stock}`;
+  return stock === 0 ? "Дууссан" : `${stock} ш`;
 };
 
 export const stockTone: Record<StockLevel, Tone> = {
@@ -25,16 +25,69 @@ export const stockTone: Record<StockLevel, Tone> = {
 
 const PRICE_STEP = 5000;
 
-const bigNumber = css.raw(field, {
+const number = css.raw(field, {
   flex: 1,
   minWidth: 0,
   textAlign: "center",
-  fontSize: "30px",
   fontWeight: "700",
   fontVariantNumeric: "tabular-nums",
 });
 
-const plusMinus = css.raw(round.raw(), { width: "56px", height: "56px", fontSize: "22px" });
+// A sheet's stepper is big; a row's is the height of the row's buttons.
+const stepperSizes = {
+  lg: {
+    gap: css.raw({ gap: "12px" }),
+    button: css.raw(round.raw(), { width: "56px", height: "56px", fontSize: "22px" }),
+    number: css.raw(number, { fontSize: "30px" }),
+  },
+  sm: {
+    gap: css.raw({ gap: "6px" }),
+    button: css.raw(round.raw(), { width: "36px", height: "36px", fontSize: "16px" }),
+    number: css.raw(number, { height: "36px", py: 0, px: "4px", borderRadius: "10px" }),
+  },
+};
+
+/** − number +. A price steps by 5,000₮ and shows as money; the − stops at `min`. */
+export function Stepper(props: {
+  value: number;
+  onChange: (value: number) => void;
+  min: number;
+  price?: boolean;
+  size: keyof typeof stepperSizes;
+  label: string;
+}) {
+  const step = () => (props.price ? PRICE_STEP : 1);
+  const size = () => stepperSizes[props.size];
+
+  return (
+    <div class={css({ display: "flex", alignItems: "center" }, size().gap)}>
+      <button
+        type="button"
+        aria-label={props.price ? `${thousands(PRICE_STEP)}₮ хасах` : "Хасах"}
+        disabled={props.value <= props.min}
+        onClick={() => props.onChange(Math.max(props.min, props.value - step()))}
+        class={css(size().button)}
+      >
+        <MinusIcon />
+      </button>
+      <input
+        inputmode="numeric"
+        aria-label={props.label}
+        value={props.price ? (props.value === 0 ? "" : `${thousands(props.value)}₮`) : props.value}
+        onInput={(event) => props.onChange(Number(digits(event.currentTarget.value)))}
+        class={css(size().number)}
+      />
+      <button
+        type="button"
+        aria-label={props.price ? `${thousands(PRICE_STEP)}₮ нэмэх` : "Нэмэх"}
+        onClick={() => props.onChange(props.value + step())}
+        class={css(size().button)}
+      >
+        <PlusIcon />
+      </button>
+    </div>
+  );
+}
 
 type NumberProps = {
   start: number;
@@ -68,7 +121,7 @@ type StockProps = {
   onReceive: (received: number) => void;
 };
 
-type StockProduct = { name: string; brand: string; count: number; stock: number | null };
+type StockProduct = { nameMn: string; brand: string; count: number; stock: number | null };
 
 /**
  * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
@@ -84,7 +137,7 @@ export function StockSheet(
   return (
     <Sheet
       open={props.product !== undefined}
-      title={props.product?.name ?? ""}
+      title={props.product?.nameMn ?? ""}
       onClose={props.onClose}
     >
       <Show when={props.product} keyed>
@@ -133,36 +186,18 @@ function StockBody(props: StockProps & { product: StockProduct; mode: StockMode 
 
 function NumberInput(props: NumberProps) {
   const [value, setValue] = createSignal(untrack(() => props.start));
-  const step = () => (props.price ? PRICE_STEP : 1);
-  const min = () => props.min ?? step();
 
   return (
     <>
-      <div class={css({ display: "flex", alignItems: "center", gap: "12px", pb: "20px" })}>
-        <button
-          type="button"
-          aria-label={props.price ? `${thousands(PRICE_STEP)}₮ хасах` : "Хасах"}
-          disabled={value() <= min()}
-          onClick={() => setValue((current) => Math.max(min(), current - step()))}
-          class={css(plusMinus)}
-        >
-          <MinusIcon />
-        </button>
-        <input
-          inputmode="numeric"
-          aria-label={props.price ? "Үнэ" : undefined}
-          value={props.price ? (value() === 0 ? "" : `${thousands(value())}₮`) : value()}
-          onInput={(event) => setValue(Number(digits(event.currentTarget.value)))}
-          class={css(bigNumber)}
+      <div class={css({ pb: "20px" })}>
+        <Stepper
+          value={value()}
+          onChange={setValue}
+          min={props.min ?? (props.price ? PRICE_STEP : 1)}
+          price={props.price}
+          size="lg"
+          label={props.price ? "Үнэ" : "Тоо"}
         />
-        <button
-          type="button"
-          aria-label={props.price ? `${thousands(PRICE_STEP)}₮ нэмэх` : "Нэмэх"}
-          onClick={() => setValue((current) => current + step())}
-          class={css(plusMinus)}
-        >
-          <PlusIcon />
-        </button>
       </div>
       <SaveButton
         failed={props.failed}

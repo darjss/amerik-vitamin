@@ -15,11 +15,9 @@ import {
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
-import CaretLeftIcon from "~icons/ph/caret-left-bold";
 import CheckIcon from "~icons/ph/check-bold";
 import CheckCircleIcon from "~icons/ph/check-circle-fill";
 import CopyIcon from "~icons/ph/copy-bold";
-import MoreIcon from "~icons/ph/dots-three-bold";
 import PhoneIcon from "~icons/ph/phone-fill";
 import WarningIcon from "~icons/ph/warning-circle-fill";
 
@@ -37,13 +35,13 @@ import {
 } from "../../orders";
 import { Tile } from "../../photos";
 import { DetailSkeleton } from "../../skeletons";
-import { button, press, round } from "../../styles";
+import { NavBar } from "../../bars";
+import { button, round } from "../../styles";
 import {
   appear,
   createCopied,
   Dock,
   Failed,
-  glassBar,
   groupHead,
   hairline,
   panel,
@@ -137,42 +135,12 @@ export default function OrderPage() {
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<DetailSkeleton />}>
           <div class={css(appear)}>
-            <header
-              class={css(glassBar, {
-                display: "grid",
-                gridTemplateColumns: "1fr auto 1fr",
-                alignItems: "center",
-                px: "6px",
-                pb: "2px",
-              })}
-            >
-              <a
-                href="/orders"
-                class={css(press, {
-                  justifySelf: "start",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "2px",
-                  height: "44px",
-                  px: "8px",
-                  textStyle: "headline",
-                  fontWeight: "600",
-                  "& svg": { fontSize: "20px" },
-                })}
-              >
-                <CaretLeftIcon />
-                Захиалга
-              </a>
-              <b class={css({ textStyle: "headline", fontWeight: "700" })}>#{order().number}</b>
-              <button
-                type="button"
-                aria-label="Бусад үйлдэл"
-                onClick={() => open("menu")}
-                class={css(round.raw(), { justifySelf: "end", bg: "transparent" })}
-              >
-                <MoreIcon />
-              </button>
-            </header>
+            <NavBar
+              back="/orders"
+              backLabel="Захиалга"
+              title={`#${order().number}`}
+              onMore={() => open("menu")}
+            />
 
             <div class={css({ px: "16px" })}>
               <div

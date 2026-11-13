@@ -29,38 +29,56 @@ export const BatchStatus = Schema.Literals(["ordered", "partly_arrived", "arrive
 
 export type BatchStatus = typeof BatchStatus.Type;
 
-/** Supplier orders with no gap of more than 2 days between them. Units are bottles. */
+/** The shop's product a supplier order line is matched to, as the arrival screens show it. */
+export const ShopProduct = Schema.Struct({
+  id: ProductId,
+  name: Schema.String,
+  nameMn: Schema.String,
+  brand: Schema.String,
+  count: Schema.Int,
+  image: Schema.NullOr(Schema.String),
+  price: Schema.Int,
+});
+
+export type ShopProduct = typeof ShopProduct.Type;
+
+/**
+ * Supplier orders with no gap of more than 2 days between them. Units are
+ * bottles. `photos` are its matched products that have a photo, in order.
+ */
 export const Batch = Schema.Struct({
   from: Day,
   to: Day,
+  orders: Schema.Int,
   products: Schema.Int,
   ordered: Schema.Int,
   received: Schema.Int,
   open: Schema.Int,
   status: BatchStatus,
+  photos: Schema.Array(ShopProduct),
 });
+
+export type Batch = typeof Batch.Type;
 
 /**
  * One product on a batch. `product` is null while the shop has no product with
  * the ASIN, so the UI can offer to add it from `title` and `asin`.
  */
 export const BatchProduct = Schema.Struct({
-  product: Schema.NullOr(
-    Schema.Struct({
-      id: ProductId,
-      name: Schema.String,
-      nameMn: Schema.String,
-      image: Schema.NullOr(Schema.String),
-    }),
-  ),
+  product: Schema.NullOr(ShopProduct),
   asin: Schema.String,
   title: Schema.String,
+  ordered: Schema.Int,
   /** Units still open: ordered, not received, not marked not coming. */
   expected: Schema.Int,
   received: Schema.Int,
-  /** The product's price, or `priceFromAmazon` of the unit cost. Null when neither is known. */
+  /** Amazon's price per bottle on the latest order that shows one. */
+  unitCostCents: Schema.NullOr(Schema.Int),
+  /** `priceFromAmazon` of the unit cost, null when the cost is unknown. */
   suggestedPrice: Schema.NullOr(Schema.Int),
 });
+
+export type BatchProduct = typeof BatchProduct.Type;
 
 export const BatchDetail = Schema.Struct({
   from: Day,

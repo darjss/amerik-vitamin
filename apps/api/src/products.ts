@@ -18,6 +18,7 @@ export const listProducts = Effect.fn("listProducts")(function* listProducts() {
       nameMn: products.nameMn,
       brand: brands.name,
       count: products.count,
+      form: products.form,
       images: products.images,
       price: products.price,
       stock: products.stock,
