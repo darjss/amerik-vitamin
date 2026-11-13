@@ -54,6 +54,14 @@ const keyOf = (line: Line) => line.product?.id ?? line.asin;
 
 const footnote = css.raw({ textStyle: "footnote", color: "inkMuted" });
 
+/** A product above its controls. The track can shrink, so one-line names cut off instead of widening it. */
+const stackedRow = css.raw({
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr)",
+  px: "12px",
+  py: "10px",
+});
+
 export default function BatchPage() {
   const params = useParams();
   const location = useLocation();
@@ -249,8 +257,8 @@ function Row(props: {
   const missing = () => props.line.ordered - props.line.received - props.line.expected;
 
   return (
-    <div class={css(hairline, { display: "grid", gap: "10px", px: "12px", py: "10px" })}>
-      <div class={css({ display: "flex", gap: "12px" })}>
+    <div class={css(hairline, stackedRow, { gap: "10px" })}>
+      <div class={css({ display: "flex", gap: "16px" })}>
         <Show
           when={props.line.product}
           fallback={
@@ -302,54 +310,50 @@ function Row(props: {
               {missing() > 0 ? ` · ${missing()} ирэхгүй` : ""}
             </div>
           </Show>
-        </div>
-      </div>
-
-      <Show when={open()}>
-        <Show
-          when={props.line.product !== null}
-          fallback={
+          <Show when={open() && props.line.product === null}>
             <a
               href={`/products/new?url=${encodeURIComponent(`https://www.amazon.com/dp/${props.line.asin}`)}`}
-              class={css(button.raw({ tone: "butter", size: "sm" }), { justifySelf: "end" })}
+              class={css(button.raw({ tone: "butter", size: "sm" }), { mt: "8px" })}
             >
               <PlusIcon />
               Бараа нэмэх
             </a>
-          }
-        >
-          <div>
-            <Failed text={props.failed} />
-            <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-              <div class={css({ width: "128px", flex: "none" })}>
-                <Stepper
-                  value={count()}
-                  onChange={setCount}
-                  min={1}
-                  size="sm"
-                  label={`${props.line.product?.nameMn ?? ""} ирсэн тоо`}
-                />
-              </div>
-              <button
-                type="button"
-                disabled={props.busy}
-                onClick={() => props.onClose()}
-                class={css(button.raw({ size: "sm" }), { ml: "auto" })}
-              >
-                Хаах
-              </button>
-              <button
-                type="button"
-                disabled={props.busy || count() < 1}
-                onClick={() => props.onReceive(count())}
-                class={button({ tone: "butter", size: "sm" })}
-              >
-                <CheckIcon />
-                {count() === props.line.expected ? "Бүгд ирсэн" : `${count()} ирсэн`}
-              </button>
+          </Show>
+        </div>
+      </div>
+
+      <Show when={open() && props.line.product !== null}>
+        <div>
+          <Failed text={props.failed} />
+          <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
+            <div class={css({ width: "128px", flex: "none" })}>
+              <Stepper
+                value={count()}
+                onChange={setCount}
+                min={1}
+                size="sm"
+                label={`${props.line.product?.nameMn ?? ""} ирсэн тоо`}
+              />
             </div>
+            <button
+              type="button"
+              disabled={props.busy}
+              onClick={() => props.onClose()}
+              class={css(button.raw({ size: "sm" }), { ml: "auto" })}
+            >
+              Хаах
+            </button>
+            <button
+              type="button"
+              disabled={props.busy || count() < 1}
+              onClick={() => props.onReceive(count())}
+              class={button({ tone: "butter", size: "sm" })}
+            >
+              <CheckIcon />
+              {count() === props.line.expected ? "Бүгд ирсэн" : `${count()} ирсэн`}
+            </button>
           </div>
-        </Show>
+        </div>
       </Show>
     </div>
   );
@@ -428,53 +432,43 @@ function PriceList(props: {
       <div class={css(panel)}>
         <For each={props.lines} keyed={(line) => line.product.id}>
           {(line) => (
-            <div class={css(hairline, { display: "grid", gap: "8px", px: "12px", py: "10px" })}>
+            <div class={css(hairline, stackedRow, { gap: "8px" })}>
               <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
-                <Tile product={line().product} size={48} />
+                <Tile product={line().product} size={56} />
                 <div class={css({ flex: 1, minWidth: 0 })}>
                   <div class={css(oneLine, { textStyle: "subhead", fontWeight: "600" })}>
                     {line().product.nameMn}
                   </div>
-                  <div class={css(oneLine, footnote, { fontVariantNumeric: "tabular-nums" })}>
+                  <div class={css(footnote, { fontVariantNumeric: "tabular-nums" })}>
                     Одоо {money(line().product.price)}
+                    <Show when={line().suggestedPrice}>
+                      {(suggested) => (
+                        <>
+                          {" · "}
+                          <b class={css({ color: "ink", fontWeight: "600" })}>
+                            Санал {money(suggested())}
+                          </b>
+                        </>
+                      )}
+                    </Show>
                     <Show when={line().unitCostCents}>
                       {(cents) => <> · Amazon {dollars(cents())}</>}
                     </Show>
                   </div>
                 </div>
               </div>
-              <div class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                <div class={css({ flex: 1, minWidth: 0 })}>
-                  <Stepper
-                    value={priceOf(line())}
-                    onChange={(price) =>
-                      setPrices((draft) => {
-                        draft[line().product.id] = price;
-                      })
-                    }
-                    min={5000}
-                    price
-                    size="sm"
-                    label={`${line().product.nameMn} үнэ`}
-                  />
-                </div>
-                <Show when={line().suggestedPrice}>
-                  {(suggested) => (
-                    <button
-                      type="button"
-                      disabled={suggested() === priceOf(line())}
-                      onClick={() =>
-                        setPrices((draft) => {
-                          draft[line().product.id] = suggested();
-                        })
-                      }
-                      class={button({ size: "sm" })}
-                    >
-                      Санал {money(suggested())}
-                    </button>
-                  )}
-                </Show>
-              </div>
+              <Stepper
+                value={priceOf(line())}
+                onChange={(price) =>
+                  setPrices((draft) => {
+                    draft[line().product.id] = price;
+                  })
+                }
+                min={5000}
+                price
+                size="sm"
+                label={`${line().product.nameMn} үнэ`}
+              />
             </div>
           )}
         </For>
@@ -482,11 +476,15 @@ function PriceList(props: {
 
       <div
         class={css({
+          // Sticks over the sheet's bottom padding too, so rows don't show under it.
           position: "sticky",
-          bottom: 0,
+          zIndex: 2,
+          bottom: "calc(-20px - env(safe-area-inset-bottom))",
           mx: "-20px",
+          mb: "calc(-20px - env(safe-area-inset-bottom))",
           px: "20px",
           pt: "12px",
+          pb: "calc(20px + env(safe-area-inset-bottom))",
           bg: "page",
         })}
       >

@@ -250,7 +250,12 @@ export const getBatch = Effect.fn("getBatch")(function* getBatch(batch: string) 
     .leftJoin(products, eq(products.id, supplierOrderLines.productId))
     .leftJoin(brands, eq(brands.id, products.brandId))
     .where(between(supplierOrders.orderedOn, from, to))
-    .orderBy(asc(supplierOrders.orderedOn), asc(supplierOrders.number))
+    // The ASIN keeps an order's lines in place when a count reloads the page.
+    .orderBy(
+      asc(supplierOrders.orderedOn),
+      asc(supplierOrders.number),
+      asc(supplierOrderLines.asin),
+    )
     .pipe(dieOnDatabaseError);
 
   const grouped = Map.groupBy(lines, (line) => line.product?.id ?? line.asin).values();
@@ -351,6 +356,14 @@ export const closeBatch = Effect.fn("closeBatch")(function* closeBatch(input: Cl
   const { from, to } = yield* findBatch(input.batch);
   const now = DateTime.toDateUtc(yield* DateTime.now);
 
+  // The Effect query builder renders a subquery inside inArray as `in ()`, so
+  // the batch's orders are read first.
+  const inBatch = yield* db
+    .select({ id: supplierOrders.id })
+    .from(supplierOrders)
+    .where(between(supplierOrders.orderedOn, from, to))
+    .pipe(dieOnDatabaseError);
+
   const closed = yield* db
     .update(supplierOrderLines)
     .set({ closedAt: now })
@@ -361,10 +374,7 @@ export const closeBatch = Effect.fn("closeBatch")(function* closeBatch(input: Cl
         lt(supplierOrderLines.received, supplierOrderLines.qty),
         inArray(
           supplierOrderLines.orderId,
-          db
-            .select({ id: supplierOrders.id })
-            .from(supplierOrders)
-            .where(between(supplierOrders.orderedOn, from, to)),
+          inBatch.map((order) => order.id),
         ),
       ),
     )
