@@ -85,6 +85,8 @@ export const Postgres = Effect.gen(function* provision() {
 
   return yield* Cloudflare.Hyperdrive.Connection("Postgres", {
     caching: { disabled: true },
+    // The PlanetScale database allows 25 connections and vit-store's live API shares it.
+    originConnectionLimit: 5,
     mtls: { caCertificateId: authority.mtlsCertificateId, sslmode: "verify-full" },
     // Depending on the migration hash keeps the Worker from running ahead of the schema.
     origin: Output.all(Output.asOutput(origin), migrations.hash).pipe(
