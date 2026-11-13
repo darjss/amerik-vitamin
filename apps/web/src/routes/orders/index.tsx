@@ -5,17 +5,7 @@ import * as Arr from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import {
-  createEffect,
-  createMemo,
-  Errored,
-  For,
-  isPending,
-  Loading,
-  refresh,
-  Show,
-  useContext,
-} from "solid-js";
+import { createMemo, Errored, For, isPending, Loading, refresh, Show, useContext } from "solid-js";
 import { css } from "styled-system/css";
 import SearchIcon from "~icons/ph/magnifying-glass";
 import PlusIcon from "~icons/ph/plus-bold";
@@ -31,14 +21,15 @@ import {
   appear,
   groupHead,
   hairline,
+  oneLine,
   panel,
   Problem,
   searchBox,
-  TabBar,
   tones,
   top,
 } from "../../ui";
 import { ListSkeleton } from "../../skeletons";
+import { StickyBar, Tab, TabBar, Tabs } from "../../bars";
 import { statusText } from "../../words";
 
 const views = [
@@ -82,26 +73,10 @@ const waitingDays = (order: Pick<OrderSummary, "status" | "terms" | "createdAt">
   return days >= 2 ? days : undefined;
 };
 
-/** Scrolls the strip just enough that the chosen tab and its padding show whole. */
-const reveal = (strip: HTMLElement) => {
-  const tab = strip.querySelector<HTMLElement>("[aria-current]");
-
-  if (tab === null) return;
-
-  const pad = 16;
-  const start = tab.offsetLeft - pad;
-  const end = tab.offsetLeft + tab.offsetWidth + pad - strip.clientWidth;
-
-  strip.scrollLeft = Math.min(Math.max(strip.scrollLeft, end), start);
-};
-
-const frosted = css.raw({ bg: "page/84", backdropFilter: "blur(16px) saturate(160%)" });
-
 export default function Orders() {
   const [params, setParams] = useSearchParams<{ view?: string; q?: string }>();
   const view = () => views.find((candidate) => candidate.key === params.view) ?? views[0];
   const input = createMemo(() => searchOf(params.q ?? "") ?? view().input);
-  let strip: HTMLElement | undefined;
 
   const orders = createMemo(() => {
     const filter = input();
@@ -115,13 +90,6 @@ export default function Orders() {
   const reload = async () => {
     await Promise.all([refresh(orders), refresh(counts)]);
   };
-
-  createEffect(
-    () => view().key,
-    () => {
-      if (strip) reveal(strip);
-    },
-  );
 
   // Titles aren't integer-like, so the record keeps the list's newest-first order.
   const days = () => {
@@ -150,27 +118,7 @@ export default function Orders() {
         </a>
       </header>
 
-      {/* The status bar's strip when she runs it full screen; content scrolls under both. */}
-      <div
-        class={css(frosted, {
-          position: "fixed",
-          zIndex: 4,
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "env(safe-area-inset-top)",
-        })}
-      />
-      <div
-        class={css(frosted, {
-          position: "sticky",
-          zIndex: 4,
-          top: "env(safe-area-inset-top)",
-          mx: "-16px",
-          px: "16px",
-          pt: "2px",
-        })}
-      >
+      <StickyBar>
         <label class={css(searchBox)}>
           <SearchIcon />
           <input
@@ -184,73 +132,22 @@ export default function Orders() {
           />
         </label>
 
-        {/* Underline tabs that spread when they fit and scroll when they don't. */}
-        <nav
-          ref={(element) => {
-            strip = element;
-          }}
-          class={css({
-            position: "relative",
-            display: "flex",
-            gap: "18px",
-            mx: "-16px",
-            px: "16px",
-            mt: "4px",
-            overflowX: "auto",
-            scrollbarWidth: "none",
-            boxShadow: "inset 0 -1px 0 {colors.line}",
-          })}
-        >
+        <Tabs current={view().key}>
           <For each={views}>
             {(candidate) => (
-              <a
+              <Tab
                 href={candidate.key === "to_ship" ? "/orders" : `/orders?view=${candidate.key}`}
-                aria-current={view().key === candidate.key ? "page" : undefined}
-                class={css({
-                  position: "relative",
-                  flex: "1 0 auto",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "6px",
-                  height: "44px",
-                  textStyle: "subhead",
-                  fontWeight: "600",
-                  whiteSpace: "nowrap",
-                  color: "inkMuted",
-                  transition: "color 150ms ease",
-                  "& em": { fontStyle: "normal", fontVariantNumeric: "tabular-nums" },
-                  "&[aria-current]": {
-                    color: "ink",
-                    _after: {
-                      content: '""',
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: "3px",
-                      borderRadius: "3px 3px 0 0",
-                      bg: "ink",
-                    },
-                  },
-                })}
-              >
-                {candidate.label}
-                <Show when={candidate.count}>
-                  {(key) => (
-                    <Loading fallback={null}>
-                      <em>{counts()[key()]}</em>
-                    </Loading>
-                  )}
-                </Show>
-              </a>
+                current={view().key === candidate.key}
+                label={candidate.label}
+                count={candidate.count && counts()[candidate.count]}
+              />
             )}
           </For>
-        </nav>
-      </div>
+        </Tabs>
+      </StickyBar>
 
       <Errored fallback={(error) => <Problem error={error()} />}>
-        <Loading fallback={<ListSkeleton chips={false} />}>
+        <Loading fallback={<ListSkeleton />}>
           {/* A new filter keeps the old list on screen, dimmed, until the new one lands. */}
           <div
             class={css(appear, {
@@ -325,13 +222,6 @@ export default function Orders() {
     </main>
   );
 }
-
-const oneLine = css.raw({
-  minWidth: 0,
-  whiteSpace: "nowrap",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-});
 
 /**
  * One order in three lines: phone, time and total; how it's paid and the

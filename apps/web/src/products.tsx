@@ -13,7 +13,7 @@ import type { Tone } from "./ui";
 export const stockText = (stock: number | null) => {
   if (stock === null) return "Тоолоогүй";
 
-  return stock === 0 ? "Дууссан" : `${stock}`;
+  return stock === 0 ? "Дууссан" : `${stock} ш`;
 };
 
 export const stockTone: Record<StockLevel, Tone> = {
@@ -68,7 +68,7 @@ type StockProps = {
   onReceive: (received: number) => void;
 };
 
-type StockProduct = { name: string; brand: string; count: number; stock: number | null };
+type StockProduct = { nameMn: string; brand: string; count: number; stock: number | null };
 
 /**
  * The list's stock button: one sheet, two jobs. Тоолсон sets what's on the
@@ -84,7 +84,7 @@ export function StockSheet(
   return (
     <Sheet
       open={props.product !== undefined}
-      title={props.product?.name ?? ""}
+      title={props.product?.nameMn ?? ""}
       onClose={props.onClose}
     >
       <Show when={props.product} keyed>

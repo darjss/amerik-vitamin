@@ -10,7 +10,8 @@ import { runEffect } from "../api/solid-effect";
 import { longDate, money } from "../format";
 import { Tile } from "../photos";
 import { button } from "../styles";
-import { appear, panel, Pill, Problem, section, sectionHead, sub, TabBar, top } from "../ui";
+import { TabBar } from "../bars";
+import { appear, panel, Pill, Problem, section, sectionHead, sub, top } from "../ui";
 import { HomeSkeleton } from "../skeletons";
 
 const bigMoney = css.raw({
