@@ -456,7 +456,7 @@ function Row(props: { order: OrderSummary; now: Date; reload: () => Promise<void
       <div class={css({ display: "flex", alignItems: "flex-end", gap: "10px", mt: "10px" })}>
         <div class={css({ flex: 1, minWidth: 0, display: "flex", flexWrap: "wrap", gap: "10px" })}>
           <For each={props.order.lines} keyed={(line) => line.productId}>
-            {(line) => <Tile product={line()} size={40} quantity={line().quantity} ring="card" />}
+            {(line) => <Tile product={line()} size={48} quantity={line().quantity} ring="card" />}
           </For>
         </div>
         <Show
