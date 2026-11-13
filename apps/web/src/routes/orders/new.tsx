@@ -247,7 +247,7 @@ export default function NewOrder() {
             />
 
             <section class={css(section, { mt: "26px" })}>
-              <h2 class={css({ textStyle: "title3", mb: "10px" })}>Төлбөр</h2>
+              <h2 class={css({ textStyle: "headline", mb: "10px" })}>Төлбөр</h2>
               <Segmented
                 options={[
                   ["prepay", "Урьдчилсан", BankIcon],
@@ -280,7 +280,7 @@ const fieldRow = css.raw({
   gap: "12px",
   minHeight: "56px",
   px: "16px",
-  "& + &": { boxShadow: "inset 50px 0 0 {colors.surface}, inset 0 .5px 0 {colors.line}" },
+  "& + &": { boxShadow: "inset 50px 0 0 {colors.card}, inset 0 .5px 0 {colors.line}" },
   "& > svg": { fontSize: "21px", color: "inkMuted", flex: "none", width: "22px" },
   "& input, & textarea": {
     flex: 1,
@@ -291,7 +291,7 @@ const fieldRow = css.raw({
     textStyle: "body",
     color: "ink",
     resize: "none",
-    _placeholder: { color: "inkFaint" },
+    _placeholder: { color: "inkMuted" },
   },
 });
 
@@ -331,7 +331,7 @@ function ContactFields(props: {
           }
         >
           <Show when={props.orders}>
-            {(orders) => <Pill tone="soft">{orders() + 1} дахь захиалга</Pill>}
+            {(orders) => <Pill tone="neutral">{orders() + 1} дахь захиалга</Pill>}
           </Show>
         </Loading>
       </label>
@@ -373,7 +373,7 @@ function PastBuys(props: {
   return (
     <Show when={props.products.length > 0}>
       <section class={css(section, { mt: "28px" })}>
-        <h2 class={css({ textStyle: "title3", mb: "10px" })}>Өмнө авсан</h2>
+        <h2 class={css({ textStyle: "headline", mb: "10px" })}>Өмнө авсан</h2>
         <div
           class={css({
             display: "flex",
@@ -405,7 +405,7 @@ function PastBuys(props: {
                   product={product()}
                   size={48}
                   quantity={props.cart[product().id] || undefined}
-                  ring="surface"
+                  ring="card"
                   still
                 />
                 <span>
@@ -428,7 +428,7 @@ function PastBuys(props: {
                     borderRadius: "50%",
                     display: "grid",
                     placeItems: "center",
-                    bg: "chip",
+                    bg: "fill",
                     fontSize: "17px",
                   })}
                 >
@@ -452,7 +452,7 @@ function ProductGrid(props: {
 }) {
   return (
     <section class={css(section, { mt: "22px" })}>
-      <h2 class={css({ textStyle: "title3" })}>Бараа</h2>
+      <h2 class={css({ textStyle: "headline" })}>Бараа</h2>
       <label class={css(searchBox, { mt: "12px" })}>
         <SearchIcon />
         <input
@@ -481,7 +481,7 @@ function ProductGrid(props: {
                   minWidth: 0,
                   textAlign: "left",
                   cursor: "pointer",
-                  transition: "transform .5s {easings.spring}",
+                  transition: "transform .5s {easings.out}",
                   _active: {
                     transform: "scale(.95)",
                     transition: "transform .1s ease-out",
@@ -498,7 +498,7 @@ function ProductGrid(props: {
                     transition: "box-shadow .2s ease",
                   },
                   (props.cart[product().id] ?? 0) > 0 && {
-                    boxShadow: "0 0 0 2.5px {colors.sel}, 0 8px 16px -10px {colors.sel/50}",
+                    boxShadow: "0 0 0 2.5px {colors.ink}, 0 8px 16px -10px {colors.ink/50}",
                   },
                 )}
               >

@@ -78,7 +78,7 @@ export default function NewProductPage() {
               when={params.manual}
               fallback={
                 <div class={css({ px: "16px", pt: "8px", display: "grid", gap: "14px" })}>
-                  <h1 class={css({ textStyle: "largeTitle", px: "4px" })}>Юунаас унших вэ?</h1>
+                  <h1 class={css({ textStyle: "title", px: "4px" })}>Юунаас унших вэ?</h1>
                   <p class={css(sub, { px: "4px", mt: "-6px" })}>
                     AI Amazon-оос мэдээлэл, зураг олж, тайлбар бичээд маягтыг бөглөнө. Та шалгаад
                     үнээ оруулна.
@@ -93,7 +93,7 @@ export default function NewProductPage() {
                       cursor: "pointer",
                       textStyle: "body",
                       fontWeight: "650",
-                      "& svg": { fontSize: "34px", color: "sel" },
+                      "& svg": { fontSize: "34px", color: "ink" },
                     })}
                   >
                     <CameraIcon />
@@ -117,7 +117,7 @@ export default function NewProductPage() {
                         gap: "8px",
                         textStyle: "body",
                         fontWeight: "650",
-                        "& svg": { color: "sel", fontSize: "20px" },
+                        "& svg": { color: "ink", fontSize: "20px" },
                       })}
                     >
                       <LinkIcon />
@@ -135,7 +135,7 @@ export default function NewProductPage() {
                       type="button"
                       disabled={busy() || !/amazon\.|amzn\./iu.test(url())}
                       onClick={() => void start(AmazonSource.make({ url: url() }))}
-                      class={button({ tone: "ink", wide: true })}
+                      class={button({ tone: "butter", wide: true })}
                     >
                       <SparkleIcon />
                       Унших
@@ -247,7 +247,7 @@ function Progress() {
                 class={css(
                   sub,
                   { display: "flex", gap: "10px" },
-                  index() < step() && { color: "sel" },
+                  index() < step() && { color: "ink" },
                   index() === step() && { color: "ink", fontWeight: "600" },
                 )}
               >

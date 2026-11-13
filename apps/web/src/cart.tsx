@@ -18,7 +18,7 @@ export function Cart(props: {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title3" })}>Сагс</h2>
+        <h2 class={css({ textStyle: "headline" })}>Сагс</h2>
       </div>
       <Show
         when={props.lines.length > 0}
@@ -44,8 +44,8 @@ export function Cart(props: {
                     flex: "none",
                     height: "44px",
                     borderRadius: "22px",
-                    bg: "surface",
-                    boxShadow: "raiseSm",
+                    bg: "card",
+                    boxShadow: "card",
                     "& button": {
                       width: "44px",
                       height: "44px",

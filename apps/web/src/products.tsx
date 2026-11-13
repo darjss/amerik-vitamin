@@ -17,10 +17,10 @@ export const stockText = (stock: number | null) => {
 };
 
 export const stockTone: Record<StockLevel, Tone> = {
-  out: "owes",
+  out: "owe",
   low: "wait",
   unknown: "neutral",
-  ok: "soft",
+  ok: "ok",
 };
 
 const PRICE_STEP = 5000;
@@ -192,7 +192,7 @@ export function FactsTable(props: { label: ProductLabel }) {
           class={css({
             width: "100%",
             borderCollapse: "collapse",
-            textStyle: "callout",
+            textStyle: "body",
             fontVariantNumeric: "tabular-nums",
           })}
         >

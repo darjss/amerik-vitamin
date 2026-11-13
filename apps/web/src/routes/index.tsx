@@ -34,7 +34,7 @@ export default function Home() {
           <div class={css(appear)}>
             <h1
               class={css({
-                textStyle: "largeTitle",
+                textStyle: "title",
                 px: "20px",
                 pt: "28px",
                 fontSize: "32px",
@@ -50,13 +50,13 @@ export default function Home() {
                 when={home().toShip > 0}
                 fallback={
                   <div class={css({ p: "20px" })}>
-                    <h2 class={css({ textStyle: "title3" })}>Илгээх захиалга алга</h2>
+                    <h2 class={css({ textStyle: "headline" })}>Илгээх захиалга алга</h2>
                     <p class={css(sub, { mt: "2px" })}>Шинэ захиалга ирэхэд энд гарна</p>
                   </div>
                 }
               >
                 <div class={css({ px: "20px", pt: "20px" })}>
-                  <h2 class={css({ textStyle: "title3" })}>Өнөөдөр савлах</h2>
+                  <h2 class={css({ textStyle: "headline" })}>Өнөөдөр савлах</h2>
                   <p class={css(sub, { mt: "2px", fontVariantNumeric: "tabular-nums" })}>
                     {home().toShip} илгээмж · {home().toShipPieces} ширхэг
                   </p>
@@ -74,7 +74,7 @@ export default function Home() {
                   <For each={home().shelf} keyed={(product) => product.productId}>
                     {(product) => (
                       <div>
-                        <Tile product={product()} quantity={product().quantity} ring="surface" />
+                        <Tile product={product()} quantity={product().quantity} ring="card" />
                         <div
                           class={css({
                             mt: "9px",
@@ -92,7 +92,7 @@ export default function Home() {
                   </For>
                 </div>
                 <div class={css({ px: "16px", pb: "16px" })}>
-                  <a href="/pack" class={button({ tone: "ink", wide: true })}>
+                  <a href="/pack" class={button({ tone: "butter", wide: true })}>
                     <PackageIcon />
                     Савлах
                   </a>
@@ -103,7 +103,7 @@ export default function Home() {
             <Show when={home().awaitingPayment > 0}>
               <section class={css(section)}>
                 <div class={css(sectionHead)}>
-                  <h2 class={css({ textStyle: "title2" })}>Хийх</h2>
+                  <h2 class={css({ textStyle: "headline" })}>Хийх</h2>
                 </div>
                 <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
                   <span
@@ -127,7 +127,7 @@ export default function Home() {
                     </div>
                     <div class={css(sub)}>Шилжүүлэг ирсэн эсэхийг шалгах</div>
                   </div>
-                  <a href="/orders?view=awaiting" class={button({ tone: "ink", size: "sm" })}>
+                  <a href="/orders?view=awaiting" class={button({ tone: "butter", size: "sm" })}>
                     Шалгах
                   </a>
                 </div>
@@ -136,11 +136,11 @@ export default function Home() {
 
             <section class={css(section)}>
               <div class={css(sectionHead)}>
-                <h2 class={css({ textStyle: "title2" })}>Мөнгө</h2>
+                <h2 class={css({ textStyle: "headline" })}>Мөнгө</h2>
               </div>
               <div class={css({ display: "grid", gridTemplateColumns: "1.25fr 1fr", gap: "16px" })}>
                 <div>
-                  <div class={css(bigMoney, { color: "owes" })}>{money(home().codToCollect)}</div>
+                  <div class={css(bigMoney, { color: "owe" })}>{money(home().codToCollect)}</div>
                   <div class={css(sub, { mt: "2px" })}>{home().codOrders} илгээмжээс авах</div>
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function Home() {
             <Show when={home().lowStock.length > 0}>
               <section class={css(section)}>
                 <div class={css(sectionHead)}>
-                  <h2 class={css({ textStyle: "title2" })}>Дуусаж байна</h2>
+                  <h2 class={css({ textStyle: "headline" })}>Дуусаж байна</h2>
                   <a
                     href="/products"
                     class={css({
@@ -188,10 +188,7 @@ export default function Home() {
                             {product().brand} · {product().count} ш
                           </div>
                         </div>
-                        <Show
-                          when={product().stock > 0}
-                          fallback={<Pill tone="owes">Дууссан</Pill>}
-                        >
+                        <Show when={product().stock > 0} fallback={<Pill tone="owe">Дууссан</Pill>}>
                           <Pill tone="wait">{product().stock} үлдсэн</Pill>
                         </Show>
                       </div>

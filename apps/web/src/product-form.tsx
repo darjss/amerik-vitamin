@@ -253,7 +253,7 @@ export function DraftForm(props: {
         {(title) => (
           <p class={css(sub, { px: "20px", pt: "8px" })}>
             Amazon:{" "}
-            <a href={draft.amazonUrl ?? undefined} class={css({ color: "sel" })}>
+            <a href={draft.amazonUrl ?? undefined} class={css({ color: "ink" })}>
               {title()}
             </a>
           </p>
@@ -298,7 +298,7 @@ export function DraftForm(props: {
 
       <section class={css(section, { mt: "22px" })}>
         <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Хэлбэр</h2>
+          <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Хэлбэр</h2>
         </div>
         <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
           <For each={ProductForm.literals}>
@@ -321,7 +321,7 @@ export function DraftForm(props: {
 
       <section class={css(section, { mt: "22px" })}>
         <div class={css(sectionHead, { mb: "10px" })}>
-          <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Ангилал</h2>
+          <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Ангилал</h2>
         </div>
         <div class={css({ display: "flex", flexWrap: "wrap", gap: "8px" })}>
           <For each={props.options.categories}>
@@ -389,7 +389,7 @@ export function DraftForm(props: {
         {(printed) => (
           <section class={css(section, { mt: "22px", display: "grid", gap: "8px" })}>
             <div class={css(sectionHead, { mb: "2px" })}>
-              <h2 class={css({ textStyle: "title2", fontSize: "18px" })}>Найрлага</h2>
+              <h2 class={css({ textStyle: "headline", fontSize: "18px" })}>Найрлага</h2>
             </div>
             <FactsTable label={printed()} />
             <Show when={printed().otherIngredients.join(", ")}>

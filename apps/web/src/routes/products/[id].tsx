@@ -245,7 +245,7 @@ function Heading(props: { product: ProductDetail; onPrice: () => void }) {
     <div class={css({ px: "20px", pt: "8px" })}>
       <h1
         class={css({
-          textStyle: "title2",
+          textStyle: "headline",
           fontSize: "26px",
           lineHeight: "32px",
           textWrap: "balance",
@@ -253,7 +253,7 @@ function Heading(props: { product: ProductDetail; onPrice: () => void }) {
       >
         {props.product.name}
       </h1>
-      <p class={css({ textStyle: "callout", color: "inkMuted", mt: "4px", textWrap: "balance" })}>
+      <p class={css({ textStyle: "body", color: "inkMuted", mt: "4px", textWrap: "balance" })}>
         {props.product.nameMn}
       </p>
       <div class={css({ display: "flex", alignItems: "center", gap: "10px", mt: "12px" })}>
@@ -327,9 +327,9 @@ const quickAction = css.raw(press, {
   gap: "6px",
   height: "76px",
   borderRadius: "18px",
-  bg: "surface",
+  bg: "card",
   color: "ink",
-  boxShadow: "raiseSm",
+  boxShadow: "card",
   textStyle: "footnote",
   fontWeight: "600",
   "& svg": { fontSize: "24px" },
@@ -394,7 +394,7 @@ function QuickActions(props: { product: ProductDetail; onOpen: (sheet: SheetKind
         class={css(
           button.raw(),
           { mx: "16px", mt: "10px", width: "calc(100% - 32px)" },
-          copied() === "copied" && { bg: "paidBg", color: "paid", boxShadow: "none" },
+          copied() === "copied" && { bg: "okBg", color: "ok", boxShadow: "none" },
         )}
       >
         <CopyIcon />
@@ -423,7 +423,7 @@ function Facts(props: { product: ProductDetail }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Мэдээлэл</h2>
+        <h2 class={css({ textStyle: "headline" })}>Мэдээлэл</h2>
       </div>
       <dl class={css({ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px 16px" })}>
         <For each={facts(props.product)} keyed={(fact) => fact.label}>
@@ -462,7 +462,7 @@ function Label(props: { label: ProductLabel }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Найрлага</h2>
+        <h2 class={css({ textStyle: "headline" })}>Найрлага</h2>
       </div>
       <div class={css({ display: "grid", gap: "18px" })}>
         <FactsTable label={props.label} />
@@ -470,7 +470,7 @@ function Label(props: { label: ProductLabel }) {
           {(part) => (
             <div>
               <h3 class={css({ textStyle: "headline", mb: "4px" })}>{part().title}</h3>
-              <p class={css({ textStyle: "callout" })}>{part().text}</p>
+              <p class={css({ textStyle: "body" })}>{part().text}</p>
             </div>
           )}
         </For>
@@ -498,7 +498,7 @@ function Description(props: { text: string }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Тайлбар</h2>
+        <h2 class={css({ textStyle: "headline" })}>Тайлбар</h2>
       </div>
       <div class={css({ display: "grid", gap: "12px", fontSize: "17px", lineHeight: "25px" })}>
         <For each={props.text.split(/\n+/u)}>{(paragraph) => <p>{paragraph}</p>}</For>
@@ -511,7 +511,7 @@ function History(props: { moves: ReadonlyArray<StockMove>; now: Date }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Түүх</h2>
+        <h2 class={css({ textStyle: "headline" })}>Түүх</h2>
       </div>
       <Show when={props.moves.length > 0} fallback={<p class={css(sub)}>Хөдөлгөөн алга.</p>}>
         <For each={props.moves} keyed={(move) => move.id}>
@@ -532,7 +532,7 @@ function MoveRow(props: { move: StockMove; now: Date }) {
             {(orderId) => (
               <a
                 href={`/orders/${orderId()}`}
-                class={css({ color: "sel", fontVariantNumeric: "tabular-nums" })}
+                class={css({ color: "ink", fontVariantNumeric: "tabular-nums" })}
               >
                 {" "}
                 #{props.move.orderNumber}
@@ -548,7 +548,7 @@ function MoveRow(props: { move: StockMove; now: Date }) {
       <b
         class={css(
           { textStyle: "body", fontVariantNumeric: "tabular-nums" },
-          props.move.change > 0 && { color: "paid" },
+          props.move.change > 0 && { color: "ok" },
         )}
       >
         {props.move.change > 0 ? `+${props.move.change}` : `−${-props.move.change}`}
@@ -595,7 +595,7 @@ function MenuSheet(props: {
           type="button"
           disabled={props.busy}
           onClick={() => props.onArchive(true)}
-          class={css(button.raw({ wide: true }), { color: "owes" })}
+          class={css(button.raw({ wide: true }), { color: "owe" })}
         >
           <ArchiveIcon />
           Архивлах

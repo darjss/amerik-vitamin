@@ -40,9 +40,9 @@ import { ListSkeleton } from "../../skeletons";
 /** The stock views, keyed by stock level. Each one but Бүгд shows only when it has products. */
 const views = [
   { key: "all", label: "Бүгд", dot: undefined },
-  { key: "out", label: "Дууссан", dot: "owes" },
+  { key: "out", label: "Дууссан", dot: "owe" },
   { key: "low", label: "Дуусаж байна", dot: "wait" },
-  { key: "unknown", label: "Тоолоогүй", dot: "inkFaint" },
+  { key: "unknown", label: "Тоолоогүй", dot: "inkMuted" },
   { key: "archived", label: "Архив", dot: undefined },
 ] as const;
 
@@ -59,8 +59,8 @@ const rowChip = css.raw(press, {
   px: "10px",
   height: "30px",
   borderRadius: "15px",
-  bg: "surface",
-  boxShadow: "raiseSm",
+  bg: "card",
+  boxShadow: "card",
   textStyle: "subhead",
   fontWeight: "650",
 });
@@ -75,9 +75,9 @@ const actionRow = css.raw(button.raw(), {
 });
 
 const dots = {
-  owes: css.raw({ bg: "owes" }),
+  owe: css.raw({ bg: "owe" }),
   wait: css.raw({ bg: "wait" }),
-  inkFaint: css.raw({ bg: "inkFaint" }),
+  inkMuted: css.raw({ bg: "inkMuted" }),
 };
 
 export default function Products() {
@@ -164,8 +164,8 @@ export default function Products() {
           pt: "52px",
         })}
       >
-        <h1 class={css({ textStyle: "largeTitle" })}>Бараа</h1>
-        <a href="/products/new" aria-label="Шинэ бараа" class={round({ tone: "ink" })}>
+        <h1 class={css({ textStyle: "title" })}>Бараа</h1>
+        <a href="/products/new" aria-label="Шинэ бараа" class={round({ tone: "butter" })}>
           <PlusIcon />
         </a>
       </div>
@@ -337,7 +337,7 @@ export default function Products() {
               </button>
               <button
                 type="button"
-                class={css(actionRow, copied() === "copied" && { bg: "paidBg", color: "paid" })}
+                class={css(actionRow, copied() === "copied" && { bg: "okBg", color: "ok" })}
                 onClick={() =>
                   void copy(`${product().brand} ${product().name}\n${money(product().price)}`)
                 }
@@ -353,7 +353,7 @@ export default function Products() {
               <button
                 type="button"
                 disabled={busy()}
-                class={css(actionRow, product().archivedAt === null && { color: "owes" })}
+                class={css(actionRow, product().archivedAt === null && { color: "owe" })}
                 onClick={() => {
                   const productId = product().id;
                   const archived = product().archivedAt === null;

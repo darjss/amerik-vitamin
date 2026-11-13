@@ -153,7 +153,7 @@ export function StepButton(props: {
             <button
               type="button"
               disabled={running(props.order.id)}
-              class={css(button.raw({ tone: "ink", wide: props.wide }), {
+              class={css(button.raw({ tone: "butter", wide: props.wide }), {
                 position: "relative",
                 zIndex: 1,
               })}
@@ -182,7 +182,7 @@ export function StepButton(props: {
                   left: 0,
                   bottom: 0,
                   height: "4px",
-                  bg: "sel",
+                  bg: "ink",
                   transition: "width 1s linear",
                 })}
                 style={{ width: `${((left() - 1) / HOLD_SECONDS) * 100}%` }}
@@ -201,15 +201,15 @@ export function Money(props: { order: Pick<OrderSummary, "terms" | "paid" | "bal
       when={props.order.balance > 0}
       fallback={
         <Show when={props.order.paid > 0}>
-          <Pill tone="paid">
+          <Pill tone="ok">
             <CheckCircleIcon />
             Төлсөн
           </Pill>
         </Show>
       }
     >
-      <Show when={props.order.terms === "cod"} fallback={<Pill tone="owes">Төлбөр хүлээж</Pill>}>
-        <Pill tone="owes">{money(props.order.balance)}</Pill>
+      <Show when={props.order.terms === "cod"} fallback={<Pill tone="owe">Төлбөр хүлээж</Pill>}>
+        <Pill tone="owe">{money(props.order.balance)}</Pill>
       </Show>
     </Show>
   );
@@ -266,12 +266,12 @@ export function Tracker(props: { order: OrderDetail }) {
                   width: "100%",
                   height: "3px",
                   borderRadius: "2px",
-                  bg: "track",
+                  bg: "line",
                 },
                 _first: { _before: { display: "none" } },
               },
-              stage.done && { color: "ink", _before: { bg: "sel" } },
-              at() === nextIndex() && { color: "sel" },
+              stage.done && { color: "ink", _before: { bg: "ink" } },
+              at() === nextIndex() && { color: "ink" },
             )}
           >
             <span
@@ -285,18 +285,18 @@ export function Tracker(props: { order: OrderDetail }) {
                   display: "grid",
                   placeItems: "center",
                   bg: "page",
-                  boxShadow: "inset 0 0 0 2px {colors.dot}",
+                  boxShadow: "inset 0 0 0 2px {colors.line}",
                   fontSize: "15px",
                 },
-                stage.done && { bg: "sel", boxShadow: "none", color: "white" },
+                stage.done && { bg: "ink", boxShadow: "none", color: "white" },
                 at() === nextIndex() && {
-                  boxShadow: "inset 0 0 0 2px {colors.sel}",
+                  boxShadow: "inset 0 0 0 2px {colors.ink}",
                   _after: {
                     content: '""',
                     width: "10px",
                     height: "10px",
                     borderRadius: "50%",
-                    bg: "sel",
+                    bg: "ink",
                   },
                 },
               )}
@@ -321,7 +321,7 @@ export function History(props: { phone: string; orders: number }) {
         href={`/orders?view=all&q=${props.phone}`}
         class={css({ display: "inline-block", mt: "6px" })}
       >
-        <Pill tone="soft">Нийт {props.orders} захиалга</Pill>
+        <Pill tone="neutral">Нийт {props.orders} захиалга</Pill>
       </a>
     </Show>
   );

@@ -145,7 +145,7 @@ export default function OrderPage() {
             </header>
 
             <div class={css({ px: "20px", pt: "14px" })}>
-              <h1 class={css({ textStyle: "largeTitle" })}>{headlineOf(order())}</h1>
+              <h1 class={css({ textStyle: "title" })}>{headlineOf(order())}</h1>
               <p class={css(sub, { mt: "6px" })}>
                 {payText(order())} · {when(order().createdAt, now())} · {sourceText[order().source]}
               </p>
@@ -181,7 +181,7 @@ export default function OrderPage() {
                   <button
                     type="button"
                     onClick={() => open("cancel")}
-                    class={css(button.raw({ wide: true }), { color: "owes" })}
+                    class={css(button.raw({ wide: true }), { color: "owe" })}
                   >
                     Захиалга цуцлах
                   </button>
@@ -235,7 +235,7 @@ function Lines(props: { order: OrderDetail }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Бараа</h2>
+        <h2 class={css({ textStyle: "headline" })}>Бараа</h2>
         <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
           {props.order.lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
         </span>
@@ -244,7 +244,7 @@ function Lines(props: { order: OrderDetail }) {
         <For each={props.order.lines} keyed={(line) => line.productId}>
           {(line) => (
             <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
-              <Tile product={line()} size={64} quantity={line().quantity} soft />
+              <Tile product={line()} size={64} quantity={line().quantity} ring="card" />
               <div class={css({ flex: 1, minWidth: 0 })}>
                 <div class={css({ textStyle: "headline" })}>{line().name}</div>
                 <div class={css(sub)}>
@@ -274,7 +274,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Захиалагч</h2>
+        <h2 class={css({ textStyle: "headline" })}>Захиалагч</h2>
       </div>
       <Show when={props.order.customerPhone}>
         {(digits) => (
@@ -293,7 +293,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
               </div>
               <History phone={digits()} orders={props.order.customerOrders} />
             </div>
-            <a href={`tel:${digits()}`} aria-label="Залгах" class={round({ tone: "ink" })}>
+            <a href={`tel:${digits()}`} aria-label="Залгах" class={round({ tone: "butter" })}>
               <PhoneIcon />
             </a>
           </div>
@@ -334,7 +334,7 @@ function Customer(props: { order: OrderDetail; onEdit: () => void }) {
               type="button"
               aria-label="Хаяг хуулах"
               onClick={() => void copy(address())}
-              class={css(round.raw(), copied() === "copied" && { bg: "paidBg", color: "paid" })}
+              class={css(round.raw(), copied() === "copied" && { bg: "okBg", color: "ok" })}
             >
               <CopyIcon />
             </button>
@@ -372,7 +372,7 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
   return (
     <section class={css(section)}>
       <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Төлбөр</h2>
+        <h2 class={css({ textStyle: "headline" })}>Төлбөр</h2>
       </div>
       <div class={css(panel, { overflow: "hidden" })}>
         <div class={css({ px: "20px", py: "16px" })}>
@@ -400,12 +400,12 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
                 justifyContent: "space-between",
                 px: "20px",
                 py: "14px",
-                bg: "paidBg",
-                color: "paid",
+                bg: "okBg",
+                color: "ok",
                 textStyle: "body",
                 fontWeight: "650",
                 fontVariantNumeric: "tabular-nums",
-                "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
+                "& + &": { boxShadow: "inset 0 .5px 0 {colors.ok/20}" },
               })}
             >
               <span class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
@@ -429,8 +429,8 @@ function Payment(props: { order: OrderDetail; onPay: () => void }) {
               justifyContent: "space-between",
               px: "20px",
               py: "14px",
-              bg: "owesBg",
-              color: "owes",
+              bg: "oweBg",
+              color: "owe",
               textStyle: "body",
               fontWeight: "650",
               fontVariantNumeric: "tabular-nums",
@@ -471,7 +471,7 @@ function CancelSheet(props: {
         <button
           type="button"
           onClick={() => props.onClose()}
-          class={css(button.raw({ size: "lg" }), { flex: 1 })}
+          class={css(button.raw(), { flex: 1 })}
         >
           Үгүй
         </button>
@@ -479,7 +479,7 @@ function CancelSheet(props: {
           type="button"
           disabled={props.busy}
           onClick={() => props.onCancel()}
-          class={css(button.raw({ size: "lg" }), { flex: 1, bg: "owes", color: "white" })}
+          class={css(button.raw(), { flex: 1, bg: "owe", color: "white" })}
         >
           Цуцлах
         </button>

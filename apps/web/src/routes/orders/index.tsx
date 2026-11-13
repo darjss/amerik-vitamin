@@ -95,11 +95,11 @@ export default function Orders() {
   return (
     <main class={css(top, { pb: "120px" })}>
       <div class={css({ display: "flex", justifyContent: "flex-end", px: "16px", pt: "4px" })}>
-        <a href="/orders/new" aria-label="Шинэ захиалга" class={round({ tone: "ink" })}>
+        <a href="/orders/new" aria-label="Шинэ захиалга" class={round({ tone: "butter" })}>
           <PlusIcon />
         </a>
       </div>
-      <h1 class={css({ textStyle: "largeTitle", px: "20px", mt: "8px" })}>Захиалга</h1>
+      <h1 class={css({ textStyle: "title", px: "20px", mt: "8px" })}>Захиалга</h1>
 
       <label class={css(searchBox, { mx: "16px", mt: "16px" })}>
         <SearchIcon />
@@ -174,7 +174,7 @@ export default function Orders() {
                   <div class={css({ textStyle: "headline" })}>{orders().length} илгээмж</div>
                   <div class={css(sub)}>{pieces()} ширхэг</div>
                 </div>
-                <a href="/pack" class={button({ tone: "ink", size: "sm" })}>
+                <a href="/pack" class={button({ tone: "butter", size: "sm" })}>
                   Савлах
                 </a>
               </div>
@@ -208,14 +208,14 @@ export default function Orders() {
                           pt: "14px",
                           pb: "16px",
                           borderRadius: "22px",
-                          transition: "transform .56s {easings.spring}, background .2s ease",
+                          transition: "transform .56s {easings.out}, background .2s ease",
                           _active: {
                             bg: "ink/5",
                             transform: "scale(.985)",
                             transition: "transform .12s ease-out, background 0s",
                           },
                         },
-                        secondsLeft(order().id) !== undefined && { bg: "selSoft" },
+                        secondsLeft(order().id) !== undefined && { bg: "fill" },
                       )}
                     >
                       {/* The whole order opens its page; photos and the step button sit above it. */}
@@ -274,14 +274,14 @@ export default function Orders() {
                         }
                       >
                         {(left) => (
-                          <div class={css(sub, { mt: "5px", color: "sel", fontWeight: "600" })}>
+                          <div class={css(sub, { mt: "5px", color: "ink", fontWeight: "600" })}>
                             {left()} секундын дараа {nextStep(order())?.label}
                           </div>
                         )}
                       </Show>
                       <Show when={failure(order().id)}>
                         {(text) => (
-                          <div class={css(sub, { mt: "5px", color: "owes", fontWeight: "600" })}>
+                          <div class={css(sub, { mt: "5px", color: "owe", fontWeight: "600" })}>
                             {text()}
                           </div>
                         )}

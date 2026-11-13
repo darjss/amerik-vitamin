@@ -31,11 +31,11 @@ export default function Login() {
         textAlign: "center",
       })}
     >
-      <h1 class={css({ textStyle: "largeTitle" })}>Америк Хүнс Бараа</h1>
+      <h1 class={css({ textStyle: "title" })}>Америк Хүнс Бараа</h1>
       <button
         type="button"
         onClick={signIn}
-        class={css(button.raw({ tone: "ink", size: "lg" }), { px: "32px" })}
+        class={css(button.raw({ tone: "butter" }), { px: "32px" })}
       >
         Google-ээр нэвтрэх
       </button>

@@ -10,7 +10,8 @@ import { createRuntime, RuntimeContext } from "./api/solid-effect";
 import { createHeldSteps, HeldSteps } from "./orders";
 import { ZoomProvider } from "./photos";
 
-import "@fontsource-variable/inter/opsz.css";
+import "@fontsource-variable/onest/wght.css";
+import "@fontsource-variable/unbounded/wght.css";
 import "./app.css";
 
 // Pages are separate chunks. A touch, hover or focus on a link fetches the
