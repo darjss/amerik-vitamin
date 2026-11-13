@@ -3,6 +3,7 @@ export { Api, DatabaseUnavailable, HideDefects } from "./api.ts";
 export { Authenticated, CurrentUser, Unauthorized } from "./auth.ts";
 
 export {
+  AmazonOrderNumber,
   BankTransactionId,
   BrandId,
   CategoryId,
@@ -16,6 +17,7 @@ export {
   ProductId,
   QPayInvoiceId,
   StockMoveId,
+  SupplierOrderId,
   UserId,
 } from "./ids.ts";
 
@@ -82,3 +84,16 @@ export {
   SetPrice,
   StockMove,
 } from "./product.ts";
+
+export {
+  Batch,
+  BatchDetail,
+  BatchNotFound,
+  BatchProduct,
+  BatchStatus,
+  CloseBatch,
+  Day,
+  NothingOpen,
+  ReceiveBatch,
+  SupplierOrderInput,
+} from "./supply.ts";

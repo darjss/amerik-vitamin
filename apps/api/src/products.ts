@@ -5,7 +5,7 @@ import { and, asc, desc, eq, gte, inArray, isNull, or, sum } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 
-const { brands, categories, orders, products, stockMoves } = schema;
+const { brands, categories, orders, products, stockMoves, supplierOrderLines } = schema;
 
 /** Every product, archived ones included, by brand and name. */
 export const listProducts = Effect.fn("listProducts")(function* listProducts() {
@@ -267,6 +267,14 @@ export const createProduct = Effect.fn("createProduct")(function* createProduct(
     label: input.label,
     createdAt: now,
   });
+
+  // Supplier order lines bought before the shop had this ASIN get the product now.
+  if (input.asin !== null) {
+    yield* db
+      .update(supplierOrderLines)
+      .set({ productId: id })
+      .where(and(eq(supplierOrderLines.asin, input.asin), isNull(supplierOrderLines.productId)));
+  }
 
   if (input.stock > 0) {
     yield* moveStock({

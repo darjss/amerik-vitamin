@@ -41,6 +41,15 @@ import {
   ReceiveStock,
   SetPrice,
 } from "./product.ts";
+import {
+  Batch,
+  BatchDetail,
+  BatchNotFound,
+  CloseBatch,
+  Day,
+  NothingOpen,
+  ReceiveBatch,
+} from "./supply.ts";
 
 export class DatabaseUnavailable extends Schema.TaggedError<DatabaseUnavailable>()(
   "DatabaseUnavailable",
@@ -115,6 +124,17 @@ const Dashboard = RpcGroup.make(
     error: DuplicateProduct,
   }),
   Rpc.make("archiveProduct", { payload: ArchiveProduct, error: ProductUnavailable }),
+  Rpc.make("listBatches", { success: Schema.Array(Batch) }),
+  Rpc.make("getBatch", { payload: { batch: Day }, success: BatchDetail, error: BatchNotFound }),
+  Rpc.make("receiveBatch", {
+    payload: ReceiveBatch,
+    success: Schema.Struct({ received: Schema.Int, stock: Schema.Int }),
+    error: Schema.Union([BatchNotFound, NothingOpen]),
+  }),
+  Rpc.make("closeBatch", {
+    payload: CloseBatch,
+    error: Schema.Union([BatchNotFound, NothingOpen]),
+  }),
 ).middleware(Authenticated);
 
 export class Api extends RpcGroup.make(

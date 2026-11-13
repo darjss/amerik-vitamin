@@ -23,6 +23,7 @@ import {
   setPrice,
 } from "./products";
 import { countStock, receiveStock } from "./stock";
+import { closeBatch, getBatch, listBatches, receiveBatch } from "./supply";
 
 /** Every write's actor is the signed-in admin, never a value from the client. */
 const withActor = <A, E, R>(write: (actor: string) => Effect.Effect<A, E, R>) =>
@@ -54,6 +55,10 @@ export const ApiHandlers = Api.toLayer({
   getDraft: ({ draftId }) => getDraft(draftId),
   createProduct: (input) => withActor((actor) => createProduct(input, actor)),
   archiveProduct: (input) => archiveProduct(input),
+  listBatches: () => listBatches(),
+  getBatch: ({ batch }) => getBatch(batch),
+  receiveBatch: (input) => withActor((actor) => receiveBatch(input, actor)),
+  closeBatch: (input) => closeBatch(input),
 });
 
 export const HideDefectsLive = Layer.succeed(
