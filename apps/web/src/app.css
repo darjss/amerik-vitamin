@@ -12,6 +12,16 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  ::selection {
+    background: var(--colors-butter);
+    color: var(--colors-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--colors-ink);
+    outline-offset: 2px;
+  }
+
   a {
     color: inherit;
     text-decoration: none;
