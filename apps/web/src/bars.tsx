@@ -15,12 +15,12 @@ import { press, round } from "./styles";
 import { frosted, glassBar } from "./ui";
 import type { Icon } from "./ui";
 
-/** A pushed page's bar: ‹ back to where she came from, the page's name, and ⋯. */
+/** A pushed page's bar: ‹ back to where she came from, the page's name, and ⋯ when it has more. */
 export function NavBar(props: {
   back: string;
   backLabel: string;
   title: JSX.Element;
-  onMore: () => void;
+  onMore?: () => void;
 }) {
   return (
     <header
@@ -50,14 +50,18 @@ export function NavBar(props: {
         {props.backLabel}
       </a>
       <b class={css({ textStyle: "headline", fontWeight: "700" })}>{props.title}</b>
-      <button
-        type="button"
-        aria-label="Бусад үйлдэл"
-        onClick={() => props.onMore()}
-        class={css(round.raw(), { justifySelf: "end", bg: "transparent" })}
-      >
-        <MoreIcon />
-      </button>
+      <Show when={props.onMore}>
+        {(onMore) => (
+          <button
+            type="button"
+            aria-label="Бусад үйлдэл"
+            onClick={() => onMore()()}
+            class={css(round.raw(), { justifySelf: "end", bg: "transparent" })}
+          >
+            <MoreIcon />
+          </button>
+        )}
+      </Show>
     </header>
   );
 }

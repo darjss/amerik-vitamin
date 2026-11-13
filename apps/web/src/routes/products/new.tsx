@@ -10,17 +10,20 @@ import * as Schema from "effect/Schema";
 import { createMemo, createSignal, Errored, For, Loading, onSettled, Show } from "solid-js";
 import { css } from "styled-system/css";
 import CameraIcon from "~icons/ph/camera";
+import CaretRightIcon from "~icons/ph/caret-right-bold";
+import CheckIcon from "~icons/ph/check-bold";
+import DotIcon from "~icons/ph/dot-outline-fill";
 import LinkIcon from "~icons/ph/link-bold";
 import PencilIcon from "~icons/ph/pencil-simple";
 import SparkleIcon from "~icons/ph/sparkle";
-import CloseIcon from "~icons/ph/x-bold";
 
 import { ApiClient } from "../../api/client";
 import { createWrite, runEffect } from "../../api/solid-effect";
-import { blank, DraftForm, input } from "../../product-form";
+import { blank, DraftForm } from "../../product-form";
 import { FormSkeleton } from "../../skeletons";
-import { button, round } from "../../styles";
-import { Failed, glassBar, Note, panel, Problem, spinner, sub } from "../../ui";
+import { NavBar } from "../../bars";
+import { button, press } from "../../styles";
+import { Failed, field, Note, panel, Problem, spinner, sub } from "../../ui";
 
 // Шинэ бараа: an Amazon link or a bottle photo goes to the drafting Workflow
 // on the API; she checks the filled-in form, adds her price and confirms.
@@ -60,14 +63,8 @@ export default function NewProductPage() {
   };
 
   return (
-    <main class={css({ pb: "140px" })}>
-      <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-        <a href="/products" aria-label="Хаах" class={round({ tone: "glass" })}>
-          <CloseIcon />
-        </a>
-        <b class={css({ textStyle: "headline", flex: 1, textAlign: "center" })}>Шинэ бараа</b>
-        <span class={css({ width: "44px" })} />
-      </header>
+    <main class={css({ maxWidth: "640px", mx: "auto", pb: "140px" })}>
+      <NavBar back="/products" backLabel="Бараа" title="Шинэ бараа" />
 
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Show
@@ -85,20 +82,34 @@ export default function NewProductPage() {
                   </p>
 
                   <label
-                    class={css(panel, {
-                      display: "grid",
-                      placeItems: "center",
-                      gap: "8px",
-                      py: "28px",
-                      cursor: "pointer",
-                      textStyle: "body",
-                      fontWeight: "650",
-                      "& svg": { fontSize: "34px", color: "ink" },
+                    class={css(panel, press, {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "14px",
+                      p: "16px",
+                      "& > span:first-child": {
+                        display: "grid",
+                        placeItems: "center",
+                        flex: "none",
+                        width: "52px",
+                        height: "52px",
+                        borderRadius: "50%",
+                        bg: "butter",
+                        boxShadow: "butter",
+                        fontSize: "26px",
+                      },
                     })}
                   >
-                    <CameraIcon />
-                    Савны зураг авах
-                    <span class={css(sub)}>Шошго нь харагдаж байвал болно</span>
+                    <span>
+                      <CameraIcon />
+                    </span>
+                    <span class={css({ flex: 1 })}>
+                      <b class={css({ display: "block", textStyle: "headline" })}>
+                        Савны зураг авах
+                      </b>
+                      <span class={css(sub)}>Шошго нь харагдаж байвал болно</span>
+                    </span>
+                    <CaretRightIcon class={css({ color: "inkMuted", flex: "none" })} />
                     <input
                       type="file"
                       accept="image/*"
@@ -129,7 +140,7 @@ export default function NewProductPage() {
                       placeholder="https://www.amazon.com/dp/…"
                       value={url()}
                       onInput={(event) => setUrl(event.currentTarget.value.trim())}
-                      class={css(input)}
+                      class={css(field)}
                     />
                     <button
                       type="button"
@@ -246,12 +257,14 @@ function Progress() {
               <div
                 class={css(
                   sub,
-                  { display: "flex", gap: "10px" },
+                  { display: "flex", alignItems: "center", gap: "10px", "& svg": { flex: "none" } },
                   index() < step() && { color: "ink" },
                   index() === step() && { color: "ink", fontWeight: "600" },
                 )}
               >
-                <span>{index() < step() ? "✓" : "·"}</span>
+                <Show when={index() < step()} fallback={<DotIcon />}>
+                  <CheckIcon />
+                </Show>
                 {name}
               </div>
             )}

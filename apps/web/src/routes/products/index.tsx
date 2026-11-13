@@ -374,7 +374,7 @@ function Row(props: {
         display: "flex",
         gap: "12px",
         px: "12px",
-        py: "10px",
+        py: "8px",
         bg: "card",
         transition: "background-color 120ms ease",
         "&:has(> a:active)": { bg: "fill" },
@@ -395,7 +395,7 @@ function Row(props: {
         <div class={css(oneLine, { mt: "2px", textStyle: "footnote", color: "inkMuted" })}>
           {props.product.brand} · {props.product.count} ш · {formText[props.product.form]}
         </div>
-        <div class={css({ display: "flex", alignItems: "center", gap: "6px", mt: "8px" })}>
+        <div class={css({ display: "flex", alignItems: "center", gap: "6px", mt: "6px" })}>
           <button
             type="button"
             aria-label={`${props.product.nameMn} үнэ өөрчлөх`}
