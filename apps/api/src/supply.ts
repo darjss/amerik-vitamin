@@ -242,8 +242,8 @@ export const getBatch = Effect.fn("getBatch")(function* getBatch(batch: string) 
 
 /**
  * Boxes mix batches, so a count fills this batch's open lines oldest first,
- * then older batches', and stops at what's open. The filled count goes into
- * stock as one receipt. Cost stays unset: landed cost needs the shipment's
+ * then older batches', and stops at what's open. Her whole count goes into
+ * stock as one receipt, since the shelf beats the order list. Cost stays unset: landed cost needs the shipment's
  * shipping and the order's FX, which nothing records yet (COMMERCE-RULES).
  */
 export const receiveBatch = Effect.fn("receiveBatch")(function* receiveBatch(
@@ -274,6 +274,10 @@ export const receiveBatch = Effect.fn("receiveBatch")(function* receiveBatch(
     .orderBy(asc(supplierOrders.orderedOn), asc(supplierOrders.number))
     .for("update", { of: supplierOrderLines });
 
+  // A second tap on an already filled product finds nothing open and must not
+  // add the same bottles twice.
+  if (open.length === 0) return yield* new NothingOpen({ productId: input.productId });
+
   let left = input.received;
 
   for (const line of [
@@ -293,19 +297,15 @@ export const receiveBatch = Effect.fn("receiveBatch")(function* receiveBatch(
       );
   }
 
-  const received = input.received - left;
-
-  if (received === 0) return yield* new NothingOpen({ productId: input.productId });
-
   const moved = yield* moveStock({
     productId: input.productId,
-    change: received,
+    change: input.received,
     reason: "receipt",
     note: `Amazon ${from}`,
     actor,
   });
 
-  return { received, stock: moved.stock ?? received };
+  return { received: input.received, stock: moved.stock ?? input.received };
 }, transaction);
 
 /** Marks what's still open of a product in a batch as not coming. */
