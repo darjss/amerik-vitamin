@@ -446,7 +446,8 @@ export function Dock(props: { children: JSX.Element }) {
         bottom: 0,
         display: "grid",
         gap: "10px",
-        px: "16px",
+        // On a wide screen the buttons keep to the page's 640px column.
+        px: "max(16px, calc((100% - 608px) / 2))",
         pt: "12px",
         pb: "calc(env(safe-area-inset-bottom) + 16px)",
       })}

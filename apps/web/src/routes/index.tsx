@@ -42,7 +42,9 @@ export default function Home() {
               })}
             >
               {date().weekday},{" "}
-              <span class={css({ color: "inkMuted", fontWeight: "600" })}>{date().date}</span>
+              <span class={css({ color: "inkMuted", fontWeight: "600", whiteSpace: "nowrap" })}>
+                {date().date}
+              </span>
             </h1>
 
             <section class={css(panel, { mx: "16px", mt: "20px", borderRadius: "26px" })}>

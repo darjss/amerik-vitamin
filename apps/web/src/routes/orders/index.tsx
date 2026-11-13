@@ -343,18 +343,14 @@ function Row(props: { order: OrderSummary; now: Date; reload: () => Promise<void
 
   return (
     <div
-      class={css(
-        hairline,
-        {
-          px: "16px",
-          pt: "10px",
-          pb: "12px",
-          bg: "card",
-          transition: "background-color 120ms ease",
-          "&:has(> a:active)": { bg: "fill" },
-        },
-        held() !== undefined && { bg: "butter/20" },
-      )}
+      class={css(hairline, {
+        px: "16px",
+        pt: "10px",
+        pb: "12px",
+        bg: "card",
+        transition: "background-color 120ms ease",
+        "&:has(> a:active)": { bg: "fill" },
+      })}
     >
       {/* The whole row opens the order; photos and the step button sit above it. */}
       <a

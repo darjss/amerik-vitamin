@@ -401,9 +401,11 @@ function Lines(props: { order: OrderDetail }) {
             <div class={css(row)}>
               <Tile product={line()} size={48} />
               <div class={css({ flex: 1, minWidth: 0 })}>
-                <b class={css({ display: "block", fontWeight: "600" })}>{line().name}</b>
-                <span class={css(sub, { display: "block" })}>
-                  {line().brand} · {line().quantity} × {money(line().unitPrice)}
+                <b class={css({ display: "block", fontWeight: "600", lineClamp: 2 })}>
+                  {line().name}
+                </b>
+                <span class={css(sub, { display: "block", whiteSpace: "nowrap" })}>
+                  {line().quantity} × {money(line().unitPrice)}
                 </span>
               </div>
               <b class={css({ fontWeight: "700", whiteSpace: "nowrap" })}>
