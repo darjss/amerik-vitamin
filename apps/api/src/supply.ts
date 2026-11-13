@@ -129,8 +129,9 @@ const findBatch = Effect.fn("findBatch")(function* findBatch(batch: string) {
   const db = yield* Database;
 
   const days = yield* db
-    .selectDistinct({ day: supplierOrders.orderedOn })
+    .select({ day: supplierOrders.orderedOn })
     .from(supplierOrders)
+    .groupBy(supplierOrders.orderedOn)
     .orderBy(asc(supplierOrders.orderedOn))
     .pipe(dieOnDatabaseError);
 

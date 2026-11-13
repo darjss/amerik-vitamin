@@ -60,6 +60,10 @@ _Avoid_: draft, auto order, extracted order
 A purchase we make from Amazon, Eagle Shine or another supplier.
 _Avoid_: purchase, PO, shipment, import
 
+**Batch**:
+Supplier orders placed with no gap of more than 2 days between them, like the 150 to 270 Amazon orders of one buying burst. Found from order dates, never stored, and named by its first day. On arrival day mom confirms counts per product against a batch. A box can mix batches.
+_Avoid_: shipment, wave, delivery
+
 **Stock move**:
 One logged change to a product's stock, with a reason. A sale, a cancellation, a receipt and a count are all stock moves.
 _Avoid_: inventory adjustment, stock update
