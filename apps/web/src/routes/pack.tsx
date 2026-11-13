@@ -97,7 +97,7 @@ export default function Pack() {
                         flex: 1,
                         height: "4px",
                         borderRadius: "2px",
-                        bg: "track",
+                        bg: "line",
                         overflow: "hidden",
                       })}
                     >
@@ -105,7 +105,7 @@ export default function Pack() {
                         class={css({
                           position: "absolute",
                           inset: 0,
-                          bg: "sel",
+                          bg: "ink",
                           transition: "width .4s cubic-bezier(.23,1,.32,1)",
                         })}
                         style={{ width: `${fill(at())}%` }}
@@ -164,7 +164,7 @@ function Parcel(props: {
             gap: "6px",
             alignItems: "flex-start",
             mt: "6px",
-            textStyle: "callout",
+            textStyle: "body",
             "& svg": { flex: "none", mt: "2px" },
           })}
         >
@@ -266,11 +266,11 @@ function Parcel(props: {
                     placeItems: "center",
                     fontSize: "20px",
                     color: "transparent",
-                    boxShadow: "inset 0 0 0 2px {colors.tick}",
+                    boxShadow: "inset 0 0 0 2px {colors.line}",
                     transition: "background .15s ease, box-shadow .15s ease, color .15s ease",
                   },
                   props.isTicked(line().productId) && {
-                    bg: "sel",
+                    bg: "ink",
                     boxShadow: "none",
                     color: "white",
                   },
@@ -288,7 +288,7 @@ function Parcel(props: {
           <button
             type="button"
             onClick={() => props.onNext(false)}
-            class={css(button.raw({ size: "lg" }), { flex: 1 })}
+            class={css(button.raw(), { flex: 1 })}
           >
             Алгасах
           </button>
@@ -296,7 +296,7 @@ function Parcel(props: {
             type="button"
             disabled={!props.allTicked}
             onClick={() => props.onNext(true)}
-            class={css(button.raw({ tone: "ink", size: "lg" }), { flex: 1.6 })}
+            class={css(button.raw({ tone: "butter" }), { flex: 1.6 })}
           >
             Савласан
           </button>
@@ -315,8 +315,8 @@ const disc = css.raw({
   display: "grid",
   placeItems: "center",
   fontSize: "32px",
-  bg: "paidBg",
-  color: "paid",
+  bg: "okBg",
+  color: "ok",
 });
 
 /** The end of the pass: check the pile against the list, then hand it all to TU. */
@@ -357,7 +357,7 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
             <span class={css(disc)}>
               <CheckIcon />
             </span>
-            <h1 class={css({ textStyle: "title2" })}>{props.packed.length} илгээмж савласан</h1>
+            <h1 class={css({ textStyle: "headline" })}>{props.packed.length} илгээмж савласан</h1>
             <Show when={props.total > props.packed.length}>
               <p class={css(sub, { mt: "6px" })}>
                 {props.total - props.packed.length} алгассан. Илгээх жагсаалтад үлдэнэ.
@@ -402,14 +402,14 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
             <Dock>
               <Show when={collect() > 0}>
                 <p class={css(sub, { textAlign: "center", color: "ink" })}>
-                  TU хүргэлтээр <b class={css({ color: "owes" })}>{money(collect())}</b> авна
+                  TU хүргэлтээр <b class={css({ color: "owe" })}>{money(collect())}</b> авна
                 </p>
               </Show>
               <button
                 type="button"
                 disabled={busy()}
                 onClick={() => handAll(props.packed)}
-                class={button({ tone: "ink", wide: true })}
+                class={button({ tone: "butter", wide: true })}
               >
                 <TruckIcon />
                 {props.packed.length} илгээмжийг TU-д өгөх
@@ -424,19 +424,16 @@ function Hand(props: { packed: ReadonlyArray<OrderSummary>; total: number }) {
           <span class={css(disc)}>
             <TruckIcon />
           </span>
-          <h1 class={css({ textStyle: "title2" })}>{done().sent} илгээмж TU-д өглөө</h1>
+          <h1 class={css({ textStyle: "headline" })}>{done().sent} илгээмж TU-д өглөө</h1>
           <Show when={done().failed.length > 0}>
-            <p class={css({ color: "owes", mt: "8px" })}>
+            <p class={css({ color: "owe", mt: "8px" })}>
               {done()
                 .failed.map((number) => `#${number}`)
                 .join(", ")}{" "}
               болсонгүй. Захиалга дотроос дахин оролдоно уу.
             </p>
           </Show>
-          <a
-            href="/"
-            class={css(button.raw({ tone: "ink", size: "lg" }), { mt: "28px", px: "32px" })}
-          >
+          <a href="/" class={css(button.raw({ tone: "butter" }), { mt: "28px", px: "32px" })}>
             Нүүр рүү
           </a>
         </div>

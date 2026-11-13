@@ -36,21 +36,12 @@ export const reasonText: Record<StockMoveReason, string> = {
   count: "Тоолсон",
 };
 
-/** An order list row's status, where there is no next step to take. */
+/** An order's status in a word. `paid` reads as ready, since a new COD order is ready too. */
 export const statusText: Record<OrderStatus, string> = {
-  new: "Төлбөр хүлээж",
-  paid: "Илгээгээгүй",
-  shipped: "Замд",
-  delivered: "Хүргэсэн",
-  cancelled: "Цуцалсан",
-};
-
-/** The order page's large title. A new COD order is ready like a paid one. */
-export const headlineText: Record<OrderStatus, string> = {
-  new: "Төлбөр хүлээж байна",
+  new: "Шинэ",
   paid: "Илгээхэд бэлэн",
   shipped: "Замд",
-  delivered: "Хүргэгдсэн",
+  delivered: "Хүргэсэн",
   cancelled: "Цуцалсан",
 };
 

@@ -1,14 +1,15 @@
 import { css, cva } from "styled-system/css";
 
+/** Squeezes on pointer-down for 120ms and lets go on release. */
 export const press = css.raw({
   cursor: "pointer",
-  transition: "transform .56s {easings.spring}",
-  _active: { transform: "scale(.97)", transition: "transform .12s ease-out" },
+  transition: "transform 120ms {easings.out}, background-color 150ms ease",
+  _active: { transform: "scale(.96)" },
+  _motionReduce: { _active: { transform: "none" } },
 });
 
-const ink = { bg: "ink", color: "surface", boxShadow: "lift" } as const;
-
-const lg = { height: "56px", fontSize: "18px" };
+/** The primary action: butter with a darker edge along the bottom. */
+const butter = { bg: "butter", color: "ink", boxShadow: "butter" } as const;
 
 export const button = cva({
   base: {
@@ -18,33 +19,41 @@ export const button = cva({
     justifyContent: "center",
     gap: "8px",
     flex: "none",
-    height: "48px",
+    height: "50px",
     px: "20px",
-    borderRadius: "999px",
+    borderRadius: "14px",
     textStyle: "headline",
+    fontWeight: "600",
     whiteSpace: "nowrap",
-    bg: "surface",
+    bg: "fill",
     color: "ink",
-    boxShadow: "raiseSm",
     "& svg": { fontSize: "20px" },
     _disabled: {
-      bg: "chip",
-      color: "inkFaint",
+      bg: "fill",
+      color: "inkMuted",
       boxShadow: "none",
       cursor: "default",
       _active: { transform: "none" },
     },
   },
   variants: {
-    tone: { surface: {}, ink },
+    tone: { fill: {}, butter },
+    // The next step on a list row: compact, but still the one filled action.
     size: {
-      sm: { height: "44px", px: "18px", fontSize: "16px" },
+      sm: {
+        height: "36px",
+        px: "12px",
+        gap: "6px",
+        borderRadius: "10px",
+        textStyle: "subhead",
+        fontWeight: "600",
+        "& svg": { fontSize: "16px" },
+      },
       md: {},
-      lg,
     },
-    wide: { true: { ...lg, width: "100%" } },
+    wide: { true: { width: "100%" } },
   },
-  defaultVariants: { tone: "surface", size: "md" },
+  defaultVariants: { tone: "fill", size: "md" },
 });
 
 export const round = cva({
@@ -57,22 +66,22 @@ export const round = cva({
     placeItems: "center",
     flex: "none",
     fontSize: "20px",
-    bg: "surface",
+    bg: "fill",
     color: "ink",
-    boxShadow: "raiseSm",
   },
   variants: {
     tone: {
-      surface: {},
-      ink,
+      fill: {},
+      butter,
+      // Over a photo or scrolling content.
       glass: {
-        bg: "surface/78",
-        backdropFilter: "blur(20px) saturate(180%)",
-        boxShadow: "glass",
+        bg: "card/80",
+        backdropFilter: "blur(16px) saturate(160%)",
+        boxShadow: "float",
       },
     },
   },
-  defaultVariants: { tone: "surface" },
+  defaultVariants: { tone: "fill" },
 });
 
 export const chip = cva({
@@ -82,25 +91,18 @@ export const chip = cva({
     alignItems: "center",
     gap: "7px",
     flex: "none",
-    height: "40px",
-    px: "15px",
-    borderRadius: "20px",
-    bg: "surface",
-    boxShadow: "raiseSm",
+    height: "36px",
+    px: "14px",
+    borderRadius: "18px",
+    bg: "fill",
     textStyle: "subhead",
     fontWeight: "600",
     whiteSpace: "nowrap",
-    transition: "background .2s ease, color .2s ease",
-    "& b": { fontWeight: "700", color: "inkMuted", fontVariantNumeric: "tabular-nums" },
+    "& b": { fontWeight: "600", color: "inkMuted", fontVariantNumeric: "tabular-nums" },
   },
   variants: {
     on: {
-      true: {
-        bg: "sel",
-        color: "white",
-        boxShadow: "0 1px 2px {colors.sel/25}",
-        "& b": { color: "white/78" },
-      },
+      true: { bg: "ink", color: "page", "& b": { color: "butter" } },
     },
   },
 });

@@ -15,58 +15,75 @@ import {
   useContext,
 } from "solid-js";
 import { css } from "styled-system/css";
+import CaretLeftIcon from "~icons/ph/caret-left-bold";
+import CheckIcon from "~icons/ph/check-bold";
 import CheckCircleIcon from "~icons/ph/check-circle-fill";
 import CopyIcon from "~icons/ph/copy-bold";
 import MoreIcon from "~icons/ph/dots-three-bold";
-import MapPinIcon from "~icons/ph/map-pin";
 import PhoneIcon from "~icons/ph/phone-fill";
-import CloseIcon from "~icons/ph/x-bold";
+import WarningIcon from "~icons/ph/warning-circle-fill";
 
 import { ApiClient } from "../../api/client";
 import { createWrite, runEffect } from "../../api/solid-effect";
-import { clock, money, phone, when } from "../../format";
+import { clock, dayTitle, money, phone } from "../../format";
 import {
   EditSheet,
   HeldSteps,
-  History,
   nextStep,
+  payment,
   PaySheet,
   StepButton,
-  Tracker,
+  Stepper,
 } from "../../orders";
 import { Tile } from "../../photos";
 import { DetailSkeleton } from "../../skeletons";
-import { button, round } from "../../styles";
+import { button, press, round } from "../../styles";
 import {
   appear,
   createCopied,
   Dock,
   Failed,
   glassBar,
-  Note,
+  groupHead,
+  hairline,
   panel,
+  Pill,
   Problem,
-  section,
-  sectionHead,
   Sheet,
   sub,
 } from "../../ui";
-import { headlineText, methodText, sourceText } from "../../words";
+import { methodText, sourceText, statusText } from "../../words";
 
 type SheetKind = "menu" | "pay" | "edit" | "cancel";
 
-const headlineOf = (order: OrderDetail) =>
-  headlineText[order.status === "new" && order.terms === "cod" ? "paid" : order.status];
+/** A new COD order is ready to ship like a paid one. */
+const shownStatus = (order: OrderDetail) =>
+  order.status === "new" && order.terms === "cod" ? "paid" : order.status;
 
-const payText = (order: OrderDetail) => {
-  const last = order.payments.at(-1);
-
-  if (order.balance <= 0 && last !== undefined) return `${methodText[last.method]} төлсөн`;
-
-  return order.terms === "cod" ? "Хүргэлтээр төлнө" : "Төлбөр хүлээж";
+const dots = {
+  new: css.raw({ bg: "status.new" }),
+  paid: css.raw({ bg: "status.paid" }),
+  shipped: css.raw({ bg: "status.shipped" }),
+  delivered: css.raw({ bg: "status.delivered" }),
+  cancelled: css.raw({ bg: "status.cancelled" }),
 };
 
 const editable = (order: OrderDetail) => order.status === "new" || order.status === "paid";
+
+const owing = (order: OrderDetail) => order.balance > 0 && order.status !== "cancelled";
+
+/** A panel row: one line of content with its action on the right. */
+const row = css.raw(hairline, {
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+  minHeight: "52px",
+  px: "16px",
+  py: "10px",
+  width: "100%",
+  textAlign: "left",
+  fontVariantNumeric: "tabular-nums",
+});
 
 export default function OrderPage() {
   const params = useParams();
@@ -116,48 +133,85 @@ export default function OrderPage() {
   };
 
   return (
-    <main class={css({ pb: "130px" })}>
+    <main class={css({ maxWidth: "640px", mx: "auto", pb: "120px" })}>
       <Errored fallback={(error) => <Problem error={error()} />}>
         <Loading fallback={<DetailSkeleton />}>
           <div class={css(appear)}>
-            <header class={css(glassBar, { display: "flex", alignItems: "center", gap: "10px" })}>
-              <a href="/orders" aria-label="Хаах" class={round({ tone: "glass" })}>
-                <CloseIcon />
-              </a>
-              <b
-                class={css({
+            <header
+              class={css(glassBar, {
+                display: "grid",
+                gridTemplateColumns: "1fr auto 1fr",
+                alignItems: "center",
+                px: "6px",
+                pb: "2px",
+              })}
+            >
+              <a
+                href="/orders"
+                class={css(press, {
+                  justifySelf: "start",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "2px",
+                  height: "44px",
+                  px: "8px",
                   textStyle: "headline",
-                  flex: 1,
-                  textAlign: "center",
-                  fontVariantNumeric: "tabular-nums",
+                  fontWeight: "600",
+                  "& svg": { fontSize: "20px" },
                 })}
               >
-                #{order().number}
-              </b>
+                <CaretLeftIcon />
+                Захиалга
+              </a>
+              <b class={css({ textStyle: "headline", fontWeight: "700" })}>#{order().number}</b>
               <button
                 type="button"
                 aria-label="Бусад үйлдэл"
                 onClick={() => open("menu")}
-                class={round({ tone: "glass" })}
+                class={css(round.raw(), { justifySelf: "end", bg: "transparent" })}
               >
                 <MoreIcon />
               </button>
             </header>
 
-            <div class={css({ px: "20px", pt: "14px" })}>
-              <h1 class={css({ textStyle: "largeTitle" })}>{headlineOf(order())}</h1>
-              <p class={css(sub, { mt: "6px" })}>
-                {payText(order())} · {when(order().createdAt, now())} · {sourceText[order().source]}
-              </p>
+            <div class={css({ px: "16px" })}>
+              <div
+                class={css({
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "6px",
+                  mt: "6px",
+                })}
+              >
+                <Pill tone="neutral">
+                  <span
+                    class={css(
+                      { width: "8px", height: "8px", borderRadius: "50%" },
+                      dots[shownStatus(order())],
+                    )}
+                  />
+                  {statusText[shownStatus(order())]}
+                </Pill>
+                <Show when={payment(order())}>
+                  {(paid) => <Pill tone={paid().tone}>{paid().text}</Pill>}
+                </Show>
+                <span class={css(sub, { ml: "auto", whiteSpace: "nowrap" })}>
+                  {sourceText[order().source]} · {dayTitle(order().createdAt, now())}{" "}
+                  {clock.format(order().createdAt)}
+                </span>
+              </div>
+
+              <Show when={order().status !== "cancelled"}>
+                <div class={css(panel, { mt: "12px" })}>
+                  <Stepper order={order()} />
+                </div>
+              </Show>
+
+              <Customer order={order()} onEdit={() => open("edit")} />
+              <Lines order={order()} />
+              <Payment order={order()} now={now()} onPay={() => open("pay")} />
             </div>
-
-            <Show when={order().status !== "cancelled"}>
-              <Tracker order={order()} />
-            </Show>
-
-            <Lines order={order()} />
-            <Customer order={order()} onEdit={() => open("edit")} />
-            <Payment order={order()} onPay={() => open("pay")} />
 
             {/* A failed step keeps the dock even when the order has no next step left. */}
             <Show when={nextStep(order()) !== undefined || failure(order().id) !== undefined}>
@@ -167,7 +221,7 @@ export default function OrderPage() {
               </Dock>
             </Show>
 
-            <Sheet open={sheet() === "menu"} title="Захиалга" onClose={close}>
+            <Sheet open={sheet() === "menu"} title={`#${order().number}`} onClose={close}>
               <div class={css({ display: "grid", gap: "10px" })}>
                 <button
                   type="button"
@@ -181,7 +235,7 @@ export default function OrderPage() {
                   <button
                     type="button"
                     onClick={() => open("cancel")}
-                    class={css(button.raw({ wide: true }), { color: "owes" })}
+                    class={css(button.raw(), { width: "100%", bg: "oweBg", color: "owe" })}
                   >
                     Захиалга цуцлах
                   </button>
@@ -231,226 +285,194 @@ export default function OrderPage() {
   );
 }
 
-function Lines(props: { order: OrderDetail }) {
-  return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Бараа</h2>
-        <span class={css(sub, { fontVariantNumeric: "tabular-nums" })}>
-          {props.order.lines.reduce((total, line) => total + line.quantity, 0)} ширхэг
-        </span>
-      </div>
-      <div class={css({ display: "grid", gap: "16px" })}>
-        <For each={props.order.lines} keyed={(line) => line.productId}>
-          {(line) => (
-            <div class={css({ display: "flex", alignItems: "center", gap: "14px" })}>
-              <Tile product={line()} size={64} quantity={line().quantity} soft />
-              <div class={css({ flex: 1, minWidth: 0 })}>
-                <div class={css({ textStyle: "headline" })}>{line().name}</div>
-                <div class={css(sub)}>
-                  {line().brand} · {line().count} ш
-                </div>
-              </div>
-              <span
-                class={css({
-                  textStyle: "body",
-                  fontWeight: "600",
-                  fontVariantNumeric: "tabular-nums",
-                })}
-              >
-                {money(line().unitPrice * line().quantity)}
-              </span>
-            </div>
-          )}
-        </For>
-      </div>
-    </section>
-  );
-}
-
+/** Phone and call, then the address and note. A tap on either edits them while it can. */
 function Customer(props: { order: OrderDetail; onEdit: () => void }) {
   const { copied, copy } = createCopied();
 
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Захиалагч</h2>
-      </div>
-      <Show when={props.order.customerPhone}>
-        {(digits) => (
-          <div class={css({ display: "flex", alignItems: "center", gap: "12px" })}>
-            <div class={css({ flex: 1 })}>
-              <div
-                class={css({
-                  fontSize: "24px",
-                  lineHeight: "30px",
-                  fontWeight: "700",
-                  letterSpacing: "-0.01em",
-                  fontVariantNumeric: "tabular-nums",
-                })}
-              >
-                {phone(digits())}
+    <section>
+      <h2 class={css(groupHead)}>Захиалагч</h2>
+      <div class={css(panel)}>
+        <Show when={props.order.customerPhone}>
+          {(digits) => (
+            <div class={css(row)}>
+              <div class={css({ flex: 1, minWidth: 0 })}>
+                <div
+                  class={css({
+                    fontSize: "20px",
+                    lineHeight: "26px",
+                    fontWeight: "700",
+                    letterSpacing: "0.01em",
+                  })}
+                >
+                  {phone(digits())}
+                </div>
+                <Show
+                  when={props.order.customerOrders > 1}
+                  fallback={<span class={css(sub)}>Анхны захиалга</span>}
+                >
+                  <a
+                    href={`/orders?view=all&q=${digits()}`}
+                    class={css(sub, {
+                      textDecoration: "underline",
+                      textUnderlineOffset: "3px",
+                      textDecorationColor: "line",
+                    })}
+                  >
+                    Нийт {props.order.customerOrders} захиалга
+                  </a>
+                </Show>
               </div>
-              <History phone={digits()} orders={props.order.customerOrders} />
+              <a href={`tel:${digits()}`} aria-label="Залгах" class={round({ tone: "butter" })}>
+                <PhoneIcon />
+              </a>
             </div>
-            <a href={`tel:${digits()}`} aria-label="Залгах" class={round({ tone: "ink" })}>
-              <PhoneIcon />
-            </a>
-          </div>
-        )}
-      </Show>
-      <div class={css({ display: "flex", alignItems: "center", gap: "12px", mt: "18px" })}>
-        <span
-          class={css({
-            width: "44px",
-            flex: "none",
-            display: "grid",
-            placeItems: "center",
-            fontSize: "22px",
-            color: "inkMuted",
-          })}
-        >
-          <MapPinIcon />
-        </span>
-        <button
-          type="button"
-          disabled={!editable(props.order)}
-          onClick={() => props.onEdit()}
-          class={css({
-            flex: 1,
-            textAlign: "left",
-            fontSize: "17px",
-            lineHeight: "23px",
-            fontWeight: "500",
-            cursor: "pointer",
-            _disabled: { cursor: "default" },
-          })}
-        >
-          {props.order.address ?? "Хаяггүй"}
-        </button>
-        <Show when={props.order.address}>
-          {(address) => (
-            <button
-              type="button"
-              aria-label="Хаяг хуулах"
-              onClick={() => void copy(address())}
-              class={css(round.raw(), copied() === "copied" && { bg: "paidBg", color: "paid" })}
-            >
-              <CopyIcon />
-            </button>
           )}
         </Show>
-      </div>
-      <Show when={props.order.notes}>
-        {(notes) => (
+        <div class={css(row)}>
           <button
             type="button"
             disabled={!editable(props.order)}
             onClick={() => props.onEdit()}
-            class={css({ display: "block", width: "100%", mt: "14px", cursor: "pointer" })}
+            class={css({
+              flex: 1,
+              minWidth: 0,
+              textAlign: "left",
+              textStyle: "body",
+              cursor: "pointer",
+              _disabled: { cursor: "default" },
+            })}
           >
-            <Note>{notes()}</Note>
+            {props.order.address ?? "Хаяггүй"}
           </button>
-        )}
-      </Show>
+          <Show when={props.order.address}>
+            {(address) => (
+              <button
+                type="button"
+                aria-label="Хаяг хуулах"
+                onClick={() => void copy(address())}
+                class={css(
+                  round.raw(),
+                  { bg: "transparent", color: "inkMuted" },
+                  copied() === "copied" && { color: "ok" },
+                )}
+              >
+                <Show when={copied() === "copied"} fallback={<CopyIcon />}>
+                  <CheckIcon />
+                </Show>
+              </button>
+            )}
+          </Show>
+        </div>
+        <Show when={props.order.notes}>
+          {(notes) => (
+            <button
+              type="button"
+              disabled={!editable(props.order)}
+              onClick={() => props.onEdit()}
+              class={css(row, {
+                color: "waitInk",
+                fontWeight: "600",
+                cursor: "pointer",
+                _disabled: { cursor: "default" },
+                "& svg": { flex: "none", fontSize: "20px", color: "wait" },
+              })}
+            >
+              <WarningIcon />
+              {notes()}
+            </button>
+          )}
+        </Show>
+      </div>
     </section>
   );
 }
 
-const receiptRow = css.raw({
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "baseline",
-  py: "5px",
-  textStyle: "body",
-  fontVariantNumeric: "tabular-nums",
-});
-
-const owing = (order: OrderDetail) => order.balance > 0 && order.status !== "cancelled";
-
-function Payment(props: { order: OrderDetail; onPay: () => void }) {
+function Lines(props: { order: OrderDetail }) {
   return (
-    <section class={css(section)}>
-      <div class={css(sectionHead)}>
-        <h2 class={css({ textStyle: "title2" })}>Төлбөр</h2>
-      </div>
-      <div class={css(panel, { overflow: "hidden" })}>
-        <div class={css({ px: "20px", py: "16px" })}>
-          <div class={css(receiptRow)}>
-            <span>Бараа</span>
-            <span class={css({ fontWeight: "600" })}>
-              {money(props.order.total - props.order.deliveryFee)}
-            </span>
-          </div>
-          <div class={css(receiptRow)}>
-            <span>Хүргэлт</span>
-            <span class={css({ fontWeight: "600" })}>{money(props.order.deliveryFee)}</span>
-          </div>
-          <div class={css(receiptRow, { fontSize: "20px", fontWeight: "700" })}>
-            <span>Нийт</span>
-            <span>{money(props.order.total)}</span>
-          </div>
-        </div>
-        <For each={props.order.payments} keyed={(payment) => payment.id}>
-          {(payment) => (
-            <div
-              class={css({
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                px: "20px",
-                py: "14px",
-                bg: "paidBg",
-                color: "paid",
-                textStyle: "body",
-                fontWeight: "650",
-                fontVariantNumeric: "tabular-nums",
-                "& + &": { boxShadow: "inset 0 .5px 0 {colors.paid/20}" },
-              })}
-            >
-              <span class={css({ display: "flex", alignItems: "center", gap: "8px" })}>
-                <CheckCircleIcon />
-                <span>
-                  Төлсөн
-                  <small class={css({ display: "block", textStyle: "subhead", fontWeight: "500" })}>
-                    {methodText[payment().method]} · {clock.format(payment().createdAt)}
-                  </small>
+    <section>
+      <h2 class={css(groupHead)}>
+        Бараа
+        <small>{props.order.lines.reduce((total, line) => total + line.quantity, 0)} ш</small>
+      </h2>
+      <div class={css(panel)}>
+        <For each={props.order.lines} keyed={(line) => line.productId}>
+          {(line) => (
+            <div class={css(row)}>
+              <Tile product={line()} size={48} />
+              <div class={css({ flex: 1, minWidth: 0 })}>
+                <b class={css({ display: "block", fontWeight: "600", lineClamp: 2 })}>
+                  {line().name}
+                </b>
+                <span class={css(sub, { display: "block", whiteSpace: "nowrap" })}>
+                  {line().quantity} × {money(line().unitPrice)}
                 </span>
-              </span>
-              {money(payment().amount)}
+              </div>
+              <b class={css({ fontWeight: "700", whiteSpace: "nowrap" })}>
+                {money(line().unitPrice * line().quantity)}
+              </b>
             </div>
           )}
         </For>
-        <Show when={owing(props.order)}>
-          <div
-            class={css({
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              px: "20px",
-              py: "14px",
-              bg: "owesBg",
-              color: "owes",
-              textStyle: "body",
-              fontWeight: "650",
-              fontVariantNumeric: "tabular-nums",
-            })}
-          >
-            <span>{props.order.terms === "cod" ? "Хүргэлтээр авах" : "Төлбөр хүлээж"}</span>
-            {money(props.order.balance)}
+        <div class={css(row)}>
+          <div class={css({ flex: 1 })}>
+            <b class={css({ display: "block", fontWeight: "600" })}>Нийт</b>
+            <Show when={props.order.deliveryFee > 0}>
+              <span class={css(sub, { display: "block" })}>
+                Хүргэлт {money(props.order.deliveryFee)} орсон
+              </span>
+            </Show>
           </div>
-        </Show>
+          <b class={css({ fontSize: "20px", fontWeight: "700" })}>{money(props.order.total)}</b>
+        </div>
       </div>
-      <Show when={owing(props.order)}>
-        <button
-          type="button"
-          onClick={() => props.onPay()}
-          class={css(button.raw(), { width: "100%", mt: "14px" })}
-        >
-          Мөнгө авсан
-        </button>
-      </Show>
     </section>
+  );
+}
+
+/** Each payment in green, then what's still owed in red with "Мөнгө авсан" under it. */
+function Payment(props: { order: OrderDetail; now: Date; onPay: () => void }) {
+  return (
+    <Show when={props.order.payments.length > 0 || owing(props.order)}>
+      <section>
+        <h2 class={css(groupHead)}>Төлбөр</h2>
+        <div class={css(panel)}>
+          <For each={props.order.payments} keyed={(paid) => paid.id}>
+            {(paid) => (
+              <div class={css(row, { "& svg": { flex: "none", fontSize: "20px", color: "ok" } })}>
+                <CheckCircleIcon />
+                <div class={css({ flex: 1, minWidth: 0 })}>
+                  <b class={css({ display: "block", fontWeight: "600", color: "ok" })}>
+                    {methodText[paid().method]}
+                  </b>
+                  <span class={css(sub, { display: "block" })}>
+                    {dayTitle(paid().createdAt, props.now)} {clock.format(paid().createdAt)}
+                  </span>
+                </div>
+                <b class={css({ fontWeight: "700", color: "ok" })}>{money(paid().amount)}</b>
+              </div>
+            )}
+          </For>
+          <Show when={owing(props.order)}>
+            <div class={css(row, { color: "owe", fontWeight: "600" })}>
+              <span class={css({ flex: 1 })}>
+                {props.order.terms === "cod" ? "Хүргэлтээр авах" : "Төлбөр хүлээж"}
+              </span>
+              <b class={css({ fontWeight: "700" })}>{money(props.order.balance)}</b>
+            </div>
+          </Show>
+        </div>
+        <Show when={owing(props.order)}>
+          <button
+            type="button"
+            onClick={() => props.onPay()}
+            class={css(button.raw(), { width: "100%", mt: "10px" })}
+          >
+            Мөнгө авсан
+          </button>
+        </Show>
+      </section>
+    </Show>
   );
 }
 
@@ -471,7 +493,7 @@ function CancelSheet(props: {
         <button
           type="button"
           onClick={() => props.onClose()}
-          class={css(button.raw({ size: "lg" }), { flex: 1 })}
+          class={css(button.raw(), { flex: 1 })}
         >
           Үгүй
         </button>
@@ -479,7 +501,7 @@ function CancelSheet(props: {
           type="button"
           disabled={props.busy}
           onClick={() => props.onCancel()}
-          class={css(button.raw({ size: "lg" }), { flex: 1, bg: "owes", color: "white" })}
+          class={css(button.raw(), { flex: 1, bg: "owe", color: "white" })}
         >
           Цуцлах
         </button>

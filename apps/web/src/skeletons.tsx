@@ -11,7 +11,7 @@ const bone = css.raw({
   flex: "none",
   borderRadius: "10px",
   backgroundImage:
-    "linear-gradient(90deg, {colors.chip} 30%, {colors.surface} 50%, {colors.chip} 70%)",
+    "linear-gradient(90deg, {colors.fill} 30%, {colors.card} 50%, {colors.fill} 70%)",
   // Fixed to the viewport, so one light sweeps across every bone together.
   backgroundAttachment: "fixed",
   backgroundSize: "200% 100%",

@@ -17,7 +17,7 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { css } from "styled-system/css";
+import { css, cx } from "styled-system/css";
 import BankIcon from "~icons/ph/bank";
 import CheckIcon from "~icons/ph/check-bold";
 import CheckCircleIcon from "~icons/ph/check-circle-fill";
@@ -133,13 +133,15 @@ export const createHeldSteps = () => {
 export const HeldSteps = createContext<ReturnType<typeof createHeldSteps>>();
 
 /**
- * An order's next step. A tap holds it for HOLD_SECONDS as [Болих N] with a
- * bar draining under it, then writes and calls `reload`. It stays disabled
- * while the write runs; a failure shows through `HeldSteps.failure`.
+ * An order's next step in butter. A tap holds it for HOLD_SECONDS as
+ * [Болих N] with a bar draining under it, then writes and calls `reload`.
+ * It stays disabled while the write runs; a failure shows through
+ * `HeldSteps.failure`. `sm` is the compact one on a list row.
  */
 export function StepButton(props: {
   order: Pick<OrderSummary, "id" | "status" | "terms">;
   reload: () => Promise<void>;
+  size?: "sm";
   wide?: boolean;
 }) {
   const { hold, release, running, secondsLeft } = useContext(HeldSteps);
@@ -153,13 +155,15 @@ export function StepButton(props: {
             <button
               type="button"
               disabled={running(props.order.id)}
-              class={css(button.raw({ tone: "ink", wide: props.wide }), {
-                position: "relative",
-                zIndex: 1,
-              })}
+              class={cx(
+                button({ tone: "butter", size: props.size, wide: props.wide }),
+                css({ position: "relative", zIndex: 1 }),
+              )}
               onClick={() => hold(props.order.id, next().step, props.reload)}
             >
-              <TruckIcon />
+              <Show when={next().step === "ship"} fallback={<CheckIcon />}>
+                <TruckIcon />
+              </Show>
               {next().label}
             </button>
           }
@@ -167,12 +171,15 @@ export function StepButton(props: {
           {(left) => (
             <button
               type="button"
-              class={css(button.raw({ wide: props.wide }), {
-                position: "relative",
-                zIndex: 1,
-                overflow: "hidden",
-                fontVariantNumeric: "tabular-nums",
-              })}
+              class={cx(
+                button({ size: props.size, wide: props.wide }),
+                css({
+                  position: "relative",
+                  zIndex: 1,
+                  overflow: "hidden",
+                  fontVariantNumeric: "tabular-nums",
+                }),
+              )}
               onClick={() => release(props.order.id)}
             >
               Болих {left()}
@@ -181,9 +188,10 @@ export function StepButton(props: {
                   position: "absolute",
                   left: 0,
                   bottom: 0,
-                  height: "4px",
-                  bg: "sel",
+                  height: "3px",
+                  bg: "ink",
                   transition: "width 1s linear",
+                  _motionReduce: { transition: "none" },
                 })}
                 style={{ width: `${((left() - 1) / HOLD_SECONDS) * 100}%` }}
               />
@@ -195,21 +203,35 @@ export function StepButton(props: {
   );
 }
 
+/**
+ * Where the money stands, in a word: paid, collected at the door, or owed
+ * before shipping. A cancelled order has none.
+ */
+export const payment = (order: Pick<OrderSummary, "status" | "terms" | "balance">) => {
+  if (order.status === "cancelled") return undefined;
+
+  if (order.balance <= 0) return { text: "Төлсөн", tone: "ok" as const };
+
+  return order.terms === "cod"
+    ? { text: "Хүргэлтээр", tone: "wait" as const }
+    : { text: "Төлөөгүй", tone: "owe" as const };
+};
+
 export function Money(props: { order: Pick<OrderSummary, "terms" | "paid" | "balance"> }) {
   return (
     <Show
       when={props.order.balance > 0}
       fallback={
         <Show when={props.order.paid > 0}>
-          <Pill tone="paid">
+          <Pill tone="ok">
             <CheckCircleIcon />
             Төлсөн
           </Pill>
         </Show>
       }
     >
-      <Show when={props.order.terms === "cod"} fallback={<Pill tone="owes">Төлбөр хүлээж</Pill>}>
-        <Pill tone="owes">{money(props.order.balance)}</Pill>
+      <Show when={props.order.terms === "cod"} fallback={<Pill tone="owe">Төлбөр хүлээж</Pill>}>
+        <Pill tone="owe">{money(props.order.balance)}</Pill>
       </Show>
     </Show>
   );
@@ -232,16 +254,19 @@ const stages = (order: OrderDetail) => {
     : [placed, paid, shipped, delivered];
 };
 
-export function Tracker(props: { order: OrderDetail }) {
+/** The order's stages left to right: done in ink, the next one in butter. */
+export function Stepper(props: { order: OrderDetail }) {
   const nextIndex = () => stages(props.order).findIndex((stage) => !stage.done);
 
   return (
     <ol
       class={css({
         display: "grid",
-        gridTemplateColumns: "repeat(4, 1fr)",
-        mx: "20px",
-        mt: "26px",
+        gridAutoFlow: "column",
+        gridAutoColumns: "1fr",
+        px: "4px",
+        pt: "14px",
+        pb: "12px",
       })}
     >
       <For each={stages(props.order)}>
@@ -253,25 +278,26 @@ export function Tracker(props: { order: OrderDetail }) {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "8px",
+                gap: "6px",
                 textStyle: "footnote",
-                fontWeight: "600",
                 textAlign: "center",
                 color: "inkMuted",
                 _before: {
                   content: '""',
                   position: "absolute",
-                  top: "12.5px",
+                  top: "10px",
                   right: "50%",
                   width: "100%",
-                  height: "3px",
-                  borderRadius: "2px",
-                  bg: "track",
+                  height: "2px",
+                  bg: "line",
                 },
                 _first: { _before: { display: "none" } },
               },
-              stage.done && { color: "ink", _before: { bg: "sel" } },
-              at() === nextIndex() && { color: "sel" },
+              (stage.done || at() === nextIndex()) && {
+                color: "ink",
+                fontWeight: "600",
+                _before: { bg: "ink" },
+              },
             )}
           >
             <span
@@ -279,25 +305,19 @@ export function Tracker(props: { order: OrderDetail }) {
                 {
                   position: "relative",
                   zIndex: 1,
-                  width: "28px",
-                  height: "28px",
+                  width: "22px",
+                  height: "22px",
                   borderRadius: "50%",
                   display: "grid",
                   placeItems: "center",
-                  bg: "page",
-                  boxShadow: "inset 0 0 0 2px {colors.dot}",
-                  fontSize: "15px",
+                  bg: "card",
+                  boxShadow: "inset 0 0 0 2px {colors.line}",
+                  fontSize: "12px",
                 },
-                stage.done && { bg: "sel", boxShadow: "none", color: "white" },
+                stage.done && { bg: "ink", color: "page", boxShadow: "none" },
                 at() === nextIndex() && {
-                  boxShadow: "inset 0 0 0 2px {colors.sel}",
-                  _after: {
-                    content: '""',
-                    width: "10px",
-                    height: "10px",
-                    borderRadius: "50%",
-                    bg: "sel",
-                  },
+                  bg: "butter",
+                  boxShadow: "inset 0 0 0 2px {colors.butterEdge}",
                 },
               )}
             >
@@ -310,20 +330,6 @@ export function Tracker(props: { order: OrderDetail }) {
         )}
       </For>
     </ol>
-  );
-}
-
-/** How many orders this phone has placed (from getOrder); a tap lists them. */
-export function History(props: { phone: string; orders: number }) {
-  return (
-    <Show when={props.orders > 1}>
-      <a
-        href={`/orders?view=all&q=${props.phone}`}
-        class={css({ display: "inline-block", mt: "6px" })}
-      >
-        <Pill tone="soft">Нийт {props.orders} захиалга</Pill>
-      </a>
-    </Show>
   );
 }
 

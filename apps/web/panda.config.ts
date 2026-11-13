@@ -12,42 +12,20 @@ export default defineConfig({
   presets: [presetBase, pandaPreset],
   theme: {
     extend: {
+      // Four sizes: 28 for a page title, 17, 15 and 13.
       textStyles: {
-        largeTitle: {
+        title: {
           value: {
-            fontSize: "34px",
-            lineHeight: "40px",
-            fontWeight: "700",
-            letterSpacing: "-0.025em",
+            fontFamily: "display",
+            fontSize: "28px",
+            lineHeight: "32px",
+            fontWeight: "600",
+            letterSpacing: "-0.02em",
             textWrap: "balance",
           },
         },
-        title2: {
-          value: {
-            fontSize: "22px",
-            lineHeight: "28px",
-            fontWeight: "700",
-            letterSpacing: "-0.02em",
-          },
-        },
-        title3: {
-          value: {
-            fontSize: "20px",
-            lineHeight: "25px",
-            fontWeight: "650",
-            letterSpacing: "-0.015em",
-          },
-        },
-        headline: {
-          value: {
-            fontSize: "17px",
-            lineHeight: "22px",
-            fontWeight: "600",
-            letterSpacing: "-0.01em",
-          },
-        },
-        body: { value: { fontSize: "17px", lineHeight: "1.3" } },
-        callout: { value: { fontSize: "16px", lineHeight: "20px" } },
+        headline: { value: { fontSize: "17px", lineHeight: "22px", fontWeight: "650" } },
+        body: { value: { fontSize: "17px", lineHeight: "1.35" } },
         subhead: { value: { fontSize: "15px", lineHeight: "20px" } },
         footnote: { value: { fontSize: "13px", lineHeight: "17px" } },
       },
@@ -63,53 +41,45 @@ export default defineConfig({
       },
       tokens: {
         colors: {
-          page: { value: "#f8f4ec" },
-          surface: { value: "#fffdf9" },
-          ink: { value: "#1e1b17" },
-          inkMuted: { value: "#665e54" },
-          inkFaint: { value: "#857d72" },
-          line: { value: "#e9e3d8" },
-          chip: { value: "#efeae0" },
-          track: { value: "#e1d9cb" },
-          dot: { value: "#d9d1c3" },
-          tick: { value: "#c9c0b1" },
-          scrim: { value: "rgba(15,14,12,.45)" },
-          sel: { value: "#0f4c5c" },
-          selSoft: { value: "#e1ecee" },
-          paid: { value: "#2f6b3a" },
-          paidBg: { value: "#e5efe2" },
-          owes: { value: "#b4233c" },
-          owesBg: { value: "#fbe6e8" },
-          wait: { value: "#8a5a00" },
-          waitBg: { value: "#f8ecce" },
-          waitInk: { value: "#4d3400" },
+          page: { value: "oklch(0.972 0.012 88)" },
+          card: { value: "#fff" },
+          ink: { value: "oklch(0.26 0.02 60)" },
+          inkMuted: { value: "oklch(0.47 0.025 70)" },
+          fill: { value: "oklch(0.94 0.012 85)" },
+          line: { value: "oklch(0.9 0.012 80)" },
+          scrim: { value: "oklch(0.2 0.02 60 / .42)" },
+          butter: { value: "oklch(0.9 0.14 95)" },
+          butterEdge: { value: "oklch(0.78 0.13 90)" },
+          ok: { value: "oklch(0.47 0.11 150)" },
+          okBg: { value: "oklch(0.94 0.05 155)" },
+          owe: { value: "oklch(0.52 0.17 28)" },
+          oweBg: { value: "oklch(0.95 0.035 20)" },
+          wait: { value: "oklch(0.5 0.1 70)" },
+          waitBg: { value: "oklch(0.95 0.07 95)" },
+          waitInk: { value: "oklch(0.4 0.08 70)" },
+          // The dot before an order's status word.
+          status: {
+            new: { value: "oklch(0.58 0.13 245)" },
+            paid: { value: "{colors.ok}" },
+            shipped: { value: "oklch(0.55 0.13 300)" },
+            delivered: { value: "oklch(0.6 0.03 90)" },
+            cancelled: { value: "oklch(0.7 0.01 80)" },
+          },
         },
         fonts: {
-          sans: { value: "'Inter Variable', -apple-system, system-ui, sans-serif" },
+          sans: { value: "'Onest Variable', -apple-system, system-ui, sans-serif" },
+          display: { value: "'Unbounded Variable', 'Onest Variable', sans-serif" },
         },
         shadows: {
-          raise: {
-            value:
-              "0 0 0 .5px rgba(30,27,23,.07), 0 1px 2px rgba(30,27,23,.06), 0 4px 10px -4px rgba(30,27,23,.08), 0 16px 30px -16px rgba(30,27,23,.16)",
+          card: { value: "0 1px 2px oklch(0.3 0.02 60 / 0.07)" },
+          butter: {
+            value: "inset 0 -2px 0 {colors.butterEdge}, 0 1px 3px oklch(0.4 0.08 90 / 0.25)",
           },
-          raiseSm: {
-            value:
-              "0 0 0 .5px rgba(30,27,23,.08), 0 1px 2px rgba(30,27,23,.06), 0 6px 12px -8px rgba(30,27,23,.14)",
-          },
-          lift: {
-            value:
-              "inset 0 1px 0 rgba(255,255,255,.12), 0 1px 2px rgba(30,27,23,.22), 0 8px 18px -10px rgba(30,27,23,.55)",
-          },
-          glass: {
-            value:
-              "inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 .5px rgba(30,27,23,.1), 0 6px 14px -6px rgba(30,27,23,.2)",
-          },
+          float: { value: "0 8px 24px oklch(0.3 0.02 60 / 0.16)" },
         },
         easings: {
-          spring: {
-            value:
-              "linear(0,.057,.188,.346,.503,.642,.758,.847,.913,.959,.989,1.007,1.016,1.02,1.02,1.017,1.014,1.011,1.008,1.006,1.004,1.002,1.001,1)",
-          },
+          out: { value: "cubic-bezier(0.23, 1, 0.32, 1)" },
+          move: { value: "cubic-bezier(0.65, 0, 0.35, 1)" },
         },
       },
     },

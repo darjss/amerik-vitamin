@@ -34,7 +34,7 @@ export function ZoomProvider(props: { children: JSX.Element }) {
           maxWidth: "100vw",
           height: "100dvh",
           maxHeight: "100dvh",
-          bg: "surface",
+          bg: "white",
           border: "none",
           p: "24px",
           "&[open]": { display: "grid", placeContent: "center", gap: "16px", textAlign: "center" },
@@ -54,9 +54,7 @@ export function ZoomProvider(props: { children: JSX.Element }) {
                   />
                 )}
               </Show>
-              <b class={css({ fontSize: "22px", lineHeight: "28px", fontWeight: "700" })}>
-                {product().name}
-              </b>
+              <b class={css({ textStyle: "headline" })}>{product().name}</b>
               <span class={css({ textStyle: "body", color: "inkMuted" })}>
                 {product().brand} · {product().count} ш
               </span>
@@ -68,49 +66,48 @@ export function ZoomProvider(props: { children: JSX.Element }) {
   );
 }
 
+// The photos are shot on white, so the tile is white with no frame or tint:
+// on a white section the bottle stands bare.
 const tileBase = css.raw({
   position: "relative",
   display: "block",
   flex: "none",
   bg: "white",
-  boxShadow: "raiseSm",
+  borderRadius: "6px",
   "& img": {
     position: "absolute",
     inset: 0,
     width: "100%",
     height: "100%",
     objectFit: "contain",
-    p: "9%",
+    borderRadius: "6px",
   },
 });
 
+/** The ring around ×N matches what's behind the tile. */
 const rings = {
-  page: css.raw({ boxShadow: "0 0 0 2.5px {colors.page}" }),
-  surface: css.raw({ boxShadow: "0 0 0 2.5px {colors.surface}" }),
+  page: css.raw({ boxShadow: "0 0 0 2px {colors.page}" }),
+  card: css.raw({ boxShadow: "0 0 0 2px {colors.card}" }),
 };
 
 /**
- * A product photo as a raised white tile, with ×N as a teal badge on its
- * corner. A tap shows it full size unless `still`; sizes are inline styles
- * because Panda only builds classes for values written in a css() call.
+ * A product photo on white, with ×N as an ink badge on its corner. A tap
+ * shows it full size unless `still`; sizes are inline styles because Panda
+ * only builds classes for values written in a css() call.
  */
 export function Tile(props: {
   product: Product;
   size?: number;
   quantity?: number;
-  soft?: boolean;
   ring?: keyof typeof rings;
   still?: boolean;
 }) {
   const zoom = useContext(Zoom);
 
-  const box = () => {
-    const radius = props.size === undefined || props.size >= 100 ? 20 : props.size >= 60 ? 17 : 14;
-
-    return props.size === undefined
-      ? { width: "100%", "aspect-ratio": "1", "border-radius": `${radius}px` }
-      : { width: `${props.size}px`, height: `${props.size}px`, "border-radius": `${radius}px` };
-  };
+  const box = () =>
+    props.size === undefined
+      ? { width: "100%", "aspect-ratio": "1" }
+      : { width: `${props.size}px`, height: `${props.size}px` };
 
   const inside = () => (
     <>
@@ -133,23 +130,22 @@ export function Tile(props: {
               {
                 position: "absolute",
                 zIndex: 2,
-                top: "-7px",
+                top: "-5px",
                 right: "-7px",
-                minWidth: "28px",
-                height: "28px",
-                px: "7px",
-                borderRadius: "14px",
-                bg: "sel",
-                color: "white",
-                textStyle: "subhead",
+                minWidth: "22px",
+                height: "20px",
+                px: "5px",
+                borderRadius: "10px",
+                bg: "ink",
+                color: "page",
+                fontSize: "12px",
+                lineHeight: "20px",
                 fontWeight: "700",
-                display: "grid",
-                placeItems: "center",
+                textAlign: "center",
                 fontVariantNumeric: "tabular-nums",
                 pointerEvents: "none",
               },
               rings[props.ring ?? "page"],
-              props.soft && { bg: "selSoft", color: "sel" },
             )}
           >
             ×{quantity()}

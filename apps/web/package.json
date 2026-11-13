@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@amerik/contracts": "workspace:*",
-    "@fontsource-variable/inter": "catalog:",
+    "@fontsource-variable/onest": "catalog:",
+    "@fontsource-variable/unbounded": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
     "better-auth": "catalog:",

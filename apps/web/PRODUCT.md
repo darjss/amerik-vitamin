@@ -35,72 +35,63 @@ None for the dashboard. It's internal, and vit-store's look does not carry over.
 
 ## Look
 
-The owner picked this on 2026-10-19 after two rounds of phone prototypes. Her most-used apps set the feel: Facebook, Messenger, Instagram, Meta Business Suite and Amazon. The dashboard borrows their habits: photo-first rows, filter chips, a to-do list with a button on each row and a step tracker on the order. It copies none of their screens, so there are no stories, no chat bubbles, and no borrowed headers or brand colors.
+The owner picked this on 2026-10-19 after two rounds of phone prototypes. Her most-used apps set the feel: Facebook, Messenger, Instagram, Meta Business Suite and Amazon. The dashboard borrows their habits: photo-first rows, a to-do list with a button on each row and a step tracker on the order. Hierarchy follows iOS lists and the order screens of Shopify, Square, Etsy and Amazon Seller. It copies none of their screens.
 
-The look is "Native, two-tone", chosen 2026-10-20 from three directions drawn from scratch (Atelier, Native, Market). Earlier rounds were rejected: espresso and clay (brown everywhere), cold iOS gray, marigold and lilac highlights, cream and navy on flat hairline strips ("dead, bare"), and stacked rounded order cards. The prototype is in the scratchpad at `prototypes/v6/native/`.
+The look is "D2", chosen in November 2026 from the v8 prototypes (`prototypes/v8/d2/` in the scratchpad). It takes the storefront's butter and cocoa (`vit-store/apps/storev2`) and rebuilds it on the owner's notes. Earlier rounds were rejected: espresso and clay, cold iOS gray, marigold and lilac, cream and navy hairline strips, stacked rounded order cards, "Native, two-tone" with petrol teal, and D2's own solid ink segmented filter. The owner called a tinted, pill-shaped product photo "the worst", and said the old orders list showed only one order per screen.
 
-It should feel like Apple built it for her phone, but warm. Everything she handles, such as bottles, the packing list, the receipt and buttons, stands up off the cream with soft depth. Everything she only reads is plain type on the cream with no box around it. Bars that float over the page are frosted glass. Every tap squeezes slightly and springs back.
+One separation rule: white sections on warm cream, split inside by hairlines that start 16px in, like an iOS grouped list. A bold 17px title sits above each section on the cream. No cards stacked on cards, no shadows beyond a 1px lift on a section.
 
-Two tones do the work. Warm ink fills every action. Petrol teal marks what's selected or done. The other colors are statuses only, so teal never means paid and ink never means a status.
+Butter is the one filled action. Ink marks what's selected or done. The other colors are statuses only.
 
-| Token     | Value                  | Use                                                                                 |
-| --------- | ---------------------- | ----------------------------------------------------------------------------------- |
-| page      | `#f8f4ec`              | Background                                                                          |
-| surface   | `#fffdf9`              | Raised panels, buttons, chips, search fields                                        |
-| ink       | `#1e1b17`              | Text, and every filled action: TU-д өгөх, Савлах, +, call, Захиалга үүсгэх          |
-| ink-muted | `#665e54`              | Secondary text                                                                      |
-| ink-faint | `#857d72`              | Placeholders, the label of an action that isn't ready yet                           |
-| chip      | `#efeae0`              | Segmented control track, an action that isn't ready yet                             |
-| track     | `#e1d9cb`              | Empty progress: the tracker's connectors, the packing bars                          |
-| dot, tick | `#d9d1c3`, `#c9c0b1`   | Rings around what isn't done yet: a tracker dot, a packing tick box                 |
-| scrim     | `rgba(15,14,12,.45)`   | Behind a sheet or the full-size photo                                               |
-| sel       | `#0f4c5c`              | Active filter, done tracker steps, ticks, packing progress, ×N badges, picked tiles |
-| sel-soft  | `#e1ecee`              | Active tab, ×N on the order page, "2 дахь захиалга", a held row                     |
-| paid      | `#2f6b3a` on `#e5efe2` | Paid                                                                                |
-| owes      | `#b4233c` on `#fbe6e8` | Money to collect, payment waiting, sold out                                         |
-| wait      | `#8a5a00` on `#f8ecce` | Notes she must not miss, "3 хоног", low stock                                       |
+| Token          | Value                                       | Use                                                                         |
+| -------------- | ------------------------------------------- | --------------------------------------------------------------------------- |
+| page           | `oklch(0.972 0.012 88)`                     | Background                                                                  |
+| card           | `#fff`                                      | Sections, fields, the full-size photo                                       |
+| ink            | `oklch(0.26 0.02 60)`                       | Text, the selected tab's underline, done stepper dots, ×N badges            |
+| inkMuted       | `oklch(0.47 0.025 70)`                      | Secondary text, unselected tabs                                             |
+| fill           | `oklch(0.94 0.012 85)`                      | Secondary buttons, search, chips, a pressed row                             |
+| line           | `oklch(0.9 0.012 80)`                       | Hairlines, the tab strip's base line, stepper dots not reached yet          |
+| butter, edge   | `oklch(0.9 0.14 95)`, `oklch(0.78 0.13 90)` | Every primary action: TU-д өгөх, Савлах, +, call, the selected tab bar item |
+| ok on okBg     | `oklch(0.47 0.11 150)`                      | Paid, stock fine, copied                                                    |
+| owe on oweBg   | `oklch(0.52 0.17 28)`                       | Not paid, money to collect, sold out, cancel                                |
+| wait on waitBg | `oklch(0.5 0.1 70)`                         | Collect at the door, notes she must not miss, "3 хоног", low stock          |
+| status.*       | blue, green, purple, gray                   | The dot before an order's status word                                       |
 
-Type is Inter with optical sizes, so large titles draw as Inter Display. It has Mongolian's Ө and Ү. Numbers use tabular figures. Icons are Phosphor only. The type scale is iOS's, as Panda text styles in `panda.config.ts`: largeTitle 34/40, title2 22/28, title3 20/25, headline 17/22 semibold, body 17, callout 16/20, subhead 15/20, footnote 13/17. Big numerals for money, stock and counts are one-offs on their page.
+Type is Onest, which has Mongolian's Ө and Ү, with tabular figures on every number. Unbounded is only for a page's large title. Four sizes as Panda text styles in `panda.config.ts`: title 28 (Unbounded), headline and body 17, subhead 15, footnote 13. Icons are Phosphor only.
 
 Rules:
 
-- An action looks like an action. The next step on every order is a filled ink button, and an outlined step reads as a label.
-- Product photos are raised white tiles with ×N as a teal badge on the corner. A tap shows the photo full size, except in the packing checklist and the new-order grid, where a tap does the row's job.
-- Orders are separated by space, not lines or cards. Panels are for things she handles: today's packing, the checklist, the receipt, the grouped form fields.
-- Pages open with an iOS large title. Sections get a bold title over plain content, never a gray uppercase label.
-- The tab bar is one floating glass capsule. A screen's main action is docked at the bottom over frosted material.
+- An action looks like an action. The primary button is butter with a darker edge along its bottom; the next step on a list row is the compact 36px version. Secondary buttons are fill.
+- A product photo is the bare bottle on white, square, with no tint, frame or rounded capsule. ×N is a small ink badge on its corner. A tap shows the photo full size, except in the packing checklist and the new-order grid, where a tap does the row's job.
+- Every press squeezes to .96 for 120ms. Reduced motion drops the squeeze and the slides.
+- The tab bar is one floating capsule with the current tab in butter. A screen's main action is docked at the bottom over frosted material.
 - A choice between two or three options is a segmented control with a sliding white thumb.
-- No loud banner at the top. Today's packing on Orders is one quiet row with three bottle thumbnails and Савлах.
 
 Screens:
 
-- **Нүүр** opens with the date as a large title. Today's packing comes first: one raised panel with every bottle to pull off the shelf and its ×N, and a full-width Савлах. Then Хийх (a payment to verify, with Шалгах), Мөнгө (COD left to collect in red, money in today), and Дуусаж байна (low stock with what's left).
-- **Захиалга** has a large title, a round + for a new order, search (order number, or 3 to 8 digits of a phone), and filter chips with counts. On Илгээх, a packing row opens Савлах. Each order shows:
-  - the phone, with "3 хоног" once a ready order has waited two days, and the money pill on the right
-  - the address on one line
-  - the note in a note box
-  - one photo per product with ×N
-  - the next-step button
+- **Нүүр** opens with the date as a large title. Today's packing comes first: one white section with every bottle to pull off the shelf and its ×N, and a full-width Савлах. Then Хийх (a payment to verify, with Шалгах), Мөнгө (COD left to collect in red, money in today), and Дуусаж байна (low stock with what's left).
+- **Захиалга** has the title and a round butter +, then a frosted bar that stays on top while she scrolls: search (order number, or 3 to 8 digits of a phone) and underline tabs with the count inline: Илгээх, Төлбөр хүлээж, Замд, Бүгд. The tabs spread across when they fit and scroll sideways when they don't, and the chosen one always scrolls fully into view. On Илгээх a packing row with three bottles opens Савлах. Orders sit in white sections under day headings (Өнөөдөр, Өчигдөр, Пүрэв 11/6) with the count on the right. Each order is three lines, so four orders of one to three products fit on her phone:
+  - the phone, the time, "3 хоног" once a ready order has waited two days, and the total
+  - how it's paid (Төлсөн green, Хүргэлтээр amber, Төлөөгүй red), then the address on one line
+  - one 40px photo per product with ×N, never folded into "+2", and the next step
 
-  Tapping the step holds it for 5 seconds as "Болих N" before writing. Customers are known by phone, so no screen shows a name.
+  A note she must not miss adds a line between. Tapping the step holds it for 5 seconds as "Болих N" before writing. Customers are known by phone, so no screen shows a name.
 
-- **Order** has:
-  - a frosted bar with × and ⋯
-  - the status as a large title, with payment, time and source under it
-  - a four-step tracker with dots
-  - Бараа
-  - Захиалагч: the phone with "Нийт N захиалга" and an ink call button, then the address with copy, then the note
-  - Төлбөр: a raised receipt ending in a green paid band or a red amount-to-collect band, with "Мөнгө авсан" under it
+- **Order** has a bar with ‹ Захиалга, the number and ⋯. Under it the status pill with its dot, the payment pill, and the source and time. Then:
+  - the stepper in a white section, left to right, done in ink and the next stage in butter; COD puts payment last
+  - Захиалагч: the phone with "Нийт N захиалга" (a tap lists them) and a round butter call button, then the address with copy, then the note. Tapping the address or note edits them until the order ships
+  - Бараа: photo, name, qty × price and the line total, then Нийт with the delivery fee it includes
+  - Төлбөр: each payment in green, then what's still owed in red, with "Мөнгө авсан" under the section
 
-  The ⋯ sheet edits the address and note, or cancels the order. "TU-д өгөх" stays docked.
+  The ⋯ sheet edits the address and note, or cancels the order. The next step stays docked in butter.
 
-- **Савлах** is one parcel at a time as a checklist. Progress segments fill as she ticks. The parcel header has the phone, money, address and note. Each row is the whole tap target: a 112px photo, the name, brand and count, a big ×N, and a square tick that fills teal. Алгасах and Савласан stay docked. After the last parcel come the packed list, the COD total and "N илгээмжийг TU-д өгөх".
-- **Шинэ захиалга** has Болих, then the source (Чат, Утас, Дэлгүүр) and one grouped panel for phone, address and note. A known phone shows "N дахь захиалга", fills the last address and lists Өмнө авсан to add again. Below that is a 3-column photo grid: a tap adds one, the tile gets a teal ring and ×N, and sold-out items fade to the end. Then Сагс with steppers and sums, prepay or COD, and a docked "Захиалга үүсгэх · total" that names what's missing until it's ready. A walk-in order has no delivery fee and needs no phone.
-- **Бараа** has a large title, search, then one row of chips: Бүгд, the stock views that have products (Дууссан with a red dot, Дуусаж байна amber, Тоолоогүй, Архив), and every brand with its count. Filters live in the URL, so coming back from a product keeps them. Each row has photo, name, brand and count, a raised price chip that opens the price pad (±5,000₮ steps), and the stock number as a button tinted by stock: teal, amber when low, red when out, grey when uncounted. The stock button opens one sheet with Тоолсон (set the count) and Ирсэн (add a shipment). A ⋯ chip next to the price opens the row's actions: Захиалга үүсгэх, Ирсэн бараа нэмэх, Тоолох, Үнэ өөрчлөх, Нэр, үнэ хуулах, Дэлгэрэнгүй, Архивлах. Tapping the name opens the product. A round + by the title opens Шинэ бараа.
+- **Савлах** is one parcel at a time as a checklist. Progress segments fill as she ticks. The parcel header has the phone, money, address and note. Each row is the whole tap target: a 112px photo, the name, brand and count, a big ×N, and a square tick that fills ink. Алгасах and Савласан stay docked. After the last parcel come the packed list, the COD total and "N илгээмжийг TU-д өгөх".
+- **Шинэ захиалга** has Болих, then the source (Чат, Утас, Дэлгүүр) and one grouped panel for phone, address and note. A known phone shows "N дахь захиалга", fills the last address and lists Өмнө авсан to add again. Below that is a 3-column photo grid: a tap adds one, the tile gets an ink ring and ×N, and sold-out items fade to the end. Then Сагс with steppers and sums, prepay or COD, and a docked "Захиалга үүсгэх · total" that names what's missing until it's ready. A walk-in order has no delivery fee and needs no phone.
+- **Бараа** has a large title, search, then one row of chips: Бүгд, the stock views that have products (Дууссан with a red dot, Дуусаж байна amber, Тоолоогүй, Архив), and every brand with its count. Filters live in the URL, so coming back from a product keeps them. Each row has photo, name, brand and count, a price chip that opens the price pad (±5,000₮ steps), and the stock number as a button tinted by stock: green, amber when low, red when out, grey when uncounted. The stock button opens one sheet with Тоолсон (set the count) and Ирсэн (add a shipment). A ⋯ chip next to the price opens the row's actions: Захиалга үүсгэх, Ирсэн бараа нэмэх, Тоолох, Үнэ өөрчлөх, Нэр, үнэ хуулах, Дэлгэрэнгүй, Архивлах. Tapping the name opens the product. A round + by the title opens Шинэ бараа.
 - **Шинэ бараа** asks what to read from: a photo of the bottle (the phone camera opens), an Amazon link, or Гараар бөглөх for an empty form. The AI run shows its steps with a seconds counter and keeps going if she leaves; its id stays in the URL. Then comes the filled form: the photos (× drops one), brand with the shop's brands to pick from, name, strength, count, form and category as chips, price (Amazon's dollar price as a hint), stock, and the Mongolian description, with line, flavor and serving numbers under Бусад мэдээлэл. A note box says what the AI doubted, or that the product is already in the shop with a link to it. The docked "Бараа нэмэх · price" names the missing field until the form is ready.
-- **Product** has a frosted bar with ×, the brand and ⋯, then the photos side by side (a tap enlarges one), the name, and the price, which opens a number pad. A raised panel shows what's left and what sold in 30 days. Four quick actions sit under it: Тоолох sets the count, Ирсэн adds a shipment, Үнэ changes the price, and Захиалах opens a new order with the bottle in the cart. "Нэр, үнэ хуулах" copies the name and price for a chat reply. Then the label facts, the Mongolian description and the last 30 stock moves, each sale linking to its order. ⋯ archives or restores it.
+- **Product** has a frosted bar with ×, the brand and ⋯, then the photos side by side (a tap enlarges one), the name, and the price, which opens a number pad. A white section shows what's left and what sold in 30 days. Four quick actions sit under it: Тоолох sets the count, Ирсэн adds a shipment, Үнэ changes the price, and Захиалах opens a new order with the bottle in the cart. "Нэр, үнэ хуулах" copies the name and price for a chat reply. Then the label facts, the Mongolian description and the last 30 stock moves, each sale linking to its order. ⋯ archives or restores it.
 
-Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button, hairline-strip lists, stacked rounded order cards, a loud banner at the top.
+Never: stat-card grids, charts, trend arrows, gray uppercase headers, emoji or unicode icons, a floating blue add button, stacked rounded order cards, a solid segmented filter, tinted or pill-shaped photo tiles, one photo plus "+2", a loud banner at the top.
 
 ## Features
 
@@ -111,7 +102,7 @@ On 2026-10-19 we ran vit-store's admin on a local copy of its data and used it a
 3. **Tap a photo to enlarge it.** Any product photo opens full screen with brand, strength and count under it. The omegas and D3s look alike at 68px.
 4. **Fix the address where it is.** On the order page, tapping the phone, address or note opens a sheet to edit it. Saving goes through `editOrder`, and edits are allowed until the order ships. Phone and address get copy buttons. vit-store had this idea, but with a pencil next to every field and a separate edit page. Here the whole field is the tap target.
 5. **Find any order without date filters.** vit-store stacked status tabs, six date buttons, a calendar, a payment dropdown and two sort toggles above the list. Here:
-   - Four chips: Илгээх, Төлбөр хүлээж, Замд, Бүгд.
+   - Four tabs: Илгээх, Төлбөр хүлээж, Замд, Бүгд.
    - Бүгд shows every order, newest first, under day headings (Өнөөдөр, Өчигдөр, Пүрэв 10/16), and loads more as she scrolls.
    - The search field takes a phone or an order number.
    - No date picker, no sort, no payment dropdown.

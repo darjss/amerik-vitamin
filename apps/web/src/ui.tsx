@@ -42,27 +42,63 @@ export const spinner = css.raw({
   width: "22px",
   height: "22px",
   borderRadius: "50%",
-  border: "3px solid {colors.selSoft}",
-  borderTopColor: "sel",
+  border: "3px solid {colors.line}",
+  borderTopColor: "ink",
   animation: "spin 0.9s linear infinite",
   _motionReduce: { animation: "none" },
 });
 
+/** A white section on the cream. Rows inside it are split by `hairline`. */
 export const panel = css.raw({
-  bg: "surface",
-  borderRadius: "22px",
-  boxShadow: "inset 0 1px 0 {colors.white}, {shadows.raise}",
+  bg: "card",
+  borderRadius: "14px",
+  boxShadow: "card",
+  overflow: "hidden",
 });
 
-export const glassBar = css.raw({
+/** A 1px line between two rows of a panel, inset from the left like iOS lists. */
+export const hairline = css.raw({
+  position: "relative",
+  "& + &": {
+    _before: {
+      content: '""',
+      position: "absolute",
+      zIndex: 1,
+      top: 0,
+      left: "16px",
+      right: 0,
+      height: "1px",
+      bg: "line",
+    },
+  },
+});
+
+/** A panel's bold title, above it on the cream. */
+export const groupHead = css.raw({
+  display: "flex",
+  alignItems: "baseline",
+  gap: "8px",
+  mt: "20px",
+  mb: "8px",
+  mx: "2px",
+  textStyle: "headline",
+  fontWeight: "700",
+  "& small": { ml: "auto", textStyle: "subhead", fontWeight: "500", color: "inkMuted" },
+});
+
+/** Content scrolls under it through frosted material. */
+const frosted = css.raw({
+  bg: "page/84",
+  backdropFilter: "blur(16px) saturate(160%)",
+});
+
+export const glassBar = css.raw(frosted, {
   position: "sticky",
   top: 0,
   zIndex: 5,
   px: "14px",
   pt: "calc(env(safe-area-inset-top) + 8px)",
   pb: "8px",
-  bg: "page/90",
-  backdropFilter: "blur(22px) saturate(180%)",
 });
 
 export const chipRow = css.raw({
@@ -76,28 +112,27 @@ export const chipRow = css.raw({
 
 export const field = css.raw({
   width: "100%",
-  bg: "surface",
-  borderRadius: "14px",
-  boxShadow: "0 0 0 .5px {colors.ink/12}, inset 0 1px 2px {colors.ink/5}",
+  bg: "card",
+  borderRadius: "12px",
+  boxShadow: "inset 0 0 0 1px {colors.line}",
   px: "14px",
   py: "12px",
   textStyle: "body",
   color: "ink",
   outline: "none",
-  _focus: { boxShadow: "0 0 0 2px {colors.sel}" },
+  _focus: { boxShadow: "inset 0 0 0 2px {colors.ink}" },
 });
 
 export const searchBox = css.raw({
-  height: "46px",
-  borderRadius: "14px",
-  bg: "surface",
-  boxShadow: "0 0 0 .5px {colors.ink/10}, inset 0 1px 2px {colors.ink/5}",
+  height: "42px",
+  borderRadius: "12px",
+  bg: "fill",
   display: "flex",
   alignItems: "center",
   gap: "8px",
-  px: "14px",
+  px: "12px",
   color: "inkMuted",
-  "& svg": { fontSize: "20px", flex: "none" },
+  "& svg": { fontSize: "18px", flex: "none" },
   "& input": {
     flex: 1,
     minWidth: 0,
@@ -120,11 +155,11 @@ export function Note(props: { children: JSX.Element; large?: boolean }) {
           alignItems: "flex-start",
           px: "12px",
           py: "10px",
-          borderRadius: "14px",
+          borderRadius: "12px",
           bg: "waitBg",
           color: "waitInk",
           textStyle: "subhead",
-          fontWeight: "650",
+          fontWeight: "600",
           textAlign: "left",
           "& svg": { fontSize: "19px", color: "wait", flex: "none" },
         },
@@ -142,22 +177,21 @@ const pillBase = css.raw({
   alignItems: "center",
   gap: "5px",
   flex: "none",
-  height: "28px",
+  height: "26px",
   px: "10px",
-  borderRadius: "14px",
-  textStyle: "subhead",
-  fontWeight: "650",
+  borderRadius: "13px",
+  textStyle: "footnote",
+  fontWeight: "600",
   whiteSpace: "nowrap",
   fontVariantNumeric: "tabular-nums",
-  "& svg": { fontSize: "15px" },
+  "& svg": { fontSize: "14px" },
 });
 
 export const tones = {
-  owes: css.raw({ bg: "owesBg", color: "owes" }),
-  paid: css.raw({ bg: "paidBg", color: "paid" }),
+  owe: css.raw({ bg: "oweBg", color: "owe" }),
+  ok: css.raw({ bg: "okBg", color: "ok" }),
   wait: css.raw({ bg: "waitBg", color: "wait" }),
-  soft: css.raw({ bg: "selSoft", color: "sel" }),
-  neutral: css.raw({ bg: "chip", color: "inkMuted" }),
+  neutral: css.raw({ bg: "fill", color: "ink" }),
 };
 
 export type Tone = keyof typeof tones;
@@ -184,10 +218,10 @@ export function Segmented<T extends string>(props: {
         display: "grid",
         gridAutoFlow: "column",
         gridAutoColumns: "1fr",
-        height: "46px",
+        height: "44px",
         p: "3px",
-        borderRadius: "14px",
-        bg: "chip",
+        borderRadius: "12px",
+        bg: "fill",
       })}
     >
       <span
@@ -196,10 +230,11 @@ export function Segmented<T extends string>(props: {
           top: "3px",
           bottom: "3px",
           left: "3px",
-          borderRadius: "11px",
-          bg: "surface",
-          boxShadow: "0 0 0 .5px {colors.ink/6}, 0 3px 8px -2px {colors.ink/16}",
-          transition: "transform .5s {easings.spring}",
+          borderRadius: "9px",
+          bg: "card",
+          boxShadow: "card",
+          transition: "transform 250ms {easings.move}",
+          _motionReduce: { transition: "none" },
         })}
         style={{
           width: `calc((100% - 6px) / ${props.options.length})`,
@@ -217,16 +252,16 @@ export function Segmented<T extends string>(props: {
                 alignItems: "center",
                 justifyContent: "center",
                 gap: "6px",
-                textStyle: "callout",
+                textStyle: "body",
                 fontWeight: "600",
                 color: "inkMuted",
                 cursor: "pointer",
                 transition: "color .2s ease",
                 "& svg": { fontSize: "18px" },
                 "&:has(:focus-visible)": {
-                  outline: "2px solid {colors.sel}",
+                  outline: "2px solid {colors.ink}",
                   outlineOffset: "-2px",
-                  borderRadius: "11px",
+                  borderRadius: "9px",
                 },
               },
               props.value === value && { color: "ink" },
@@ -254,7 +289,7 @@ export function Failed(props: { text: string | undefined }) {
   return (
     <Show when={props.text}>
       {(text) => (
-        <p class={css({ pb: "12px", color: "owes", textStyle: "subhead", textAlign: "center" })}>
+        <p class={css({ pb: "12px", color: "owe", textStyle: "subhead", textAlign: "center" })}>
           {text()}
         </p>
       )}
@@ -276,7 +311,7 @@ export function SaveButton(props: {
         type="button"
         disabled={props.disabled}
         onClick={() => props.onClick()}
-        class={button({ tone: "ink", size: "lg", wide: true })}
+        class={button({ tone: "butter", wide: true })}
       >
         {props.children}
       </button>
@@ -317,7 +352,7 @@ export function Problem(props: { error: unknown }) {
     <div class={css(panel, { m: "16px", p: "20px", display: "grid", gap: "14px" })}>
       <Show when={unauthorized()} fallback={<p>Ачаалж чадсангүй. Дахин оролдоно уу.</p>}>
         <p>Дахин нэвтэрнэ үү.</p>
-        <a href="/login" class={button({ tone: "ink" })}>
+        <a href="/login" class={button({ tone: "butter" })}>
           Нэвтрэх
         </a>
       </Show>
@@ -366,7 +401,8 @@ export function Sheet(props: {
         bg: "page",
         color: "ink",
         border: "none",
-        borderRadius: "22px 22px 0 0",
+        borderRadius: "20px 20px 0 0",
+        boxShadow: "0 -8px 30px oklch(0.2 0.02 60 / .12)",
         p: "0 20px calc(env(safe-area-inset-bottom) + 20px)",
         "&::backdrop": { bg: "scrim" },
       })}
@@ -388,11 +424,11 @@ export function Sheet(props: {
             height: "5px",
             mx: "auto",
             borderRadius: "3px",
-            bg: "ink/18",
+            bg: "line",
           },
         })}
       />
-      <h2 class={css({ textStyle: "title3", pt: "6px", pb: "18px" })}>{props.title}</h2>
+      <h2 class={css({ textStyle: "headline", pt: "6px", pb: "18px" })}>{props.title}</h2>
       <Show when={props.prompt}>{(prompt) => <div class={css(sheetPrompt)}>{prompt()}</div>}</Show>
       {props.children}
     </dialog>
@@ -402,7 +438,7 @@ export function Sheet(props: {
 export function Dock(props: { children: JSX.Element }) {
   return (
     <div
-      class={css({
+      class={css(frosted, {
         position: "fixed",
         zIndex: 10,
         left: 0,
@@ -410,12 +446,10 @@ export function Dock(props: { children: JSX.Element }) {
         bottom: 0,
         display: "grid",
         gap: "10px",
-        px: "16px",
-        pt: "14px",
+        // On a wide screen the buttons keep to the page's 640px column.
+        px: "max(16px, calc((100% - 608px) / 2))",
+        pt: "12px",
         pb: "calc(env(safe-area-inset-bottom) + 16px)",
-        bg: "page/92",
-        backdropFilter: "blur(24px) saturate(180%)",
-        maskImage: "linear-gradient(transparent, {colors.black} 14px)",
       })}
     >
       {props.children}
@@ -425,7 +459,7 @@ export function Dock(props: { children: JSX.Element }) {
 
 const tab = css.raw({
   flex: 1,
-  borderRadius: "27px",
+  borderRadius: "999px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -433,12 +467,11 @@ const tab = css.raw({
   gap: "2px",
   fontSize: "12px",
   fontWeight: "600",
-  color: "ink",
-  transition: "background .25s ease",
-  "& svg": { fontSize: "25px" },
+  color: "ink/72",
+  "& svg": { fontSize: "22px" },
 });
 
-const activeTab = css.raw({ bg: "selSoft", color: "sel" });
+const activeTab = css.raw({ bg: "butter", color: "ink" });
 
 const tabs = [
   { href: "/", label: "Нүүр", Icon: HouseIcon, Active: HouseFillIcon },
@@ -457,17 +490,19 @@ export function TabBar() {
       class={css({
         position: "fixed",
         zIndex: 10,
-        left: "18px",
-        right: "18px",
-        bottom: "calc(env(safe-area-inset-bottom) + 12px)",
-        height: "64px",
-        borderRadius: "32px",
+        left: "12px",
+        right: "12px",
+        bottom: "calc(env(safe-area-inset-bottom) + 10px)",
+        maxWidth: "480px",
+        mx: "auto",
+        height: "62px",
+        borderRadius: "999px",
         display: "flex",
-        p: "5px",
-        bg: "surface/88",
-        backdropFilter: "blur(24px) saturate(180%)",
-        boxShadow:
-          "inset 0 1px 0 {colors.white/85}, 0 0 0 .5px {colors.ink/9}, 0 14px 34px -12px {colors.ink/28}",
+        gap: "4px",
+        p: "6px",
+        bg: "card/82",
+        backdropFilter: "blur(18px) saturate(170%)",
+        boxShadow: "float",
       })}
     >
       <For each={tabs}>
