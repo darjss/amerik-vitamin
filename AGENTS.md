@@ -37,6 +37,7 @@ This file holds only what no tool can check. When you see the same mistake twice
 - Pin every version exactly and keep it on the newest release past the release age. When the newest is too new, pin the one before it. Release-age settings and `minimumReleaseAgeExclude` stay untouched. Add packages with `vp add <pkg>@<exact version>`; if `vp add` writes a `minimumReleaseAgeExclude` entry, revert it and pick an older version.
 - Opus 5.5 plans, implements and reviews. Hand work to Sonnet or another model only when the owner asks, and then with an exact brief: files, interfaces, done-criteria.
 - PRs target `main`, the only merge target. Its required `check` must be green.
+- To read the prod database from a script or a shell, use `agent_ro` through PgBouncer with one connection, as vit-store's AGENTS.md "Production database" says. The `PLANETSCALE_*` role in `.env` is for migrations and the Hyperdrive origin only.
 - Docs hold standing decisions. When one changes, update its single home and cite the PR. Delete finished plans.
 
 ## Parallel work
